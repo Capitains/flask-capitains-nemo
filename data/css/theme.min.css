@@ -35,6 +35,9 @@ ul.menu {
   max-height: 10em;
   overflow: hidden;
 }
+ul.menu.no-max {
+    max-height: none;
+}
 ul.menu li a, 
 #menu-container header .content,
 #menu-container header .search  {
@@ -130,6 +133,32 @@ ul.menu li a.active {
 #reading-container article body {
     font-size:1em;
     line-height: 1.618em;
+}
+#reading-container article.nav {
+    background-color: inherit;
+    box-shadow:none;
+}
+#reading-container article section nav {
+
+}
+#reading-container article section nav > div {
+    display: inline-block;
+    width:30%;
+    margin:0.5% 1%;
+    height:2.4em;
+    padding:0.2em 0.5em;
+    line-height: 2em;
+    text-align: center;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    background-color: white;
+
+    -moz-box-shadow: 1px 2px 0px 0px #656565;
+    -webkit-box-shadow: 1px 2px 0px 0px #656565;
+    -o-box-shadow: 1px 2px 0px 0px #656565;
+    box-shadow: 1px 2px 0px 0px #656565;
 }
 #breadcrumb {
     padding:1em 45px;
