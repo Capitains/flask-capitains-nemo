@@ -12,6 +12,7 @@ from flask import request
 import MyCapytain.endpoints.cts5
 import MyCapytain.resources.texts.tei
 import MyCapytain.resources.inventory
+from MyCapytain.resources.proto.inventory import Resource as InventoryProto
 import requests_cache
 
 
@@ -70,5 +71,91 @@ class Nemo(object):
         pass
 
     def get_inventory(self):
-        reply = self.endpoint.getCapabilities()
+        """ Request the api endpoint to retrieve information about the inventory
+
+        :return: The text inventory
+        :rtype: MyCapytain.resources.inventory.TextInventory
+        """
+        reply = self.endpoint.getCapabilities(inventory=self.api_inventory)
         return MyCapytain.resources.inventory.TextInventory(resource=reply)
+
+    def get_collections(self):
+        """ Filter inventory and make a list of available collections
+
+        :return: A set of CTS Namespaces
+        :rtype: set(str)
+        """
+        urns = set([textgroup.urn["cts_namespace"] for textgroup in self.get_inventory().textgroups])
+        return urns
+
+    def get_textgroups(self, collection=None):
+        """ Retrieve textgroups
+
+        :param collection: Collection to use for filtering the textgroups
+        :type collection: str
+        :return: List of textgroup filtered by collection
+        :rtype: [MyCapytain.resources.inventory.Textgroup]
+        """
+        inventory = self.get_inventory()
+        if collection is not None:
+            return Nemo.map_urns(inventory, collection, 2, "textgroups")
+        return list(inventory.textgroups.values())
+
+    def get_works(self, collection_urn=None, textgroup_urn=None):
+        """ Retrieve works
+
+        :param collection: Collection to use for filtering the textgroups
+        :type collection: str
+        :param textgroup: Collection to use for filtering the works
+        :type collection: str
+        :return: List of work filtered by collection
+        :rtype: [MyCapytain.resources.inventory.Work]
+        """
+        if collection_urn is not None and textgroup_urn is not None:
+            textgroup = list(
+                filter(lambda x: Nemo.filter_urn(x, 3, textgroup_urn), self.get_textgroups(collection_urn))
+            )
+            if len(textgroup) == 1:
+                return textgroup[0].works
+            else:
+                return []
+        elif collection_urn is None and textgroup_urn is None:
+            return [work for textgroup in self.get_inventory().textgroups.values() for work in textgroup.works.values()]
+        else:
+            raise ValueError("Get_Work takes either two None value or two set up value")
+
+    @staticmethod
+    def map_urns(items, query, part_of_urn=1, attr="textgroups"):
+        """ Small function to map urns to filter out a list of items or on a parent item
+
+        :param items: Inventory object
+        :type items: ?
+        :param query: Part of urn to check against
+        :type query: str
+        :param part_of_urn: Identifier of the part of the urn
+        :type part_of_urn: int
+        :return: Items corresponding to the object children filtered by the query
+        :rtype: list(items.children)
+        """
+
+        if attr is not None:
+            return [
+                item
+                for item in getattr(items, attr).values()
+                if Nemo.filter_urn(item, part_of_urn, query)
+            ]
+
+    @staticmethod
+    def filter_urn(item, part_of_urn, query):
+        """ Small function to map urns to filter out a list of items or on a parent item
+
+        :param item: Inventory object
+        :param query: Part of urn to check against
+        :type query: str
+        :param part_of_urn: Identifier of the part of the urn
+        :type part_of_urn: int
+        :return: Items corresponding to the object children filtered by the query
+        :rtype: list(items.children)
+        """
+        return item.urn[part_of_urn].lower() == query.lower().strip()
+
