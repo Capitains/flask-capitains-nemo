@@ -85,19 +85,19 @@ class NemoTest(unittest.TestCase):
             self.assertEqual("urn:cts:greekLit:tlg0003" in [str(tg.urn) for tg in tgs_2], True)
 
     def test_get_works_with_collection(self):
-        """ Check that authors textgroups are returned when filtered by collection
+        """ Check that works are returned when filtered by collection and textgroup
         """
         with patch('requests.get', return_value=self.getCapabilities):
             works = self.nemo.get_works("greekLIT", "TLG0003")  # With nice filtering
             self.assertIs(len(works), 1)
-            self.assertEqual("urn:cts:greekLit:tlg0003.tlg001" in list(works.keys()), True)
+            self.assertEqual("urn:cts:greekLit:tlg0003.tlg001" in [str(work.urn) for work in works], True)
 
             #  Check when it fails
             works = self.nemo.get_works("greekLIT", "TLGabc003")  # With nice filtering
             self.assertIs(len(works), 0)
 
     def test_get_works_without_filters(self):
-        """ Check that all works are returned
+        """ Check that all works are returned when not filtered
         """
         with patch('requests.get', return_value=self.getCapabilities):
             #  Check when it fails
@@ -112,3 +112,24 @@ class NemoTest(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             works = self.nemo.get_works(None, "a")
+
+    def test_get_texts_with_all_filtered(self):
+        """ Check that texts are filtered
+        """
+        with patch('requests.get', return_value=self.getCapabilities):
+            texts = self.nemo.get_texts("greekLIT", "TLG0003", "tlg001")  # With nice filtering
+            self.assertIs(len(texts), 1)
+            self.assertEqual("urn:cts:greekLit:tlg0003.tlg001.perseus-grc2" in [str(text.urn) for text in texts], True)
+
+            texts = self.nemo.get_texts("greekLIT", "TLG0003", "tlg002")  # With nice filtering
+            self.assertIs(len(texts), 0)
+
+    def test_get_texts_with_all_filtered(self):
+        """ Check that texts are filtered
+        """
+        with patch('requests.get', return_value=self.getCapabilities):
+            texts = self.nemo.get_texts()  # With nice filtering
+            self.assertIs(len(texts), 15)
+            self.assertEqual("urn:cts:greekLit:tlg0003.tlg001.perseus-grc2" in [str(text.urn) for text in texts], True)
+            self.assertEqual("urn:cts:latinLit:phi1294.phi002.perseus-lat2" in [str(text.urn) for text in texts], True)
+            self.assertEqual("urn:cts:latinLit:phi1294.phi002.perseus-lat3" in [str(text.urn) for text in texts], False)

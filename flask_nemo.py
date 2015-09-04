@@ -116,13 +116,42 @@ class Nemo(object):
                 filter(lambda x: Nemo.filter_urn(x, 3, textgroup_urn), self.get_textgroups(collection_urn))
             )
             if len(textgroup) == 1:
-                return textgroup[0].works
+                return textgroup[0].works.values()
             else:
                 return []
         elif collection_urn is None and textgroup_urn is None:
             return [work for textgroup in self.get_inventory().textgroups.values() for work in textgroup.works.values()]
         else:
             raise ValueError("Get_Work takes either two None value or two set up value")
+
+    def get_texts(self, collection_urn=None, textgroup_urn=None, work_urn=None):
+        """ Retrieve works
+
+        :param collection: Collection to use for filtering the textgroups
+        :type collection: str
+        :param textgroup: Collection to use for filtering the works
+        :type collection: str
+        :return: List of work filtered by collection
+        :rtype: [MyCapytain.resources.inventory.Work]
+        """
+        if collection_urn is not None and textgroup_urn is not None and work_urn is not None:
+            work = list(
+                filter(lambda x: Nemo.filter_urn(x, 4, work_urn), self.get_works(collection_urn, textgroup_urn))
+            )
+            if len(work) == 1:
+                return work[0].texts.values()
+            else:
+                return []
+        elif collection_urn is None and textgroup_urn is None and work_urn is None:
+            return [
+                text
+                for textgroup in self.get_inventory().textgroups.values()
+                for work in textgroup.works.values()
+                for text in work.texts.values()
+            ]
+        else:
+            raise ValueError("Get_Work takes either two None value or two set up value")
+
 
     @staticmethod
     def map_urns(items, query, part_of_urn=1, attr="textgroups"):
