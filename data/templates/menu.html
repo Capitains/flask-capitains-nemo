@@ -2,6 +2,14 @@
     <img class="logo" src="{{url_for('static', filename='images/nemo.png')}} " alt="Capitains Nemo" />
 </div>
 <header>
+    <span class="content">Collection
+</header>
+<ul class="menu">
+    {% for collection in collections %}
+        <li><a class="{{collection|active_link}}" href="">{{collection|collection_i18n}}</a></li>
+    {% endfor %}
+</ul>
+<header>
     <span class="content">Authors
         <div class="icon">
             <span class="glyphicon glyphicon-plus"></span>

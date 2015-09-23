@@ -28,6 +28,11 @@ class Nemo(object):
         "authors": "authors.html",
         "index": "index.html"
     }
+    COLLECTIONS = {
+        "latinLit": "Latin",
+        "greekLit": "Ancient Greek",
+        "froLit": "Medieval French"
+    }
     """ Nemo is an extension for Flask python micro-framework which provides
     a User Interface to your app for dealing with CTS API.
 
@@ -45,7 +50,7 @@ class Nemo(object):
 
     def __init__(self, app=None, api_url="/", base_url="/nemo", cache=None, expire=3600,
                  template_folder=None, static_folder=None, static_url_path=None,
-                 urls=None):
+                 urls=None, inventory=None):
         __doc__ = Nemo.__doc__
         self.prefix = base_url
         self.api_url = api_url
@@ -58,7 +63,7 @@ class Nemo(object):
             self.app = None
 
         self.api_url = ""
-        self.api_inventory = None
+        self.api_inventory = inventory
         self.cache = None
         if cache is not None:
             self.__register_cache(cache, expire)
@@ -83,6 +88,11 @@ class Nemo(object):
             self._urls = urls
         else:
             self._urls = Nemo.ROUTES
+
+        self._filters = [
+            "f_active_link",
+            "f_collection_i18n"
+        ]
 
     def __register_cache(self, sqlite_path, expire):
         """ Set up a request cache
@@ -120,7 +130,10 @@ class Nemo(object):
         :return: A set of CTS Namespaces
         :rtype: set(str)
         """
-        urns = set([textgroup.urn["cts_namespace"] for textgroup in self.get_inventory().textgroups])
+        inventory = self.get_inventory()
+        urns = set(
+            [inventory.textgroups[textgroup].urn[2] for textgroup in inventory.textgroups]
+        )
         return urns
 
     def get_textgroups(self, collection=None):
@@ -224,7 +237,7 @@ class Nemo(object):
         return item.urn[part_of_urn].lower() == query.lower().strip()
 
     def r_index(self):
-        return render_template(self.templates["index"])
+        return self.render(self.templates["index"])
 
     def create_blueprint(self):
         """  Register routes on app
@@ -250,6 +263,11 @@ class Nemo(object):
 
         return self.blueprint
 
+    def render(self, template, **kwargs):
+        kwargs["collections"] = self.get_collections()
+
+        return render_template(template, **kwargs)
+
     def register_routes(self):
         """ Register routes on app using Blueprint
 
@@ -257,3 +275,25 @@ class Nemo(object):
         """
         if self.app is not None:
             self.app.register_blueprint(self.create_blueprint())
+
+    def register_filters(self):
+        """ Register filters for Jinja to use
+
+        Extends the dictionary filters
+        """
+        for _filter in self._filters:
+            self.app.jinja_env.filters[
+                _filter.replace("f_", "")
+            ] = getattr(self.__class__, _filter)
+
+    @staticmethod
+    def f_active_link(string):
+        if string in request.path:
+            return "active"
+        return ""
+
+    @staticmethod
+    def f_collection_i18n(string):
+        if string in Nemo.COLLECTIONS:
+            return Nemo.COLLECTIONS[string]
+        return string

@@ -12,9 +12,11 @@ app = Flask(
 nemo = Nemo(
     app=app,
     api_url="http://localhost:8080/exist/restxq/cts",
-    base_url="/"
+    base_url="/",
+    inventory="latin"
 )
 nemo.register_routes()
+nemo.register_filters()
 # We run the app
 app.debug = True
 app.run()
