@@ -9,7 +9,7 @@
 
     <!-- Bootstrap --><!-- Latest compiled and minified CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/css/theme.min.css">
+    <link rel="stylesheet" href="{{url_for('static', filename='css/theme.min.css')}}">
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -20,46 +20,14 @@
   </head>
   <body>
     <nav class="col-md-2" id="menu-container">
-        <div class="logo-container">
-            <img class="logo" src="/images/nemo.png" alt="Capitains Nemo" />
-        </div>
-        <header>
-            <span class="content">Collection
-            </span>
-        </header>
-        <ul class="menu no-max">
-            <li><a class="active">Greek</a></li>
-            <li><a>Latin</a></li>
-            <li><a>Ancient French</a></li>
-            <li><a>Farsi</a></li>
-        </ul>
-
+      {% include "menu.html" %}
     </nav>
     <div class="col-md-10" id="reading-container">
         <nav id="breadcrumb">
             Home / Cicero / Against Catiline / 1.1
         </nav>
-        <article class="nav">
-            <head><h1>Author</h1></head>
-            <section class="row">
-                <nav>
-                    <div><a>Antiphon</a></div>
-                    <div><a>Aristophanes</a></div>
-                    <div><a>Aristotle</a></div>
-                    <div><a>Athenaeus</a></div>
-                    <div><a>Augustus Emperor of Rome 63 B.C.-14 A.D.</a></div>
-                    <div><a>Cicero</a></div>
-                    <div><a>Diodorus Siculus</a></div>
-                    <div><a>Euclid</a></div>
-                    <div><a>Euripides</a></div>
-                    <div><a>Herodotus</a></div>
-                    <div><a>Hesiod</a></div>
-                    <div><a>Homeric Hymns</a></div>
-                    <div><a>Homeric Poems</a></div>
-                    <div><a>Lucan</a></div>
-                </nav>
-            </section>
-        </article>
+          {% block article %}
+          {% endblock %}
     </div>
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->

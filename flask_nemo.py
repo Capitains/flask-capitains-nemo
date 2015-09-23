@@ -8,7 +8,8 @@
 
 __version__ = "0.0.1"
 
-from flask import request
+import os.path as op
+from flask import request, render_template, Blueprint, current_app
 import MyCapytain.endpoints.cts5
 import MyCapytain.resources.texts.tei
 import MyCapytain.resources.inventory
@@ -17,6 +18,16 @@ import requests_cache
 
 
 class Nemo(object):
+    ROUTES = [
+        ("/", "r_index", ["GET"])
+    ]
+    TEMPLATES = {
+        "container": "container.html",
+        "menu": "menu.html",
+        "text": "text.html",
+        "authors": "authors.html",
+        "index": "index.html"
+    }
     """ Nemo is an extension for Flask python micro-framework which provides
     a User Interface to your app for dealing with CTS API.
 
@@ -32,12 +43,14 @@ class Nemo(object):
     :type base_url: int
     """
 
-    def __init__(self, app=None, api_url="/", base_url="/nemo", cache=None, expire=3600):
+    def __init__(self, app=None, api_url="/", base_url="/nemo", cache=None, expire=3600,
+                 template_folder=None, static_folder=None, static_url_path=None,
+                 urls=None):
         __doc__ = Nemo.__doc__
-        self.base_url = base_url
+        self.prefix = base_url
         self.api_url = api_url
         self.endpoint = MyCapytain.endpoints.cts5.CTS(self.api_url)
-
+        self.templates = Nemo.TEMPLATES
         if app is not None:
             self.app = app
             self.init_app(self.app)
@@ -49,6 +62,27 @@ class Nemo(object):
         self.cache = None
         if cache is not None:
             self.__register_cache(cache, expire)
+
+        if template_folder:
+            self.template_folder = template_folder
+        else:
+            self.template_folder = op.join('data', 'templates')
+
+        if static_folder:
+            self.static_folder = static_folder
+        else:
+            self.static_folder = op.join('data', 'static')
+
+        if static_url_path:
+            self.static_url_path = static_url_path
+        else:
+            self.static_url_path = "/assets/nemo"
+        self.blueprint = None
+
+        if urls:
+            self._urls = urls
+        else:
+            self._urls = Nemo.ROUTES
 
     def __register_cache(self, sqlite_path, expire):
         """ Set up a request cache
@@ -63,7 +97,8 @@ class Nemo(object):
         )
 
     def init_app(self, app):
-        self.api_url = app.config['CTS_API_URL']
+        if "CTS_API_URL" in app.config:
+            self.api_url = app.config['CTS_API_URL']
         if "CTS_API_INVENTORY" in app.config:
             self.api_inventory = app.config['CTS_API_INVENTORY']
 
@@ -188,3 +223,37 @@ class Nemo(object):
         """
         return item.urn[part_of_urn].lower() == query.lower().strip()
 
+    def r_index(self):
+        return render_template(self.templates["index"])
+
+    def create_blueprint(self):
+        """  Register routes on app
+
+        :return: None
+        """
+        # Create blueprint and register rules
+        self.blueprint = Blueprint(
+            self.endpoint,
+            __name__,
+            url_prefix=self.prefix,
+            template_folder=self.template_folder,
+            static_folder=self.static_folder,
+            static_url_path=self.static_url_path
+        )
+        for url, name, methods in self._urls:
+            self.blueprint.add_url_rule(
+                url,
+                name,
+                getattr(self, name),
+                methods=methods
+            )
+
+        return self.blueprint
+
+    def register_routes(self):
+        """ Register routes on app using Blueprint
+
+        :return:
+        """
+        if self.app is not None:
+            self.app.register_blueprint(self.create_blueprint())
