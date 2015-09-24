@@ -19,14 +19,17 @@ import requests_cache
 
 class Nemo(object):
     ROUTES = [
-        ("/", "r_index", ["GET"])
+        ("/", "r_index", ["GET"]),
+        ("/<collection>", "r_collection", ["GET"]),
+        ("/<collection>/<textgroup>", "r_texts", ["GET"])
     ]
     TEMPLATES = {
         "container": "container.html",
         "menu": "menu.html",
         "text": "text.html",
-        "authors": "authors.html",
-        "index": "index.html"
+        "textgroups": "textgroups.html",
+        "index": "index.html",
+        "texts": "texts.html"
     }
     COLLECTIONS = {
         "latinLit": "Latin",
@@ -76,7 +79,7 @@ class Nemo(object):
         if static_folder:
             self.static_folder = static_folder
         else:
-            self.static_folder = op.join('data', 'static')
+            self.static_folder = op.join('data', 'static')  # Not working
 
         if static_url_path:
             self.static_url_path = static_url_path
@@ -93,6 +96,8 @@ class Nemo(object):
             "f_active_link",
             "f_collection_i18n"
         ]
+        # Reusing self._inventory across requests
+        self._inventory = None
 
     def __register_cache(self, sqlite_path, expire):
         """ Set up a request cache
@@ -121,8 +126,13 @@ class Nemo(object):
         :return: The text inventory
         :rtype: MyCapytain.resources.inventory.TextInventory
         """
+        if self._inventory:
+            return self._inventory
+
         reply = self.endpoint.getCapabilities(inventory=self.api_inventory)
-        return MyCapytain.resources.inventory.TextInventory(resource=reply)
+        inventory = MyCapytain.resources.inventory.TextInventory(resource=reply)
+        self._inventory = inventory
+        return self._inventory
 
     def get_collections(self):
         """ Filter inventory and make a list of available collections
@@ -190,6 +200,12 @@ class Nemo(object):
                 return work[0].texts.values()
             else:
                 return []
+        elif collection_urn is not None and textgroup_urn is not None and work_urn is None:
+            return [
+                text
+                for work in self.get_works(collection_urn, textgroup_urn)
+                for text in work.texts.values()
+            ]
         elif collection_urn is None and textgroup_urn is None and work_urn is None:
             return [
                 text
@@ -237,7 +253,25 @@ class Nemo(object):
         return item.urn[part_of_urn].lower() == query.lower().strip()
 
     def r_index(self):
-        return self.render(self.templates["index"])
+        """ Index route function
+        """
+        return {"template": self.templates["index"]}
+
+    def r_collection(self, collection):
+        """ Author selection function
+        """
+        return {
+            "template": self.templates["textgroups"],
+            "textgroups": self.get_textgroups(collection)
+        }
+
+    def r_texts(self, collection, textgroup):
+        """ Author selection function
+        """
+        return {
+            "template": self.templates["texts"],
+            "texts": self.get_texts(collection, textgroup)
+        }
 
     def create_blueprint(self):
         """  Register routes on app
@@ -246,27 +280,52 @@ class Nemo(object):
         """
         # Create blueprint and register rules
         self.blueprint = Blueprint(
-            self.endpoint,
-            __name__,
+            "nemo",
+            "nemo",
             url_prefix=self.prefix,
             template_folder=self.template_folder,
             static_folder=self.static_folder,
             static_url_path=self.static_url_path
         )
+
         for url, name, methods in self._urls:
             self.blueprint.add_url_rule(
                 url,
-                name,
-                getattr(self, name),
+                view_func=self.view_maker(name),
+                endpoint=name,
                 methods=methods
             )
 
         return self.blueprint
 
+    def view_maker(self, name):
+        """ Create a view
+        :param name:
+        :return:
+        """
+        return lambda **kwargs: self.route(getattr(self, name), **kwargs)
+
     def render(self, template, **kwargs):
         kwargs["collections"] = self.get_collections()
+        kwargs["lang"] = "eng"
+
+        if Nemo.in_and_not_int("textgroup", "textgroups", kwargs):
+            kwargs["textgroups"] = self.get_textgroups(kwargs["url"]["collection"])
+
+        if Nemo.in_and_not_int("text", "texts", kwargs):
+            kwargs["texts"] = self.get_texts(kwargs["url"]["collection"], kwargs["url"]["textgroup"])
 
         return render_template(template, **kwargs)
+
+    def route(self, fn, **kwargs):
+        """ return a routes
+        :param fn: Function to run the route with
+        :param kwargs:
+        :return:
+        """
+        new_kwargs = fn(**kwargs)
+        new_kwargs["url"] = kwargs
+        return self.render(**new_kwargs)
 
     def register_routes(self):
         """ Register routes on app using Blueprint
@@ -287,7 +346,19 @@ class Nemo(object):
             ] = getattr(self.__class__, _filter)
 
     @staticmethod
+    def in_and_not_int(identifier, collection, kwargs):
+        """ Check if an element identified by identifier is in kwargs but not the collection containing it
+        :param identifier:
+        :param collection:
+        :param kwargs:
+        :return:
+        :rtype: bool
+        """
+        return identifier in kwargs["url"] and collection not in kwargs
+
+    @staticmethod
     def f_active_link(string):
+        print(string)
         if string in request.path:
             return "active"
         return ""

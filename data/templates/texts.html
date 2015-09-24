@@ -1,0 +1,14 @@
+{% extends "container.html" %}
+
+{% block article %}
+<article>
+    <head><h1>Texts</h1></head>
+    <section>
+        <ul class="row">
+            {% for text in texts %}
+                <li><a>{{ text.metadata['label'][lang] }}</a><br />{{text.metadata['description'][lang] }}</li>
+            {% endfor %}
+        </ul>
+    </section>
+</article>
+{% endblock %}

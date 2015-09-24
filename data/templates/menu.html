@@ -1,14 +1,15 @@
 <div class="logo-container">
-    <img class="logo" src="{{url_for('static', filename='images/nemo.png')}} " alt="Capitains Nemo" />
+    <img class="logo" src="{{url_for('nemo.static', filename='images/nemo.png')}} " alt="Capitains Nemo" />
 </div>
 <header>
     <span class="content">Collection
 </header>
 <ul class="menu">
     {% for collection in collections %}
-        <li><a class="{{collection|active_link}}" href="">{{collection|collection_i18n}}</a></li>
+        <li><a class="{{collection|active_link}}" href="{{url_for('nemo.r_collection', collection=collection)}}">{{collection|collection_i18n}}</a></li>
     {% endfor %}
 </ul>
+{% if textgroups %}
 <header>
     <span class="content">Authors
         <div class="icon">
@@ -22,22 +23,13 @@
     </div>
 </header>
 <ul class="menu">
-    <li><a class="active">Cicero</a></li>
-    <li><a>Antiphon</a></li>
-    <li><a>Aristophanes</a></li>
-    <li><a>Aristotle</a></li>
-    <li><a>Athenaeus</a></li>
-    <li><a>Augustus Emperor of Rome 63 B.C.-14 A.D.</a></li>
-    <li><a>Diodorus Siculus</a></li>
-    <li><a>Euclid</a></li>
-    <li><a>Euripides</a></li>
-    <li><a>Herodotus</a></li>
-    <li><a>Hesiod</a></li>
-    <li><a>Homeric Hymns</a></li>
-    <li><a>Homeric Poems</a></li>
-    <li><a>Lucan</a></li>
+    {% for textgroup in textgroups %}
+        <li><a class="{{textgroup.urn[3]|active_link}}" href="{{url_for('nemo.r_texts', collection=textgroup.urn[2], textgroup=textgroup.urn[3])}}">{{textgroup.metadata['groupname'][lang]}}</a></li>
+    {% endfor %}
 </ul>
+{% endif %}
 
+{% if work %}
 <header>
     <span class="content">Texts</span>
 </header>
@@ -46,3 +38,4 @@
     <li><a>Oratore</a></li>
     <li><a>De oratore</a></li>
 </ul>
+{% endif %}
