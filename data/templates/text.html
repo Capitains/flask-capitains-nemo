@@ -1,13 +1,19 @@
+{% extends "container.html" %}
+
+{% block article %}
 <article>
     <header>
-        <h1>Against Catiline</h1>
-        <h2>Cicero</h2>
+        <h1>{{version.parents[0].metadata["title"][lang]}}</h1>
+        <h2>{{version.parents[1].metadata["groupname"][lang]}}</h2>
+        <p><small><i>{{version.metadata["description"][lang]}}</i></small></p>
     </header>
     <section>
-        <p><span class="reference">1.1</span> quo usque tandem abutere, Catilina, patientia nostra? quam diu etiam furor iste tuus nos [1] eludet? quem ad finem sese effrenata iactabit audacia? nihilne te nocturnum praesidium Palati, nihil urbis vigiliae, nihil timor populi, nihil concursus bonorum omnium, nihil hic munitissimus habendi senatus locus, nihil horum ora voltusque moverunt? patere tua consilia non sentis, constrictam iam horum omnium scientia teneri coniurationem tuam [2] non vides? quid proxima, quid superiore nocte egeris, ubi fueris, quos convocaveris, quid consili ceperis quem nostrum ignorare arbitraris? O tempora, o mores! senatus haec intellegit, consul videt; hic tamen vivit. vivit? immo vero etiam in senatum venit, fit publici consili particeps, notat et designat oculis ad caedem unum quemque nostrum. nos autem fortes viri satis facere rei publicae videmur, si istius furorem ac tela vitamus [3] . ad mortem te, Catilina, duci iussu consulis iam pridem oportebat, in te conferri pestem [4] quam tu in nos [5] omnis iam diu [6] machinaris. an vero vir amplissimus, P. Scipio, pontifex maximus, Ti. Gracchum mediocriter labefactantem statum rei publicae privatus interfecit: Catilinam [7] orbem terrae caede atque incendiis vastare cupientem nos consules perferemus [8] ? nam illa nimis antiqua praetereo, quod [9] C. Servilius Ahala Sp. Maelium novis rebus studentem manu sua occidit. fuit, fuit ista quondam in hac re publica virtus ut viri fortes acrioribus suppliciis civem perniciosum quam acerbissimum hostem coercerent. habemus [10] senatus consultum in te, Catilina, vehemens et grave [11] , non deest rei publicae consilium neque auctoritas huius ordinis: nos, nos, dico aperte, consules desumus.
-        </p>
+        <!--<p><span class="reference">1.1</span> quo usque tandem abutere, Catilina, patientia nostra? quam diu etiam furor iste tuus nos [1] eludet? quem ad finem sese effrenata iactabit audacia? nihilne te nocturnum praesidium Palati, nihil urbis vigiliae, nihil timor populi, nihil concursus bonorum omnium, nihil hic munitissimus habendi senatus locus, nihil horum ora voltusque moverunt? patere tua consilia non sentis, constrictam iam horum omnium scientia teneri coniurationem tuam [2] non vides? quid proxima, quid superiore nocte egeris, ubi fueris, quos convocaveris, quid consili ceperis quem nostrum ignorare arbitraris? O tempora, o mores! senatus haec intellegit, consul videt; hic tamen vivit. vivit? immo vero etiam in senatum venit, fit publici consili particeps, notat et designat oculis ad caedem unum quemque nostrum. nos autem fortes viri satis facere rei publicae videmur, si istius furorem ac tela vitamus [3] . ad mortem te, Catilina, duci iussu consulis iam pridem oportebat, in te conferri pestem [4] quam tu in nos [5] omnis iam diu [6] machinaris. an vero vir amplissimus, P. Scipio, pontifex maximus, Ti. Gracchum mediocriter labefactantem statum rei publicae privatus interfecit: Catilinam [7] orbem terrae caede atque incendiis vastare cupientem nos consules perferemus [8] ? nam illa nimis antiqua praetereo, quod [9] C. Servilius Ahala Sp. Maelium novis rebus studentem manu sua occidit. fuit, fuit ista quondam in hac re publica virtus ut viri fortes acrioribus suppliciis civem perniciosum quam acerbissimum hostem coercerent. habemus [10] senatus consultum in te, Catilina, vehemens et grave [11] , non deest rei publicae consilium neque auctoritas huius ordinis: nos, nos, dico aperte, consules desumus.
+        </p>-->
+        {{ text_passage }}
     </section>
     <footer>
 
     </footer>
 </article>
+{% endblock %}

@@ -30,6 +30,7 @@ class NemoTest(unittest.TestCase):
         """ Testing Flask Nemo is set up"""
         a = Nemo()
         self.assertIsInstance(a, Nemo)
+        a = Nemo()
 
     def test_inventory_request(self):
         """ Check that endpoint are derived from nemo.api_endpoint setting

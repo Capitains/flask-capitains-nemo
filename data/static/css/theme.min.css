@@ -121,6 +121,9 @@ ul.menu li a.active {
     -o-box-shadow: 1px 2px 0px 0px #656565;
     box-shadow: 1px 2px 0px 0px #656565;
 }
+#reading-container article.reffs {
+    max-width:90%;
+}
 #reading-container h2 {
     font-size: 1.618em;
     margin:0 0 1em 0;
@@ -147,6 +150,27 @@ ul.menu li a.active {
     margin:0.5% 1%;
     height:2.4em;
     padding:0.2em 0.5em;
+    line-height: 2em;
+    text-align: center;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    background-color: white;
+
+    -moz-box-shadow: 1px 2px 0px 0px #656565;
+    -webkit-box-shadow: 1px 2px 0px 0px #656565;
+    -o-box-shadow: 1px 2px 0px 0px #656565;
+    box-shadow: 1px 2px 0px 0px #656565;
+}
+ul.reffs {
+    list-style:none;
+}
+ul.reffs > li {
+    display: inline-block;
+    height:2.4em;
+    padding:0.2em 0.5em;
+    margin:3px;
     line-height: 2em;
     text-align: center;
 
