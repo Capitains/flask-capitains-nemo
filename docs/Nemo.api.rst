@@ -1,7 +1,8 @@
 Nemo API
 =================================
 
-.. automodule:: Flask.ext.nemo.Nemo
+.. automodule:: flask.ext.nemo
     :members:
-    :undoc-members:
-    :show-inheritance:
+
+    .. autoclass:: flask.ext.nemo.Nemo
+        :members:
