@@ -10,7 +10,7 @@ app = Flask(
 chunker = {
     # The default chunker takes care of book, poem, lines
     # but it would be cool to have 30 lines group for Nemo
-    "urn:cts:latinLit:phi1294.phi002.perseus-lat2": lambda text, cb: [reff.split(":")[-1] for reff in cb(2)],
+    "urn:cts:latinLit:phi1294.phi002.perseus-lat2": lambda text, cb: [(reff.split(":")[-1], reff.split(":")[-1]) for reff in cb(2)],
     "default": Nemo.scheme_chunker  # lambda text, cb: Nemo.line_grouper(text, cb, 50)
 }
 # We set up Nemo

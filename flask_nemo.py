@@ -628,11 +628,11 @@ class Nemo(object):
         :param getreffs: callback function which retrieves a list of references
         :type getreffs: function
 
-        :return: list of subereferences
-        :rtype:[str]
+        :return: List of urn references with their human readable version
+        :rtype: [(str, str)]
         """
         level = len(text.citation)
-        return [reff.split(":")[-1] for reff in getreffs(level=level)]
+        return [tuple([reff.split(":")[-1]]*2) for reff in getreffs(level=level)]
 
     @staticmethod
     def scheme_chunker(text, getreffs):
@@ -643,8 +643,8 @@ class Nemo(object):
         :param getreffs: callback function which retrieves a list of references
         :type getreffs: function
 
-        :return: list of subereferences
-        :rtype:[str]
+        :return: List of urn references with their human readable version
+        :rtype: [(str, str)]
         """
         # print(text)
         level = len(text.citation)
@@ -652,11 +652,11 @@ class Nemo(object):
         if types == ["book", "poem", "line"]:
             level = 2
         elif types == ["book", "lines"]:
-            return Nemo.line_grouper(text, getreffs)
-        return [reff.split(":")[-1] for reff in getreffs(level=level)]
+            return Nemo.line_chunker(text, getreffs)
+        return [tuple([reff.split(":")[-1]]*2) for reff in getreffs(level=level)]
 
     @staticmethod
-    def line_grouper(text, getreffs, lines=30):
+    def line_chunker(text, getreffs, lines=30):
         """ Groups line reference together
 
         :param text: Text object
@@ -665,14 +665,14 @@ class Nemo(object):
         :type getreffs: function(level)
         :param lines: Number of lines to use by group
         :type lines: int
-        :return: List of grouped urn references
-        :rtype: [str]
+        :return: List of grouped urn references with their human readable version
+        :rtype: [(str, str)]
         """
         level = len(text.citation)
         source_reffs = [reff.split(":")[-1] for reff in getreffs(level=level)]
         reffs = []
         i = 0
         while i + lines - 1 < len(source_reffs):
-            reffs.append(source_reffs[i]+"-"+source_reffs[i+lines-1])
+            reffs.append(tuple(source_reffs[i]+"-"+source_reffs[i+lines-1], source_reffs[i]))
             i += lines
         return reffs
