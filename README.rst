@@ -1,6 +1,7 @@
 
-`.. image:: https://readthedocs.org/projects/flask-capitains-nemo/badge/?version=latest <http://flask-capitains-nemo.readthedocs.org>`_
+.. image:: https://readthedocs.org/projects/flask-capitains-nemo/badge/?version=latest
     :alt: Documentation
+    :target: http://flask-capitains-nemo.readthedocs.org
 
 Capitains Nemo is an User Interface built around the need to make CTS a easy to use, human readable standard for texts. 
 Capitains Nemo counts multiple language implementation, including this one in Python for Flask. Presentend as a classic Flask
