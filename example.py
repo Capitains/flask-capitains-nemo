@@ -19,7 +19,8 @@ nemo = Nemo(
     api_url="http://services2.perseids.org/exist/restxq/cts",
     base_url="",
     inventory="nemo",
-    xslt=None,  # Use default epidoc XSLT
+    xslt="/home/thibault/Dropbox/Thèse/corpus/xsl/viz-ms1.xsl",  # Use default epidoc XSLT
+    css=["/home/thibault/dev/capitains/flask-capitains-nemo/examples/ciham.css"],
     chunker=chunker
 )
 nemo.register_routes()

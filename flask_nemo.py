@@ -67,11 +67,13 @@ class Nemo(object):
     :type xslt: bool|str
     :param chunker: Dictionary of function to group responses of GetValidReff
     :type chunker: {str: function(str, function(int))}
+    :param css: Path to additional stylesheets to load
+    :type css: [str]
     """
 
     def __init__(self, app=None, api_url="/", base_url="/nemo", cache=None, expire=3600,
                  template_folder=None, static_folder=None, static_url_path=None,
-                 urls=None, inventory=None, xslt=None, chunker=None):
+                 urls=None, inventory=None, xslt=None, chunker=None, css=None):
         __doc__ = Nemo.__doc__
         self.prefix = base_url
         self.api_url = api_url
@@ -124,7 +126,7 @@ class Nemo(object):
         if xslt is True:
             xml = etree.parse(op.join("data", "epidoc", "full.xsl"))
             self.xslt =etree.XSLT(xml)
-        elif self.xslt:
+        elif xslt:
             xml = etree.parse(xslt)
             self.xslt =etree.XSLT(xml)
 
@@ -132,6 +134,10 @@ class Nemo(object):
         self.chunker["default"] = Nemo.default_chunker
         if isinstance(chunker, dict):
             self.chunker.update(chunker)
+
+        self.css = []
+        if isinstance(css, list):
+            self.css = css
 
     def __register_cache(self, sqlite_path, expire):
         """ Set up a request cache
@@ -451,8 +457,10 @@ class Nemo(object):
         """
         text = self.get_passage(collection, textgroup, work, version, passage_identifier)
         if self.xslt:
-            passage = etree.tostring(self.xslt(text.xml))
+            print(self.xslt)
+            passage = etree.tostring(self.xslt(text.xml), encoding=str)
         else:
+            print(self.xslt)
             passage = etree.tostring(text.xml, encoding=str)
 
         version = self.get_text(collection, textgroup, work, version)
@@ -515,6 +523,8 @@ class Nemo(object):
 
             if Nemo.in_and_not_int("text", "texts", kwargs):
                 kwargs["texts"] = self.get_texts(kwargs["url"]["collection"], kwargs["url"]["textgroup"])
+
+        kwargs["csses"] = self.css
 
         return render_template(template, **kwargs)
 

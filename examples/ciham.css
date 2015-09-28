@@ -1,0 +1,59 @@
+/* mise en forme des span pour un affichage normalisé*/
+span.reg {
+  display: none;
+}
+span.expan {
+  display: none;
+}
+
+/* mise en forme position du texte et effets de caractères */
+span.above {
+  vertical-align: 15px;
+  font-size: 90%;
+  color: #000000;
+}
+span.below {
+  vertical-align: -15px;
+  font-size: 90%;
+  color: #000000;
+}
+span.decorated-initial {
+  color: red;
+  font-size: 150%;
+}
+span.first-letter-capital {
+  text-transform: capitalize;
+}
+span.capital {
+  text-transform: uppercase;
+}
+span.underline {
+  text-decoration: underline;
+}
+span.rubricated {
+  color: red;
+}
+span.smaller {
+  font-size: 80%;
+}
+span.bigger {
+  font-size: 120%;
+}
+span.widder {
+  word-spacing: 20px;
+}
+span.overstrike {
+  text-decoration: line-through;
+}
+span.exponct {
+  border-bottom: thick dotted;
+}
+span.norm {
+  text-decoration: none;
+  word-spacing: none;
+  font-size: 100%;
+  color: black;
+  vertical-align: 0;
+  text-transform: none;
+  border: 0;
+}
