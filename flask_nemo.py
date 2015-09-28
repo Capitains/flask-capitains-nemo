@@ -83,7 +83,7 @@ class Nemo(object):
 
     def __init__(self, app=None, api_url="/", base_url="/nemo", cache=None, expire=3600,
                  template_folder=None, static_folder=None, static_url_path=None,
-                 urls=None, inventory=None, xslt=None, chunker=None,
+                 urls=None, inventory=None, xslt=None, chunker=None, prevnext=None,
                  css=None, js=None, templates=None):
         __doc__ = Nemo.__doc__
         self.prefix = base_url
@@ -148,6 +148,11 @@ class Nemo(object):
         self.chunker["default"] = Nemo.default_chunker
         if isinstance(chunker, dict):
             self.chunker.update(chunker)
+
+        self.prevnext = {}
+        self.prevnext["default"] = Nemo.default_prevnext
+        if isinstance(prevnext, dict):
+            self.prevnext.update(prevnext)
 
         self.css = []
         if isinstance(css, list):
@@ -501,10 +506,14 @@ class Nemo(object):
         passage = self.xslt(text.xml)
 
         version = self.get_text(collection, textgroup, work, version)
+
+        prev, next = self.getprevnext(text, Nemo.prevnext_callback_generator(text))
         return {
             "template": self.templates["text"],
             "version": version,
-            "text_passage": Markup(passage)
+            "text_passage": Markup(passage),
+            "prev": prev,
+            "next": next
         }
 
     def r_assets(self, type, asset):
@@ -659,6 +668,20 @@ class Nemo(object):
             return self.chunker[str(text.urn)](text, reffs)
         return self.chunker["default"](text, reffs)
 
+    def getprevnext(self, passage, callback):
+        """ Retrieve previous and next passage using
+
+        :param text: Text object from which comes the references
+        :type text: MyCapytains.resources.texts.api.Passage
+        :param reffs: Callback function to retrieve a tuple where first element is the previous passage, and second the next
+        :type reffs: callback()
+        :return: Reference of previous passage, reference of next passage
+        :rtype: (str, str)
+        """
+        if str(passage.urn) in self.prevnext:
+            return self.prevnext[str(passage.urn)](passage, callback)
+        return self.prevnext["default"](passage, callback)
+
     @staticmethod
     def in_and_not_int(identifier, collection, kwargs):
         """ Check if an element identified by identifier is in kwargs but not the collection containing it
@@ -767,3 +790,41 @@ class Nemo(object):
             reffs.append(tuple(source_reffs[i]+"-"+source_reffs[i+lines-1], source_reffs[i]))
             i += lines
         return reffs
+
+    @staticmethod
+    def default_prevnext(passage, callback):
+        """ Default deliver of prevnext informations
+
+        :param passage: Passage for which to get previous and following reference
+        :type passage: MyCapytains.resources.texts.api.Passage
+        :param callback: Function to retrieve those information
+        :type callback: function
+
+        :return: Tuple representing previous and following reference
+        :rtype: (str, str)
+        """
+        previous, following = passage._next, passage._prev
+
+        if previous is None and following is None:
+            previous, following = callback()
+
+        if previous is not None:
+            previous = previous.split(":")[-1]
+        if following is not None:
+            following = following.split(":")[-1]
+        return previous, following
+
+    @staticmethod
+    def prevnext_callback_generator(passage):
+        """ Default callback generator to retrieve prev and next value of a passage
+
+        :param passage: Passage for which to get previous and following reference
+        :type passage: MyCapytains.resources.texts.api.Passage
+        :return: Function to retrieve those information
+        :rtype: function
+        """
+        def callback():
+            return MyCapytain.resources.texts.api.Passage.prevnext(
+                passage.parent.resource.getPrevNextUrn(urn=str(passage.urn))
+            )
+        return callback

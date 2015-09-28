@@ -68,7 +68,7 @@ which is a readable version of this citation node.
 >>>     reffs = [urn.split(":")[-1] for urn in getValidReff(level=2)]
 >>>     # Satura scheme contains three level (book, poem, lines) but only the Satura number is sequential
 >>>     # So as human readable, we give only the second member of the reference body
->>>     return [(reff, "Satura {0}".format(reff.split(".")[-1])) for reff in reffs]
+>>>     return [(reff, "Satura {0}".format(reff.split(".")[-1])) for reff in reffs]1
 
 Available chunkers
 ***************
