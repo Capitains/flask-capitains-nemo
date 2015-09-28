@@ -9,7 +9,12 @@ configs = {
         "inventory": "nemo",
         "xslt": "examples/ciham.xslt",  # Use default epidoc XSLT
         "css": [
+            # USE Own CSS
             "examples/ciham.css"
+        ],
+        "js": [
+            # use own js file to load a script to go from normalized edition to diplomatic one.
+            "examples/ciham.js"
         ]
     },
     "default": {
@@ -21,6 +26,10 @@ configs = {
             # but it would be cool to have 30 lines group for Nemo
             "urn:cts:latinLit:phi1294.phi002.perseus-lat2": lambda text, cb: [(reff.split(":")[-1], reff.split(":")[-1]) for reff in cb(2)],
             "default": Nemo.scheme_chunker  # lambda text, cb: Nemo.line_grouper(text, cb, 50)
-        }
+        },
+        "css" : [
+            # Use teibp from default nemo configuration
+            "examples/tei.pb.min.css"
+        ]
     }
 }

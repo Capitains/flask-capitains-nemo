@@ -9,13 +9,14 @@
 __version__ = "0.0.1"
 
 import os.path as op
-from flask import request, render_template, Blueprint, abort, Markup
+from flask import request, render_template, Blueprint, abort, Markup, send_from_directory
 import MyCapytain.endpoints.cts5
 import MyCapytain.resources.texts.tei
 import MyCapytain.resources.texts.api
 import MyCapytain.resources.inventory
 from lxml import etree
 import requests_cache
+from collections import OrderedDict
 
 
 class Nemo(object):
@@ -69,11 +70,17 @@ class Nemo(object):
     :type chunker: {str: function(str, function(int))}
     :param css: Path to additional stylesheets to load
     :type css: [str]
+    :param css: Path to additional javascripts to load
+    :type css: [str]
+
+    .. warning:: Until a C libxslt error is fixed ( https://bugzilla.gnome.org/show_bug.cgi?id=620102 ), it is not possible to use strip tags in the xslt given to this application
+
     """
 
     def __init__(self, app=None, api_url="/", base_url="/nemo", cache=None, expire=3600,
                  template_folder=None, static_folder=None, static_url_path=None,
-                 urls=None, inventory=None, xslt=None, chunker=None, css=None):
+                 urls=None, inventory=None, xslt=None, chunker=None,
+                 css=None, js=None):
         __doc__ = Nemo.__doc__
         self.prefix = base_url
         self.api_url = api_url
@@ -121,14 +128,12 @@ class Nemo(object):
         ]
         # Reusing self._inventory across requests
         self._inventory = None
-        self.xslt = None
+        self.__xslt = None
 
         if xslt is True:
-            xml = etree.parse(op.join("data", "epidoc", "full.xsl"))
-            self.xslt =etree.XSLT(xml)
+            self.__xslt = op.join("data", "epidoc", "full.xsl")
         elif xslt:
-            xml = etree.parse(xslt)
-            self.xslt =etree.XSLT(xml)
+            self.__xslt = xslt
 
         self.chunker = {}
         self.chunker["default"] = Nemo.default_chunker
@@ -138,6 +143,15 @@ class Nemo(object):
         self.css = []
         if isinstance(css, list):
             self.css = css
+
+        self.js = []
+        if isinstance(js, list):
+            self.js = js
+
+        self.__assets = {
+            "js" : OrderedDict(),
+            "css": OrderedDict()
+        }
 
     def __register_cache(self, sqlite_path, expire):
         """ Set up a request cache
@@ -165,6 +179,21 @@ class Nemo(object):
             self.api_inventory = app.config['CTS_API_INVENTORY']
         if self.app is None:
             self.app = app
+
+    def xslt(self, input):
+        """ Transform input according to registered XSLT
+
+        .. note:: Due to XSLT not being able to be used twice, we rexsltise the xml at every call of xslt
+        .. warning:: Until a C libxslt error is fixed ( https://bugzilla.gnome.org/show_bug.cgi?id=620102 ), it is not possible to use strip tags in the xslt given to this application
+        :param input: XML to transform
+        :type input: etree._Element
+        :return: Transformed XML
+        :rtype: etree._Element
+        """
+        with open(self.__xslt) as f:
+            xslt = etree.XSLT(etree.parse(f))
+        return xslt(input)
+
 
     def get_inventory(self):
         """ Request the api endpoint to retrieve information about the inventory
@@ -456,11 +485,9 @@ class Nemo(object):
         ..todo:: Change text_passage to keep being lxml and make so self.render turn etree element to Markup.
         """
         text = self.get_passage(collection, textgroup, work, version, passage_identifier)
-        if self.xslt:
-            print(self.xslt)
+        if self.__xslt:
             passage = etree.tostring(self.xslt(text.xml), encoding=str)
         else:
-            print(self.xslt)
             passage = etree.tostring(text.xml, encoding=str)
 
         version = self.get_text(collection, textgroup, work, version)
@@ -469,6 +496,37 @@ class Nemo(object):
             "version": version,
             "text_passage": Markup(passage)
         }
+
+    def r_assets(self, type, asset):
+        """ Route for specific assets.
+
+        :param asset: Filename of an asset
+        :return: Response
+        """
+        if type in self.__assets and asset in self.__assets[type]:
+            return send_from_directory(directory=self.__assets[type][asset], filename=asset)
+        abort(404)
+
+    def __register_assets(self):
+        """ Merge and register assets, both as routes and dictionary
+
+        :return: None
+        """
+        # Save assets routes
+        for css in self.css:
+            directory, filename = op.split(css)
+            self.__assets["css"][filename] = directory
+        for js in self.js:
+            directory, filename = op.split(js)
+            self.__assets["js"][filename] = directory
+
+        self.blueprint.add_url_rule(
+            # Register another path to ensure assets compatibility
+            "{0}.secondary/<type>/<asset>".format(self.static_url_path),
+            view_func=self.r_assets,
+            endpoint="secondary_assets",
+            methods=["GET"]
+        )
 
     def create_blueprint(self):
         """ Create blueprint and register rules
@@ -492,6 +550,8 @@ class Nemo(object):
                 endpoint=name,
                 methods=methods
             )
+
+        self.__register_assets()
 
         return self.blueprint
 
@@ -524,7 +584,7 @@ class Nemo(object):
             if Nemo.in_and_not_int("text", "texts", kwargs):
                 kwargs["texts"] = self.get_texts(kwargs["url"]["collection"], kwargs["url"]["textgroup"])
 
-        kwargs["csses"] = self.css
+        kwargs["assets"] = self.__assets
 
         return render_template(template, **kwargs)
 

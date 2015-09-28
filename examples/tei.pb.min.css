@@ -446,9 +446,9 @@ code {
   font-family: Courier,monospace;
 }
 /* jawalsh:
-For things like collation, condition, etc. that can have text or paragraphs as 
-children, we should use margins, when the content is text, and no margins when there 
-are child paragraphs (or other block elements). Otherwise we end up with double 
+For things like collation, condition, etc. that can have text or paragraphs as
+children, we should use margins, when the content is text, and no margins when there
+are child paragraphs (or other block elements). Otherwise we end up with double
 margins. */
 collation {
   display: block;
@@ -525,7 +525,7 @@ creation {
   /* Empty Rule Set */
 }
 /*jawalsh:
-Need to handle attributes for custEvent. All the att.datable* attributes will be tricky. 
+Need to handle attributes for custEvent. All the att.datable* attributes will be tricky.
 custodialHist and custEvent may normally be hidden along with other header metadata, but
 we'll have other datable elements that may be tricky. */
 custEvent {
@@ -879,7 +879,7 @@ list {
 item > list {
   margin-top: 0;
 }
-/* Match only lists that are descendants of 
+/* Match only lists that are descendants of
 text. Otherwise they show up in the header. */
 text list[type=simple] {
   list-style-type: none;
@@ -1375,9 +1375,9 @@ rs {
 }
 /*label*/
 /* s */
-/* When TEI document is embedded in HTML page, 
+/* When TEI document is embedded in HTML page,
    TEI's <s> element can be interpreted by
-   browser as HTML <s>, which results in 
+   browser as HTML <s>, which results in
    a strike-through from the "user agent"
    styles. */
 s {
@@ -1830,7 +1830,6 @@ zone {
   top: 0;
   width: 100%;
   height: 100%;
-  background-image: url("../images/transparentbg.png");
 }
 /* facsViewer */
 #resizable {

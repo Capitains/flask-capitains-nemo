@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
     xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tei="http://www.tei-c.org/ns/1.0"
-    exclude-result-prefixes="xs tei" version="2.0">
+    version="1.0">
 <!--
-    Author : Ariane Pinche, CIHAM, Universite Lyon 3
+    Author : Ariane Pinche
 -->
-    <xsl:strip-space elements="*"/>
     <xsl:output method="html" indent="yes" omit-xml-declaration="yes" encoding="UTF-8"/>
 
     <xsl:template match="/">
@@ -13,16 +12,26 @@
     </xsl:template>
 
     <xsl:template match="tei:body">
-        <xsl:apply-templates/>
-        <footer class="row">
-            <hr class="information-hr" title="notes de bas de page"/>
-            <div class="col-md-7 col-md-push-2">
-                <ul class="list-unstyled">
-                    <xsl:apply-templates select="//tei:text//tei:witDetail"
-                        mode="notesbasdepage"/>
-                </ul>
-            </div>
-        </footer>
+        <section>
+            <aside class="pull-right">
+                <div class="btn-group">
+                    <button type="button" class="btn btn-success" id="fac"
+                        >Facsimilaire</button>
+                    <button type="button" class="btn btn-default" id="reg"
+                        >Normalisée</button>
+                </div>
+            </aside>
+            <xsl:apply-templates/>
+            <footer class="row">
+                <hr class="information-hr" title="notes de bas de page"/>
+                <div class="col-md-7 col-md-push-2">
+                    <ul class="list-unstyled">
+                        <xsl:apply-templates select="//tei:text//tei:witDetail"
+                            mode="notesbasdepage"/>
+                    </ul>
+                </div>
+            </footer>
+        </section>
     </xsl:template>
 
 
@@ -37,9 +46,6 @@
             <xsl:apply-templates select="./tei:div"/>
        </xsl:element>
     </xsl:template>
-
-
-
 
 
     <xsl:template match="tei:l">
