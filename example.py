@@ -2,7 +2,7 @@
 # This script can take a first argument giving a configuration from examples.py
 from flask import Flask
 from flask.ext.nemo import Nemo
-from examples.configs import configs
+from examples.configs import configs, classes
 from sys import argv
 
 if __name__ == "__main__":
@@ -10,6 +10,7 @@ if __name__ == "__main__":
     key = "default"
     if len(argv) > 1 and argv[1] in configs:
         key = argv[1]
+        Nemo = classes[key]
 
     # We create a Flask app
     app = Flask(

@@ -49,7 +49,8 @@ Building your own : Structure, Parameters, Return Values
 ********************************************************
 
 A chunker should take always at least two positional arguments :
-- The first one will be the version, based on a MyCapytains.resources.inventory.Text class. It contains informations about t
+
+- The first one will be the version, based on a MyCapytains.resources.inventory.Text class. It contains informations about
     the citation scheme for example.
 - The second one is a callback function that the chunker can use to retrieve the valid references. This callback itself takes a parameters
     named level. This callback corresponds to a MyCapytains.resources.texts.api.getValidReff() method. It returns a list of string based urns.

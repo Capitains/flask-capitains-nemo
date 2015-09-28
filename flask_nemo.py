@@ -17,6 +17,8 @@ import MyCapytain.resources.inventory
 from lxml import etree
 import requests_cache
 from collections import OrderedDict
+import jinja2
+from copy import copy
 
 
 class Nemo(object):
@@ -70,8 +72,10 @@ class Nemo(object):
     :type chunker: {str: function(str, function(int))}
     :param css: Path to additional stylesheets to load
     :type css: [str]
-    :param css: Path to additional javascripts to load
-    :type css: [str]
+    :param js: Path to additional javascripts to load
+    :type js: [str]
+    :param templates: Register or override templates (Dictionary of index / path)
+    :type templates: {str: str}
 
     .. warning:: Until a C libxslt error is fixed ( https://bugzilla.gnome.org/show_bug.cgi?id=620102 ), it is not possible to use strip tags in the xslt given to this application
 
@@ -80,12 +84,17 @@ class Nemo(object):
     def __init__(self, app=None, api_url="/", base_url="/nemo", cache=None, expire=3600,
                  template_folder=None, static_folder=None, static_url_path=None,
                  urls=None, inventory=None, xslt=None, chunker=None,
-                 css=None, js=None):
+                 css=None, js=None, templates=None):
         __doc__ = Nemo.__doc__
         self.prefix = base_url
         self.api_url = api_url
         self.endpoint = MyCapytain.endpoints.cts5.CTS(self.api_url)
-        self.templates = Nemo.TEMPLATES
+
+        self.templates = copy(Nemo.TEMPLATES)
+        if isinstance(templates, dict):
+            self.templates.update(templates)
+
+
         if app is not None:
             self.app = app
             self.init_app(self.app)
@@ -181,18 +190,22 @@ class Nemo(object):
             self.app = app
 
     def xslt(self, input):
-        """ Transform input according to registered XSLT
+        """ Transform input according to potentiallyregistered XSLT
 
         .. note:: Due to XSLT not being able to be used twice, we rexsltise the xml at every call of xslt
         .. warning:: Until a C libxslt error is fixed ( https://bugzilla.gnome.org/show_bug.cgi?id=620102 ), it is not possible to use strip tags in the xslt given to this application
+
         :param input: XML to transform
         :type input: etree._Element
-        :return: Transformed XML
-        :rtype: etree._Element
+        :return: String representation of transformed resource
+        :rtype: str
         """
+        if not self.__xslt or self.__xslt is None:
+            return etree.tostring(input, encoding=str)
+
         with open(self.__xslt) as f:
             xslt = etree.XSLT(etree.parse(f))
-        return xslt(input)
+        return etree.tostring(xslt(input), encoding=str)
 
 
     def get_inventory(self):
@@ -485,10 +498,7 @@ class Nemo(object):
         ..todo:: Change text_passage to keep being lxml and make so self.render turn etree element to Markup.
         """
         text = self.get_passage(collection, textgroup, work, version, passage_identifier)
-        if self.__xslt:
-            passage = etree.tostring(self.xslt(text.xml), encoding=str)
-        else:
-            passage = etree.tostring(text.xml, encoding=str)
+        passage = self.xslt(text.xml)
 
         version = self.get_text(collection, textgroup, work, version)
         return {
@@ -552,6 +562,17 @@ class Nemo(object):
             )
 
         self.__register_assets()
+
+        # If we have added or overriden the default templates
+        if self.templates != Nemo.TEMPLATES:
+            folders = set([op.dirname(path) for path in self.templates if path != self.template_folder])
+            self.loader = jinja2.ChoiceLoader([
+                    self.blueprint.jinja_loader
+                ] + [
+                    jinja2.FileSystemLoader(folder) for folder in folders
+                ]
+            )
+            self.blueprint.jinja_loader = self.loader
 
         return self.blueprint
 

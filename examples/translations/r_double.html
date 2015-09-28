@@ -1,0 +1,24 @@
+{% extends "container.html" %}
+
+{% block article %}
+<div class="row">
+    <article class="col-md-6" style="min-height:100%;">
+        <header>
+            <h1>{{version.parents[0].metadata["title"][lang]}}</h1>
+            <h2>{{version.parents[1].metadata["groupname"][lang]}}</h2>
+            <p><small><i>{{version.metadata["description"][lang]}}</i></small></p>
+        </header>
+        <section>
+            {{ text_passage }}
+        </section>
+    </article>
+    <article class="col-md-6" style="min-height:100%;">
+        <header>
+            <p><small><i>{{visavis.metadata["description"][lang]}}</i></small></p>
+        </header>
+        <section>
+            {{ visavis_passage }}
+        </section>
+    </article>
+</div>
+{% endblock %}

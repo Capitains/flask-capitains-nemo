@@ -1,0 +1,12 @@
+#reading-container article {
+    padding:0.404em 2.617em 1.2em;
+    margin:0 auto 3em;
+    font-family: 'Palatino', 'Palatino Linotype', 'Georgia', 'Serif';
+    max-width: 90%;
+    background-color: #FFF;
+
+    -moz-box-shadow: 1px 2px 0px 0px #656565;
+    -webkit-box-shadow: 1px 2px 0px 0px #656565;
+    -o-box-shadow: 1px 2px 0px 0px #656565;
+    box-shadow: 1px 2px 0px 0px #656565;
+}
