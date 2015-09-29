@@ -11,6 +11,10 @@
         <xsl:apply-templates/>
     </xsl:template>
 
+    <xsl:template match="text()">
+        <xsl:if test="not(normalize-space()='')"><xsl:copy/></xsl:if>
+    </xsl:template>
+
     <xsl:template match="tei:body">
         <section>
             <aside class="pull-right">
@@ -209,10 +213,9 @@
         </xsl:element>
     </xsl:template>
     <xsl:template match="tei:pc[@type='reg']">
-        <xsl:element name="span">
-            <xsl:attribute name="class">reg</xsl:attribute>
+        <span class="reg">
             <xsl:apply-templates/>
-        </xsl:element>
+        </span>
     </xsl:template>
     <!-- fin éléments à affichier pour la visualisation normalisée -->
 

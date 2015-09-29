@@ -16,5 +16,6 @@ Welcome to the flask extension Nemo documentation!
    Nemo.contributing
    Nemo.templating
    Nemo.chunker
+   LXML
 
                                                      -
