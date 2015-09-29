@@ -8,16 +8,28 @@
             <h2>{{version.parents[1].metadata["groupname"][lang]}}</h2>
             <p><small><i>{{version.metadata["description"][lang]}}</i></small></p>
         </header>
+        <nav>
+            {% if prev %}
+            <a class="btn btn-xs btn-primary" href="{{url_for('nemo.r_double', collection=url['collection'], textgroup=url['textgroup'], work=url['work'], version=url['version'], passage_identifier=prev, visavis=url['visavis']) }}">
+                <span class="glyphicon glyphicon-chevron-left"></span>
+            </a>
+            {% endif %}
+            {% if next %}
+            <a class="btn btn-xs btn-primary" href="{{url_for('nemo.r_double', collection=url['collection'], textgroup=url['textgroup'], work=url['work'], version=url['version'], passage_identifier=next, visavis=url['visavis']) }}">
+                <span class="glyphicon glyphicon-chevron-right"></span>
+            </a>
+            {% endif %}
+        </nav>
         <section>
             {{ text_passage }}
         </section>
     </article>
     <article class="col-md-6" style="min-height:100%;">
         <header>
-            <p><small><i>{{visavis.metadata["description"][lang]}}</i></small></p>
+            <p><small><i>{{visavis_version.metadata["description"][lang]}}</i></small></p>
         </header>
         <section>
-            {{ visavis_passage }}
+            {{ visavis_text_passage }}
         </section>
     </article>
 </div>

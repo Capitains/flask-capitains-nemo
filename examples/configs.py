@@ -78,27 +78,20 @@ class NemoDouble(Nemo):
         :type version: str
         :param passage_identifier: Reference identifier
         :type passage_identifier: str
+        :param version: Visavis version identifier
+        :type version: str
         :return: Template, version inventory object and Markup object representing the text
         :rtype: {str: Any}
 
         ..todo:: Change text_passage to keep being lxml and make so self.render turn etree element to Markup.
         """
-        text = self.get_passage(collection, textgroup, work, version, passage_identifier)
-        second_text = self.get_passage(collection, textgroup, work, visavis, passage_identifier)
 
-        passage = self.xslt(text.xml)
-        passage2 = self.xslt(second_text.xml)
-
-        version = self.get_text(collection, textgroup, work, version)
-        version2 = self.get_text(collection, textgroup, work, visavis)
-
-        return {
-            "template": self.templates["r_double"],
-            "version": version,
-            "visavis": version2,
-            "text_passage": Markup(passage),
-            "visavis_passage": Markup(passage2)
-        }
+        # Simply call the url of the
+        args = self.r_text(collection, textgroup, work, version, passage_identifier)
+        # Call with other identifiers and add "visavis_" front of the argument
+        args.update({ "visavis_{0}".format(key):value for key, value in self.r_text(collection, textgroup, work, visavis, passage_identifier).items()})
+        args["template"] = self.templates["r_double"]
+        return args
 
 
 classes = {

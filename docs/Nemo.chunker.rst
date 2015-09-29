@@ -40,7 +40,7 @@ the default function if the requested version has the given urn.
 >>>     # Use a lambda to override default line numbers returned by Nemo.line_chunker for Seneca's Medea
 >>> })
 
-:ref: Nemo.api
+.. note:: See :ref:`Nemo.api` documentation
 
 Methods
 #######
@@ -71,7 +71,7 @@ which is a readable version of this citation node.
 >>>     return [(reff, "Satura {0}".format(reff.split(".")[-1])) for reff in reffs]1
 
 Available chunkers
-***************
+******************
 
 .. automethod:: flask.ext.nemo.Nemo.default_chunker
 .. automethod:: flask.ext.nemo.Nemo.line_chunker
