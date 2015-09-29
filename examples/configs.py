@@ -43,7 +43,7 @@ configs = {
             "r_double": "./examples/translations/r_double.html"
         }
     },
-    "default": {
+    "chunker": {
         "api_url": "http://services2.perseids.org/exist/restxq/cts",
         "base_url": "",
         "inventory": "nemo",
@@ -53,6 +53,15 @@ configs = {
             "urn:cts:latinLit:phi1294.phi002.perseus-lat2": lambda text, cb: [(reff.split(":")[-1], reff.split(":")[-1]) for reff in cb(2)],
             "default": Nemo.scheme_chunker  # lambda text, cb: Nemo.line_grouper(text, cb, 50)
         },
+        "css" : [
+            # Use teibp from default nemo configuration
+            "examples/tei.pb.min.css"
+        ]
+    },
+    "default": {
+        "api_url": "http://services2.perseids.org/exist/restxq/cts",
+        "base_url": "",
+        "inventory": "nemo",
         "css" : [
             # Use teibp from default nemo configuration
             "examples/tei.pb.min.css"
@@ -97,5 +106,6 @@ class NemoDouble(Nemo):
 classes = {
     "default": Nemo,
     "ciham": Nemo,
+    "chunker": Nemo,
     "translations": NemoDouble
 }
