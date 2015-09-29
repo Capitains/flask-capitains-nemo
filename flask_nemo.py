@@ -77,7 +77,7 @@ class Nemo(object):
     :param templates: Register or override templates (Dictionary of index / path)
     :type templates: {str: str}
 
-    .. warning:: Until a C libxslt error is fixed ( https://bugzilla.gnome.org/show_bug.cgi?id=620102 ), it is not possible to use strip spaces in the xslt given to this application.
+    .. warning:: Until a C libxslt error is fixed ( https://bugzilla.gnome.org/show_bug.cgi?id=620102 ), it is not possible to use strip spaces in the xslt given to this application. See :ref:`lxml.strip-spaces`
     """
 
     def __init__(self, app=None, api_url="/", base_url="/nemo", cache=None, expire=3600,
