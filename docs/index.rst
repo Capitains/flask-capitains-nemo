@@ -9,13 +9,11 @@ Welcome to the flask extension Nemo documentation!
 .. include:: ../README.rst
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 2
 
-   Nemo.api
    Nemo.examples
    Nemo.contributing
    Nemo.templating
    Nemo.chunker
    LXML
-
-                                                     -
+   Nemo.api

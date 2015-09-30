@@ -1,6 +1,8 @@
 Chunkers
 ========
 
+.. _Nemo.chunker::
+
 In the Nemo class, you'll find static methods called chunker, which can be used in the context of
 Nemo().chunker dictionary. Chunker are used to take care of grouping references when a user arrives on
 the version page of a text, to select where they should go.
@@ -31,14 +33,16 @@ The Nemo class accepts a chunker named argument that should be a dictionary wher
 This dictionary should at least contain one key named "default". Any other key should represents a URN and will override
 the default function if the requested version has the given urn.
 
->>> from flask.ext.nemo import Nemo
->>> nemo = Nemo(chunker={
->>>     "default": Nemo.default_chunker,
->>>     "urn:cts:latinLit:phi1294.phi002.perseus-lat2": Nemo.scheme_chunker,
->>>     # This will override the original function and provides a poem based reference for Martial Epigrammata in this version
->>>     "urn:cts:latinLit:phi1017.phi004.opp-lat4": lambda version, callback: Nemo.line_chunker(version, callback, lines=50)
->>>     # Use a lambda to override default line numbers returned by Nemo.line_chunker for Seneca's Medea
->>> })
+.. code-block:: python
+
+    from flask.ext.nemo import Nemo
+    nemo = Nemo(chunker={
+        "default": Nemo.default_chunker,
+        "urn:cts:latinLit:phi1294.phi002.perseus-lat2": Nemo.scheme_chunker,
+        # This will override the original function and provides a poem based reference for Martial Epigrammata in this version
+        "urn:cts:latinLit:phi1017.phi004.opp-lat4": lambda version, callback: Nemo.line_chunker(version, callback, lines=50)
+        # Use a lambda to override default line numbers returned by Nemo.line_chunker for Seneca's Medea
+    })
 
 .. note:: See :ref:`Nemo.api` documentation
 
@@ -47,6 +51,24 @@ Methods
 
 Building your own : Structure, Parameters, Return Values
 ********************************************************
+
+.. _Nemo.chunker.skeleton::
+
+
+.. code-block:: python
+
+    # Chunker skeleton
+    def chunker_name(version, getValidReff):
+        """ Document what your chunker should do
+
+        :param version: A version object according to MyCapytains standards. It contains metadata about the citation scheme through version.citation
+        :type version: MyCapytains.resources.inventory.Text
+        :param getValidReff: Callback function to perform a getValidReff on the given param. It accepts a single parameter named "level" and returns a list of URNs
+        :type getValidReff: function(level) -> [str]
+        :return: A list of tuple of strings where the first element is the CTS URN reference part and the second a human readable version of it
+        :rtype: [(str, str)]
+        """
+        return [("1.pr", "Book 1 Prolog")("1.1", "Book 1 Poem 1"), ...]
 
 A chunker should take always at least two positional arguments :
 
@@ -63,12 +85,14 @@ which is a readable version of this citation node.
     a text following its OCR source / manuscript
 
 
->>> # Example of chunker for the Satura of Juvenal
->>> def satura_chunker(version, getValidReff):
->>>     reffs = [urn.split(":")[-1] for urn in getValidReff(level=2)]
->>>     # Satura scheme contains three level (book, poem, lines) but only the Satura number is sequential
->>>     # So as human readable, we give only the second member of the reference body
->>>     return [(reff, "Satura {0}".format(reff.split(".")[-1])) for reff in reffs]1
+.. code-block:: python
+
+    # Example of chunker for the Satura of Juvenal
+    def satura_chunker(version, getValidReff):
+        reffs = [urn.split(":")[-1] for urn in getValidReff(level=2)]
+        # Satura scheme contains three level (book, poem, lines) but only the Satura number is sequential
+        # So as human readable, we give only the second member of the reference body
+        return [(reff, "Satura {0}".format(reff.split(".")[-1])) for reff in reffs]1
 
 Available chunkers
 ******************
