@@ -3,11 +3,11 @@ Chunkers
 
 .. _Nemo.chunker::
 
-In the Nemo class, you'll find static methods called chunker, which can be used in the context of
-Nemo().chunker dictionary. Chunker are used to take care of grouping references when a user arrives on
+In the Nemo class, you'll find static methods called chunker, which can be used in the context of the 
+Nemo().chunker dictionary. Chunkers are used to take care of grouping references when a user arrives on
 the version page of a text, to select where they should go.
 
-Nemo contains multiple chunker and accept any contributions which are providing helpful, transproject functions.
+Nemo contains multiple chunkers and accepts any contributions which provide helpful, transproject functions.
 
 Process description
 ###################
@@ -16,22 +16,17 @@ Process description
 
 .. topic:: User story
 
-    A user browse available texts and select a text. He does not want a specific passages. Nemo proposes a list of passages based
-    on the structure of the text.
+    A user browses available texts and select a text. He does not want a specific passages. Nemo proposes a list of passages based on the structure of the text.
 
-    *Example*: The Epigrams of Martial are a group of many book, containing each hundredth of poems, which are themselves composed
-    by up to 50 lines. The use would preferably be proposed the poem as the minimal citation scheme than each lines.
+    *Example*: The Epigrams of Martial are a group of many books, each containing hundreds of poems, which are themselves composed of up to 50 lines. The use would preferably be proposed the poem as the minimal citation scheme for browsing, rather than each line.
 
-To propose passages to the user, Capitains Nemo uses a chunker function which will group, if needed, references together. The function is called upon returning
-the list of references to the view. The function should always return a list of references, and not full urn, with a human readable version of it,
-which can be the same.
+To propose passages to the user, Capitains Nemo uses a chunker function which will group, if needed, references together. The function is called upon returning the list of references to the view. The function should always return a list of references, and not full urn, with a human readable version of it, which can be the same.
 
 Defining a chunker in your Nemo implementation instance
 #######################################################
 
 The Nemo class accepts a chunker named argument that should be a dictionary where values are chunker functions.
-This dictionary should at least contain one key named "default". Any other key should represents a URN and will override
-the default function if the requested version has the given urn.
+This dictionary should at least contain one key named "default". Any other key should represents a URN and will override the default function if the requested version has the given urn.
 
 .. code-block:: python
 
@@ -72,17 +67,12 @@ Building your own : Structure, Parameters, Return Values
 
 A chunker should take always at least two positional arguments :
 
-- The first one will be the version, based on a MyCapytains.resources.inventory.Text class. It contains informations about
-    the citation scheme for example.
-- The second one is a callback function that the chunker can use to retrieve the valid references. This callback itself takes a parameters
-    named level. This callback corresponds to a MyCapytains.resources.texts.api.getValidReff() method. It returns a list of string based urns.
+- The first one will be the version, based on a MyCapytains.resources.inventory.Text class. It contains information about the citation scheme for example.
+- The second one is a callback function that the chunker can use to retrieve the valid references. This callback itself takes a parameter named level. This callback corresponds to a MyCapytains.resources.texts.api.getValidReff() method. It returns a list of string based urns.
 
-The chunker itself should return a list of tuples where the first element is a passage reference such as "1.pr" or "1-50" and a second value
-which is a readable version of this citation node.
+The chunker itself should return a list of tuples where the first element is a passage reference such as "1.pr" or "1-50" and a second value which is a readable version of this citation node.
 
-.. note:: As see in the diagram, there is no limitation for the chunker as soon as it returns a valid list of reference
-    and their human readable version. It could in theory ask a third party services to return pages based urns to browse
-    a text following its OCR source / manuscript
+.. note:: As seen in the diagram, there is no limitation for the chunker as long as it returns a valid list of references and their human readable version. It could in theory ask a third party service to return page-based urns to browse a text by pages according its OCR source / manuscript
 
 
 .. code-block:: python
