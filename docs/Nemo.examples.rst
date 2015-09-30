@@ -8,18 +8,18 @@ Simple Configuration
 
 .. topic:: User story [1]
 
-    A **researcher** , an **ingeneer** or both is interested in **CTS** but has **no time** to develop their own application and their own theme : *flask.ext.nemo* will provide a simple, easy to use interface that you can deploy on any server. Even with a really limited knowledge of python.
+    A **researcher** , an **engineer** or both is interested in **CTS** but has **no time** to develop their own application and their own theme : *flask.ext.nemo* will provide a simple, easy to use interface that you can deploy on any server. Even with a really limited knowledge of python.
 
 .. topic:: User story [2]
 
-    A **researcher**, an **ingeneer** or both has already a CTS endpoint and wants to check the output and the browsing system visually.
+    A **researcher**, an **engineer** or both has already a CTS endpoint and wants to check the output and the browsing system visually.
 
 
 The simplest configuration of Nemo, or close to it, is to simply give an endpoint url to your Nemo extension, the app you are using
-and the inventory if required. This will run a browsing interface with support for collections, textgroups, texts and passages browsing.
+and the name of a CTS inventory (if required). This will run a browsing interface with support for collections, textgroups, texts and passages browsing.
 
 - The application will itself do the GetCapabilities request to retrieve the available texts and organize them through collection, textgroups and works.
-- Once an edition or a translation is clicked, a page showing available referense is shown.
+- Once an edition or a translation is clicked, a page showing available references is shown.
 - Once a passage is clicked, the passage is shown with available metadata.
 
 .. _example1.code::
