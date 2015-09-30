@@ -5,7 +5,7 @@ from flask import Markup
 configs = {
     # The CIHAM project is made of critical editions. We load for it a specific xslt to render the result of GetPassage
     # And specifics assets
-   "ciham" : {
+    "ciham" : {
         "api_url": "http://services2.perseids.org/exist/restxq/cts",
         "base_url": "",
         "inventory": "nemo",
@@ -92,7 +92,7 @@ class NemoDouble(Nemo):
         :return: Template, version inventory object and Markup object representing the text
         :rtype: {str: Any}
 
-        ..todo:: Change text_passage to keep being lxml and make so self.render turn etree element to Markup.
+        .. todo:: Change text_passage to keep being lxml and make so self.render turn etree element to Markup.
         """
 
         # Simply call the url of the
