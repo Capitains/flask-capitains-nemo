@@ -1,10 +1,7 @@
 Nemo API
 =================================
 
-.. automodule:: flask.ext.nemo
+.. _Nemo.api:
+
+.. autoclass:: flask.ext.nemo.Nemo
     :members:
-
-    .. _Nemo.api:
-
-    .. autoclass:: flask.ext.nemo.Nemo
-        :members:
