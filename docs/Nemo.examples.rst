@@ -9,7 +9,7 @@ Simple Configuration
 The simplest configuration of Nemo, or close to it, is to simply give an endpoint url to your Nemo extension, the app you are using
 and the inventory if required :
 
-.. highlight:: python
+.. code-block:: python
 
     # We import Flask
     from flask import Flask
