@@ -59,6 +59,48 @@ and the name of a CTS inventory (if required). This will run a browsing interfac
 XSLT, CSS and Javascript addons
 ###############################
 
+.. topic:: User Story
+
+    A developer, with no or only limited understanding of python, wants to expose their CTS works but have some modifications to do regarding the design.
+
+
+Because Python is not a natural language and because not everybody knows it in academia, you might find yourself in a situation where you don't know it. On the other hand, XML TEI, HTML, CSS - and thus xsl and sometimes Javascript - are quite common languages known to both researchers and engineers. Capitains Nemo for Flask accepts custom templates, CSS, Javascript, XSL and statics. And in a simple, nice way :
+
+.. code-block:: python
+
+    # ...
+    nemo = Nemo(
+        # Required API informations
+        api_url="http://services2.perseids.org/exist/restxq/cts",
+        base_url="",
+        inventory="ciham",
+        # For transform parameters, we provide a path to an xsl which will be used for every
+        transform={"default" : "examples/ciham.xslt"},
+        # CSS value should be a list of path to CSS own files
+        css=[
+            "examples/ciham.css"
+        ],
+        # JS follows the same scheme
+        js=[
+            # use own js file to load a script to go from normalized edition to diplomatic one.
+            "examples/ciham.js"
+        ],
+        templates={
+            "menu": "examples/ciham.menu.html"
+        },
+        additional_static=[
+            "path/to/picture.png"
+        ]
+    )
+
+.. topic:: Additional CSS, JS or Statics in Templates
+
+    To call or make a link to a static in your own template, you should always use the helper `url_for` and the route name `secondary_assets`. Additional statics can be linked to using the filename (be sure they do not collide !) and the type : css, js or static. Example : `{{url_for('nemo.secondary_assets', type='static', asset='picture.png')}}`.
+
+.. note:: Templates are written with `Jinja2 <http://jinja.pocoo.org/docs/dev/>`_. See also `Templates documentation`_ . For XSL, we have some unfortunate restrictions, see :ref:`lxml.strip-spaces`
+
+.. note:: You can run an example using css, js, templates and transform with `python example.py ciham`
+
 Own Chunker
 ###########
 
