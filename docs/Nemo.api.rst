@@ -47,22 +47,22 @@ Shared methods
 Routes
 ######
 
-.. _nemo.api.r_index::
+.. _Nemo.api.r_index::
 .. automethod:: flask.ext.nemo.Nemo.r_index
 
-.. _nemo.api.r_collection::
+.. _Nemo.api.r_collection::
 .. automethod:: flask.ext.nemo.Nemo.r_collection
 
-.. _nemo.api.r_texts::
+.. _Nemo.api.r_texts::
 .. automethod:: flask.ext.nemo.Nemo.r_texts
 
-.. _nemo.api.r_version::
+.. _Nemo.api.r_version::
 .. automethod:: flask.ext.nemo.Nemo.r_version
 
-.. _nemo.api.r_text::
+.. _Nemo.api.r_text::
 .. automethod:: flask.ext.nemo.Nemo.r_text
 
-.. _nemo.api.r_assets::
+.. _Nemo.api.r_assets::
 .. automethod:: flask.ext.nemo.Nemo.r_assets
 
 Statics
