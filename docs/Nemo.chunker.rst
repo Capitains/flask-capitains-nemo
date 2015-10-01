@@ -1,13 +1,7 @@
-Chunkers
-========
+Chunkers, Transformers and GetPrevNext
+======================================
 
-.. _Nemo.chunker::
-
-In the Nemo class, you'll find static methods called chunker, which can be used in the context of the 
-Nemo().chunker dictionary. Chunkers are used to take care of grouping references when a user arrives on
-the version page of a text, to select where they should go.
-
-Nemo contains multiple chunkers and accepts any contributions which provide helpful, transproject functions.
+Chunker, Transformers and GetPrevNext are way to customize your users' experience. Chunkers will decide what are the possible passages to see for a text, GetPrevNext what should be the previous and next passage while Transformers is a way to customize transformation, with or without XSLT
 
 Process description
 ###################
@@ -21,6 +15,17 @@ Process description
     *Example*: The Epigrams of Martial are a group of many books, each containing hundreds of poems, which are themselves composed of up to 50 lines. The use would preferably be proposed the poem as the minimal citation scheme for browsing, rather than each line.
 
 To propose passages to the user, Capitains Nemo uses a chunker function which will group, if needed, references together. The function is called upon returning the list of references to the view. The function should always return a list of references, and not full urn, with a human readable version of it, which can be the same.
+
+.. _Nemo.chunker::
+
+Chunkers
+########
+
+In the Nemo class, you'll find static methods called chunker, which can be used in the context of the
+Nemo().chunker dictionary. Chunkers are used to take care of grouping references when a user arrives on
+the version page of a text, to select where they should go.
+
+Nemo contains multiple chunkers and accepts any contributions which provide helpful, transproject functions.
 
 Defining a chunker in your Nemo implementation instance
 #######################################################
@@ -40,9 +45,6 @@ This dictionary should at least contain one key named "default". Any other key s
     })
 
 .. note:: See :ref:`Nemo.api` documentation
-
-Methods
-#######
 
 Building your own : Structure, Parameters, Return Values
 ********************************************************
@@ -90,3 +92,13 @@ Available chunkers
 .. automethod:: flask.ext.nemo.Nemo.default_chunker
 .. automethod:: flask.ext.nemo.Nemo.line_chunker
 .. automethod:: flask.ext.nemo.Nemo.scheme_chunker
+
+PrevNext
+########
+
+PrevNext follows the same scheme as Chunker.
+
+Transformers
+############
+
+Transformers should always return a string
