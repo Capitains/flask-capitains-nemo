@@ -28,6 +28,7 @@ if __name__ == "__main__":
     # We register its filters
     nemo.register_filters()
 
+
     # We run the app
     app.debug = True
     app.run()

@@ -9,7 +9,7 @@ configs = {
         "api_url": "http://services2.perseids.org/exist/restxq/cts",
         "base_url": "",
         "inventory": "nemo",
-        "xslt": "examples/ciham.xslt",  # Use default epidoc XSLT
+        "transform": {"default" : "examples/ciham.xslt"},  # Use own xsl
         "css": [
             # USE Own CSS
             "examples/ciham.css"
@@ -18,6 +18,9 @@ configs = {
             # use own js file to load a script to go from normalized edition to diplomatic one.
             "examples/ciham.js"
         ],
+        "templates":{
+            "menu": "examples/ciham.menu.html"
+        },
         "chunker": {
             # The default chunker takes care of book, poem, lines
             # but it would be cool to have 30 lines group for Nemo
