@@ -8,18 +8,18 @@ Simple Configuration
 
 .. topic:: User story [1]
 
-    A **researcher** , an **ingeneer** or both is interested in **CTS** but has **no time** to develop their own application and their own theme : *flask.ext.nemo* will provide a simple, easy to use interface that you can deploy on any server. Even with a really limited knowledge of python.
+    A **researcher** , an **engineer** or both is interested in **CTS** but has **no time** to develop their own application and their own theme : *flask.ext.nemo* will provide a simple, easy to use interface that you can deploy on any server. Even with a really limited knowledge of python.
 
 .. topic:: User story [2]
 
-    A **researcher**, an **ingeneer** or both has already a CTS endpoint and wants to check the output and the browsing system visually.
+    A **researcher**, an **engineer** or both has already a CTS endpoint and wants to check the output and the browsing system visually.
 
 
 The simplest configuration of Nemo, or close to it, is to simply give an endpoint url to your Nemo extension, the app you are using
-and the inventory if required. This will run a browsing interface with support for collections, textgroups, texts and passages browsing.
+and the name of a CTS inventory (if required). This will run a browsing interface with support for collections, textgroups, texts and passages browsing.
 
 - The application will itself do the GetCapabilities request to retrieve the available texts and organize them through collection, textgroups and works.
-- Once an edition or a translation is clicked, a page showing available referense is shown.
+- Once an edition or a translation is clicked, a page showing available references is shown.
 - Once a passage is clicked, the passage is shown with available metadata.
 
 .. _example1.code::
@@ -66,15 +66,11 @@ Own Chunker
 
 .. topic:: User Story
 
-    A developer wants to propose an alternative level of browsing at the text passage browsing. It should be customizable by text identifier or using available CTS metadata about the text, such as the Citation Scheme
+    A developer wants to add a custom scheme for browsing text passages by groups that are not part of the citation scheme of the text.  The custom scheme should be triggered by text identifier or using available CTS metadata about the text, such as the Citation Scheme.
 
-CTS is good, but getValidReff can really be a hassle. The default generation of browsing level will always retrieve the deepest
- citations available. For the Iliad of Homer, which is composed of two levels, books and lines, this would translate to a GetValidReff
- level 2. This would mean that the generic chunker would return on the text page a link to each line of each books (it's a total of 15337 lines, if you did not know).
+  CTS is good, but getValidReff can really be a hassle. The default generation of browsing level will always retrieve the deepest level of citations available. For the Iliad of Homer, which is composed of two levels, books and lines, this would translate to a GetValidReff level 2. This would mean that the generic chunker would return on the text page a link to each line of each book (it's a total of 15337 lines, if you did not know).
 
-Chunker provides a simple, easy to develop interface to deal with such situation : for example, returning only 50 lines packs of link (1.1-1.50, 1.51-1.100, etc.). The Nemo
- class accepts a dictionary of chunker where **keys** are **urns** and where "**default**" key is the default chunker to be applied. Given a chunker named *homer_chunker* and one named *default_chunker*,
- if the urn of Homer is **urn:cts:greekLit:tlg0012.tlg001.opp-grc1** (See :ref:`Nemo.chunker.skeleton` for function skeleton):
+  Chunker provides a simple, easy to develop interface to deal with such a situation : for example, returning only 50 lines groups of links (1.1-1.50, 1.51-1.100, etc.). The Nemo class accepts a chunker dictionary where **keys** are **urns** and where the key "**default**" is the default chunker to be applied. Given a chunker named *homer_chunker* and one named *default_chunker*,  if the urn of Homer is **urn:cts:greekLit:tlg0012.tlg001.opp-grc1** (See :ref:`Nemo.chunker.skeleton` for function skeleton):
 
 .. code-block:: python
 
@@ -89,7 +85,7 @@ Chunker provides a simple, easy to develop interface to deal with such situation
 
 .. note:: You can run an example using chunker with `python example.py chunker`
 
-.. note:: Parameters XSLT and prevnext work the same way. See relevant documentation : :ref:`Nemo.chunker` for more informations and more examples about chunkers
+.. note:: Parameters XSLT and prevnext work the same way. See relevant documentation : :ref:`Nemo.chunker` for more information about and examples of chunkers
 
 Adding routes
 #############
