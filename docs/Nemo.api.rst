@@ -65,8 +65,11 @@ Routes
 .. _nemo.api.r_assets::
 .. automethod:: flask.ext.nemo.Nemo.r_assets
 
-Filters
+Statics
 #######
+
+Filters
+*******
 
 Filters follow a naming convention : they should always start with "f_"
 
@@ -75,7 +78,7 @@ Filters follow a naming convention : they should always start with "f_"
 .. automethod:: flask.ext.nemo.Nemo.f_formatting_passage_reference
 
 Helpers
-#######
+*******
 
 .. automethod:: flask.ext.nemo.Nemo.map_urns
 .. automethod:: flask.ext.nemo.Nemo.filter_urn
@@ -83,14 +86,14 @@ Helpers
 .. automethod:: flask.ext.nemo.Nemo.prevnext_callback_generator
 
 Chunkers
-########
+********
 
 .. automethod:: flask.ext.nemo.Nemo.default_chunker
 .. automethod:: flask.ext.nemo.Nemo.line_chunker
 .. automethod:: flask.ext.nemo.Nemo.scheme_chunker
 
 PrevNexter
-##########
+**********
 
 .. automethod:: flask.ext.nemo.Nemo.default_prevnext
 

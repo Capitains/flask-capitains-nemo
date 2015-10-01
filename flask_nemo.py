@@ -487,8 +487,6 @@ class Nemo(object):
         :type passage_identifier: str
         :return: Template, version inventory object and Markup object representing the text
         :rtype: {str: Any}
-
-        ..todo:: Change text_passage to keep being lxml and make so self.render turn etree element to Markup.
         """
         text = self.get_passage(collection, textgroup, work, version, passage_identifier)
         version = self.get_text(collection, textgroup, work, version)
@@ -639,7 +637,7 @@ class Nemo(object):
     def register_filters(self):
         """ Register filters for Jinja to use
 
-       ..note::  Extends the dictionary filters of jinja_env using self._filters list
+       .. note::  Extends the dictionary filters of jinja_env using self._filters list
         """
         for _filter in self._filters:
             self.app.jinja_env.filters[
