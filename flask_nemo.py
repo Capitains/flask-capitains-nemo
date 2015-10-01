@@ -16,33 +16,12 @@ import MyCapytain.resources.texts.api
 import MyCapytain.resources.inventory
 from lxml import etree
 import requests_cache
-from collections import OrderedDict
+from collections import OrderedDict, Callable
 import jinja2
 from copy import copy
 
 
 class Nemo(object):
-    ROUTES = [
-        ("/", "r_index", ["GET"]),
-        ("/read/<collection>", "r_collection", ["GET"]),
-        ("/read/<collection>/<textgroup>", "r_texts", ["GET"]),
-        ("/read/<collection>/<textgroup>/<work>/<version>", "r_version", ["GET"]),
-        ("/read/<collection>/<textgroup>/<work>/<version>/<passage_identifier>", "r_text", ["GET"])
-    ]
-    TEMPLATES = {
-        "container": "container.html",
-        "menu": "menu.html",
-        "text": "text.html",
-        "textgroups": "textgroups.html",
-        "index": "index.html",
-        "texts": "texts.html",
-        "version": "version.html"
-    }
-    COLLECTIONS = {
-        "latinLit": "Latin",
-        "greekLit": "Ancient Greek",
-        "froLit": "Medieval French"
-    }
     """ Nemo is an extension for Flask python micro-framework which provides
     a User Interface to your app for dealing with CTS API.
 
@@ -66,8 +45,8 @@ class Nemo(object):
     :type urls: [(str, str, [str])]
     :param inventory: Default inventory to use
     :type inventory: str
-    :param xslt: Wether to use the default xslt or a given xslt to transform getPassage results
-    :type xslt: bool|str
+    :param transform: Dictionary of XSL filepath or transform function where default key is the default applied function
+    :type transform: bool|dict
     :param chunker: Dictionary of function to group responses of GetValidReff
     :type chunker: {str: function(str, function(int))}
     :param css: Path to additional stylesheets to load
@@ -76,14 +55,43 @@ class Nemo(object):
     :type js: [str]
     :param templates: Register or override templates (Dictionary of index / path)
     :type templates: {str: str}
+    :param statics: Path to additional statics such as picture to load
+    :type statics: [str]
 
     .. warning:: Until a C libxslt error is fixed ( https://bugzilla.gnome.org/show_bug.cgi?id=620102 ), it is not possible to use strip spaces in the xslt given to this application. See :ref:`lxml.strip-spaces`
     """
 
+    ROUTES = [
+        ("/", "r_index", ["GET"]),
+        ("/read/<collection>", "r_collection", ["GET"]),
+        ("/read/<collection>/<textgroup>", "r_texts", ["GET"]),
+        ("/read/<collection>/<textgroup>/<work>/<version>", "r_version", ["GET"]),
+        ("/read/<collection>/<textgroup>/<work>/<version>/<passage_identifier>", "r_text", ["GET"])
+    ]
+    TEMPLATES = {
+        "container": "container.html",
+        "menu": "menu.html",
+        "text": "text.html",
+        "textgroups": "textgroups.html",
+        "index": "index.html",
+        "texts": "texts.html",
+        "version": "version.html"
+    }
+    COLLECTIONS = {
+        "latinLit": "Latin",
+        "greekLit": "Ancient Greek",
+        "froLit": "Medieval French"
+    }
+    FILTERS = [
+        "f_active_link",
+        "f_collection_i18n",
+        "f_formatting_passage_reference"
+    ]
+
     def __init__(self, app=None, api_url="/", base_url="/nemo", cache=None, expire=3600,
                  template_folder=None, static_folder=None, static_url_path=None,
-                 urls=None, inventory=None, xslt=None, chunker=None, prevnext=None,
-                 css=None, js=None, templates=None):
+                 urls=None, inventory=None, transform=None, chunker=None, prevnext=None,
+                 css=None, js=None, templates=None, statics=None):
         __doc__ = Nemo.__doc__
         self.prefix = base_url
         self.api_url = api_url
@@ -129,19 +137,17 @@ class Nemo(object):
         else:
             self._urls = Nemo.ROUTES
 
-        self._filters = [
-            "f_active_link",
-            "f_collection_i18n",
-            "f_formatting_passage_reference"
-        ]
+        self._filters = copy(Nemo.FILTERS)
         # Reusing self._inventory across requests
         self._inventory = None
-        self.__xslt = None
+        self.__transform = {
+            "default" : None
+        }
 
-        if xslt is True:
-            self.__xslt = op.join("data", "epidoc", "full.xsl")
-        elif xslt:
-            self.__xslt = xslt
+        if transform is True:
+            self.__transform["default"] = op.join("data", "epidoc", "full.xsl")
+        elif isinstance(transform, dict):
+            self.__transform.update(transform)
 
         self.chunker = {}
         self.chunker["default"] = Nemo.default_chunker
@@ -161,9 +167,14 @@ class Nemo(object):
         if isinstance(js, list):
             self.js = js
 
+        self.statics = []
+        if isinstance(statics, list):
+            self.statics = statics
+
         self.__assets = {
             "js" : OrderedDict(),
-            "css": OrderedDict()
+            "css": OrderedDict(),
+            "static": OrderedDict()
         }
 
     def __register_cache(self, sqlite_path, expire):
@@ -193,24 +204,37 @@ class Nemo(object):
         if self.app is None:
             self.app = app
 
-    def xslt(self, input):
+    def transform(self, work, xml):
         """ Transform input according to potentiallyregistered XSLT
 
         .. note:: Due to XSLT not being able to be used twice, we rexsltise the xml at every call of xslt
         .. warning:: Until a C libxslt error is fixed ( https://bugzilla.gnome.org/show_bug.cgi?id=620102 ), it is not possible to use strip tags in the xslt given to this application
 
-        :param input: XML to transform
-        :type input: etree._Element
+        :param work: Work object containing metadata about the xml
+        :type work: MyCapytains.resources.inventory.Text
+        :param xml: XML to transform
+        :type xml: etree._Element
         :return: String representation of transformed resource
         :rtype: str
         """
-        if not self.__xslt or self.__xslt is None:
-            return etree.tostring(input, encoding=str)
+        # We check first that we don't have
+        if str(work.urn) in self.__transform:
+            func = self.__transform[str(work.urn)]
+        else:
+            func = self.__transform["default"]
 
-        with open(self.__xslt) as f:
-            xslt = etree.XSLT(etree.parse(f))
-        return etree.tostring(xslt(input), encoding=str)
+        # If we have a string, it means we get a XSL filepath
+        if isinstance(func, str):
+            with open(func) as f:
+                xslt = etree.XSLT(etree.parse(f))
+            return etree.tostring(xslt(xml), encoding=str)
 
+        # If we have a function, it means we return the result of the function
+        elif isinstance(func, Callable):
+            return func(work, xml)
+        # If we have None, it meants we just give back the xml
+        elif func is None:
+            return etree.tostring(xml, encoding=str)
 
     def get_inventory(self):
         """ Request the api endpoint to retrieve information about the inventory
@@ -386,41 +410,6 @@ class Nemo(object):
         passage = text.getPassage(passage_identifier)
         return passage
 
-    @staticmethod
-    def map_urns(items, query, part_of_urn=1, attr="textgroups"):
-        """ Small function to map urns to filter out a list of items or on a parent item
-
-        :param items: Inventory object
-        :type items: MyCapytains.resources.inventory.Resource
-        :param query: Part of urn to check against
-        :type query: str
-        :param part_of_urn: Identifier of the part of the urn
-        :type part_of_urn: int
-        :return: Items corresponding to the object children filtered by the query
-        :rtype: list(items.children)
-        """
-
-        if attr is not None:
-            return [
-                item
-                for item in getattr(items, attr).values()
-                if Nemo.filter_urn(item, part_of_urn, query)
-            ]
-
-    @staticmethod
-    def filter_urn(item, part_of_urn, query):
-        """ Small function to map urns to filter out a list of items or on a parent item
-
-        :param item: Inventory object
-        :param query: Part of urn to check against
-        :type query: str
-        :param part_of_urn: Identifier of the part of the urn
-        :type part_of_urn: int
-        :return: Items corresponding to the object children filtered by the query
-        :rtype: list(items.children)
-        """
-        return item.urn[part_of_urn].lower() == query.lower().strip()
-
     def r_index(self):
         """ Homepage route function
 
@@ -502,11 +491,11 @@ class Nemo(object):
         ..todo:: Change text_passage to keep being lxml and make so self.render turn etree element to Markup.
         """
         text = self.get_passage(collection, textgroup, work, version, passage_identifier)
-        passage = self.xslt(text.xml)
-
         version = self.get_text(collection, textgroup, work, version)
 
+        passage = self.transform(version, text.xml)
         prev, next = self.getprevnext(text, Nemo.prevnext_callback_generator(text))
+
         return {
             "template": self.templates["text"],
             "version": version,
@@ -537,6 +526,9 @@ class Nemo(object):
         for js in self.js:
             directory, filename = op.split(js)
             self.__assets["js"][filename] = directory
+        for static in self.statics:
+            directory, filename = op.split(static)
+            self.__assets["static"][filename] = directory
 
         self.blueprint.add_url_rule(
             # Register another path to ensure assets compatibility
@@ -614,6 +606,7 @@ class Nemo(object):
                 kwargs["texts"] = self.get_texts(kwargs["url"]["collection"], kwargs["url"]["textgroup"])
 
         kwargs["assets"] = self.__assets
+        kwargs["templates"] = self.templates
 
         return render_template(template, **kwargs)
 
@@ -827,3 +820,38 @@ class Nemo(object):
                 passage.parent.resource.getPrevNextUrn(urn=str(passage.urn))
             )
         return callback
+
+    @staticmethod
+    def map_urns(items, query, part_of_urn=1, attr="textgroups"):
+        """ Small function to map urns to filter out a list of items or on a parent item
+
+        :param items: Inventory object
+        :type items: MyCapytains.resources.inventory.Resource
+        :param query: Part of urn to check against
+        :type query: str
+        :param part_of_urn: Identifier of the part of the urn
+        :type part_of_urn: int
+        :return: Items corresponding to the object children filtered by the query
+        :rtype: list(items.children)
+        """
+
+        if attr is not None:
+            return [
+                item
+                for item in getattr(items, attr).values()
+                if Nemo.filter_urn(item, part_of_urn, query)
+            ]
+
+    @staticmethod
+    def filter_urn(item, part_of_urn, query):
+        """ Small function to map urns to filter out a list of items or on a parent item
+
+        :param item: Inventory object
+        :param query: Part of urn to check against
+        :type query: str
+        :param part_of_urn: Identifier of the part of the urn
+        :type part_of_urn: int
+        :return: Items corresponding to the object children filtered by the query
+        :rtype: list(items.children)
+        """
+        return item.urn[part_of_urn].lower() == query.lower().strip()
