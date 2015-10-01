@@ -1,6 +1,8 @@
 Templates documentation
 =======================
 
+.. _Templates.documentation::
+
 Template dictionary
 ###################
 

@@ -97,7 +97,7 @@ Because Python is not a natural language and because not everybody knows it in a
 
     To call or make a link to a static in your own template, you should always use the helper `url_for` and the route name `secondary_assets`. Additional statics can be linked to using the filename (be sure they do not collide !) and the type : css, js or static. Example : `{{url_for('nemo.secondary_assets', type='static', asset='picture.png')}}`.
 
-.. note:: Templates are written with `Jinja2 <http://jinja.pocoo.org/docs/dev/>`_. See also `Templates documentation`_ . For XSL, we have some unfortunate restrictions, see :ref:`lxml.strip-spaces`
+.. note:: Templates are written with `Jinja2 <http://jinja.pocoo.org/docs/dev/>`_. See also :ref:`Templates.documentation`. For XSL, we have some unfortunate restrictions, see :ref:`lxml.strip-spaces`
 
 .. note:: You can run an example using css, js, templates and transform with `python example.py ciham`
 

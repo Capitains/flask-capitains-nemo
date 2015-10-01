@@ -13,7 +13,7 @@ Welcome to the flask extension Nemo documentation!
 
    Nemo.examples
    Nemo.contributing
-   Nemo.templating
+   Nemo.templates
    Nemo.chunker
    LXML
    Nemo.api
