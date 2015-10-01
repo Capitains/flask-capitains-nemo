@@ -132,9 +132,62 @@ Own Chunker
 Adding routes
 #############
 
-.. note::
-    .. autoclass:: examples.configs.NemoDouble
-        :members:
+.. topic:: User story
+
+    The user has needs in terms of new routes that would cover specific needs, like vis-a-vis edition.
+
+There is multiple way to deal with this kind of situation. The best way is to create a subclass of Nemo. The idea behind that is that you rely on specific functionalities of Nemo and its context object. To deal with that and make as much as possible a good use of Nemo extension, you just need to add a new route to url using a tuple : first value would be the route, according to Flask standards, *ie* `/read/<collection>/<textgroup>/<work>/<version>/<passage_identifier>/<visavis>` , the name of the function or method (naming convention makes them start by r\_), *ie* `r_double`, and a list of methods, by default ["GET"].
+
+As you will most likely use a new template, don't forget to register it with the templates parameter !
+
+.. code-block:: python
+
+    # #We create a class based on Nemo
+    class NemoDouble(Nemo):
+        def r_double(self, collection, textgroup, work, version, passage_identifier, visavis):
+            """ Optional route to add a visavis version
+
+            :param collection: Collection identifier
+            :type collection: str
+            :param textgroup: Textgroup Identifier
+            :type textgroup: str
+            :param work: Work identifier
+            :type work: str
+            :param version: Version identifier
+            :type version: str
+            :param passage_identifier: Reference identifier
+            :type passage_identifier: str
+            :param version: Visavis version identifier
+            :type version: str
+            :return: Template, version inventory object and Markup object representing the text
+            :rtype: {str: Any}
+
+            .. todo:: Change text_passage to keep being lxml and make so self.render turn etree element to Markup.
+            """
+
+            # Simply call the url of the
+            args = self.r_text(collection, textgroup, work, version, passage_identifier)
+            # Call with other identifiers and add "visavis_" front of the argument
+            args.update({ "visavis_{0}".format(key):value for key, value in self.r_text(collection, textgroup, work, visavis, passage_identifier).items()})
+            args["template"] = self.templates["r_double"]
+            return args
+
+    nemo = NemoDouble(
+        api_url="http://services2.perseids.org/exist/restxq/cts",
+        base_url="",
+        inventory="nemo",
+        # We reuse Nemo.Routes and add a new one
+        urls= Nemo.ROUTES + [("/read/<collection>/<textgroup>/<work>/<version>/<passage_identifier>/<visavis>", "r_double", ["GET"])],
+        css=[
+            "examples/translations.css"
+        ],
+        # We think about registering the new route
+        templates={
+            "r_double": "./examples/translations/r_double.html"
+        }
+    )
+
+.. note:: You can run an example using chunker with `python example.py translations`
 
 Replacing routes
 ################

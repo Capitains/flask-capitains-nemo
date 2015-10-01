@@ -42,12 +42,12 @@ Variables shared across templates
 index.html
 ##########
 
-Only `Variables shared across templates`
+Only `Variables shared across templates`_
 
 menu.html
 #########
 
-Only `Variables shared across templates`
+Only `Variables shared across templates`_
 
 textgroups.html
 ###############
@@ -76,13 +76,13 @@ version.html
 
 See `r_version` in :ref:`Nemo.api.r_version`
 
-+-----------------+----------------------------------------------------------+
-| Variable Name   | Details                                                  |
-+=================+==========================================================+
-| `version`       | Version object with metadata about current text          |
-+-----------------+----------------------------------------------------------+
-| `reffs`         | List of tuples where first element is a reference, second a human readable translation |
-+-----------------+----------------------------------------------------------+
++-----------------+-----------------------------------------------------------------------------------------+
+| Variable Name   | Details                                                                                 |
++=================+=========================================================================================+
+| `version`       | Version object with metadata about current text                                         |
++-----------------+-----------------------------------------------------------------------------------------+
+| `reffs`         | List of tuples where first element is a reference, second a human readable translation  |
++-----------------+-----------------------------------------------------------------------------------------+
 
 text.html
 #########
@@ -90,10 +90,14 @@ text.html
 
 See `r_text` in :ref:`Nemo.api.r_text`
 
-+-----------------+----------------------------------------------------------+
-| Variable Name   | Details                                                  |
-+=================+==========================================================+
-| `text_passage`  | Version object with metadata about current text          |
-+-----------------+----------------------------------------------------------+
-| `reffs`         | List of tuples where first element is a reference, second a human readable translation |
-+-----------------+----------------------------------------------------------+
++-----------------+----------------------------------------------------------------------------------------+
+| Variable Name   | Details                                                                                |
++=================+========================================================================================+
+| `version`       | Version object with metadata about current text                                        |
++-----------------+----------------------------------------------------------------------------------------+
+| `text_passage`  | Markup object representing the text                                                    |
++-----------------+----------------------------------------------------------------------------------------+
+| `prev`          | Previous Passage Reference                                                             |
++-----------------+----------------------------------------------------------------------------------------+
+| `prev`          | Following Passage Reference                                                            |
++-----------------+----------------------------------------------------------------------------------------+

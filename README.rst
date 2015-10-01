@@ -10,3 +10,15 @@ Extension, `flask.ext.nemo` intends to be a simple, customizable interface betwe
 The Flask's extension Nemo can be customized from its stylesheets to its functionalities. Adding routes or removing them is
 as easy as adding a XSL Stylesheet to transform the very own result of a CTS GetPassage results to your own expected output.
 
+Install
+#######
+
+For now, flask.ext.nemo is not available on pip, as we are waiting for unit tests to be written.
+
+If you want to install the latest version, please do the following
+
+.. code-block:: shell
+
+    git clone https://github.com/Capitains/flask-capitains-nemo.git
+    cd flask-capitains-nemo
+    python3 setup.py install
