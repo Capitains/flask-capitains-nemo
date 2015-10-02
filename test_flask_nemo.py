@@ -39,6 +39,9 @@ class NemoResource(unittest.TestCase):
             self.getCapabilities = RequestPatch(f)
         with open("testing_data/getvalidreff.xml", "r") as f:
             self.getValidReff = DoubleRequestPatch(self.getCapabilities, f)
+        with open("testing_data/getpassage.xml", "r") as f:
+            self.getPassage = RequestPatch(f)
+            self.getPassage_Capabilities = DoubleRequestPatch(self.getCapabilities, f)
         self.nemo = Nemo(
             api_url=NemoTestControllers.endpoint
         )
@@ -90,6 +93,17 @@ class NemoTestControllers(NemoResource):
                 }
             )
             self.assertIs(len(inventory.textgroups), 4)
+
+    def test_get_collection(self):
+        with patch('requests.get', return_value=self.getCapabilities) as patched_get:
+            collections = self.nemo.get_collections()
+            patched_get.assert_called_once_with(
+                NemoTestControllers.endpoint, params={
+                    "request": "GetCapabilities"
+                }
+            )
+            self.assertEqual(collections, {"latinLit", "greekLit"})
+
 
     def test_get_authors(self):
         """ Check that authors textgroups are returned with informations
@@ -147,16 +161,29 @@ class NemoTestControllers(NemoResource):
             texts = self.nemo.get_texts("greekLIT", "TLG0003", "tlg002")  # With nice filtering
             self.assertIs(len(texts), 0)
 
-    def test_get_texts_with_all_filtered(self):
+    def test_get_texts_with_none_filtered(self):
         """ Check that texts are filtered
         """
         with patch('requests.get', return_value=self.getCapabilities):
             texts = self.nemo.get_texts()  # With nice filtering
-            self.assertIs(len(texts), 15)
+            self.assertIs(len(texts), 14)
             self.assertEqual("urn:cts:greekLit:tlg0003.tlg001.perseus-grc2" in [str(text.urn) for text in texts], True)
             self.assertEqual("urn:cts:latinLit:phi1294.phi002.perseus-lat2" in [str(text.urn) for text in texts], True)
             self.assertEqual("urn:cts:latinLit:phi1294.phi002.perseus-lat3" in [str(text.urn) for text in texts], False)
 
+    def test_get_texts_with_work_not_filtered(self):
+        """ Check that all textgroups texts are returned
+        """
+        with patch('requests.get', return_value=self.getCapabilities):
+            texts = self.nemo.get_texts("latinLit", "phi0959")  # With nice filtering
+            self.assertIs(len(texts), 10)
+            self.assertEqual("urn:cts:greekLit:tlg0003.tlg001.perseus-grc2" in [str(text.urn) for text in texts], False)
+            self.assertEqual("urn:cts:latinLit:phi0959.tlg001.perseus-lat2" in [str(text.urn) for text in texts], False)
+
+    def test_get_texts_raise(self):
+        with self.assertRaises(
+                ValueError):
+            self.nemo.get_texts("latinLit")
 
     def test_get_single_text(self):
         """ Check that texts are filtered
@@ -165,6 +192,22 @@ class NemoTestControllers(NemoResource):
             texts = self.nemo.get_text("greekLIT", "TLG0003", "tlg001", "perseus-grc2")  # With nice filtering
             self.assertIsInstance(texts, MyCapytain.resources.inventory.Text)
             self.assertEqual(str(texts.urn), "urn:cts:greekLit:tlg0003.tlg001.perseus-grc2")
+
+    def test_get_single_text_empty_because_no_work(self):
+        """ Check that texts are filtered
+        """
+        with patch('requests.get', return_value=self.getCapabilities):
+            with patch('flask_nemo.abort') as abort:
+                texts = self.nemo.get_text("latinLit", "phi0959", "phi011", "perseus-lat2")   # With nice filtering
+                abort.assert_called_once_with(404)
+
+    def test_get_single_text_abort(self):
+        """ Check that texts are filtered
+        """
+        with patch('requests.get', return_value=self.getCapabilities):
+            with patch('flask_nemo.abort') as abort:
+                texts = self.nemo.get_text("greekLIT", "TLG0003", "tlg001", "perseus-grc132")  # With nice filtering
+                abort.assert_called_once_with(404)
 
     def test_get_validreffs_without_specific_callback(self):
         """ Try to get valid reffs
@@ -197,12 +240,23 @@ class NemoTestControllers(NemoResource):
                 ]
             )
 
+    def test_get_passage(self):
+        self.nemo = Nemo(api_url=NemoTestControllers.endpoint, inventory="annotsrc")
+        with patch('requests.get', return_value=self.getPassage) as patched:
+            passage = self.nemo.get_passage("latinLit", "phi1294", "phi002", "perseus-lat2", "1.pr")
+            self.assertIsInstance(passage, MyCapytain.resources.texts.api.Passage)
+            self.assertEqual(len(passage.xml.xpath("//tei:l[@n]", namespaces={"tei":"http://www.tei-c.org/ns/1.0"})), 6)
+
+
 
 class NemoTestRoutes(NemoResource):
     """ Test Suite for Nemo
     """
-    endpoint = "http://website.com/cts/api"
-    # Actually
+    def test_route_index(self):
+        """ Check that index return the template
+        """
+        self.assertEqual(self.nemo.r_index(), {"template": self.nemo.templates["index"]})
+
     def test_route_text(self):
         """ Try to get valid reffs
         """
