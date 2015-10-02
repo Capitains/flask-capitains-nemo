@@ -1,6 +1,7 @@
 import unittest
 from flask.ext.nemo import Nemo
-from mock import patch
+from mock import patch, call
+import MyCapytain
 
 
 class RequestPatch(object):
@@ -15,16 +16,35 @@ class RequestPatch(object):
         return self.__text
 
 
-class NemoTestControllers(unittest.TestCase):
+class DoubleRequestPatch(object):
+    """ Request patch object to deal with patching reply in flask.ext.nemo
+    """
+    def __init__(self, first_request, f):
+        self.f = f
+        self.__text = f.read()
+
+        self.resource = [first_request.text, self.__text]
+
+    @property
+    def text(self):
+        return self.resource.pop(0)
+
+
+class NemoResource(unittest.TestCase):
     """ Test Suite for Nemo
     """
     endpoint = "http://website.com/cts/api"
     def setUp(self):
         with open("testing_data/getcapabilities.xml", "r") as f:
             self.getCapabilities = RequestPatch(f)
+        with open("testing_data/getvalidreff.xml", "r") as f:
+            self.getValidReff = DoubleRequestPatch(self.getCapabilities, f)
         self.nemo = Nemo(
             api_url=NemoTestControllers.endpoint
         )
+
+
+class NemoTestControllers(NemoResource):
 
     def test_flask_nemo(self):
         """ Testing Flask Nemo is set up"""
@@ -136,3 +156,77 @@ class NemoTestControllers(unittest.TestCase):
             self.assertEqual("urn:cts:greekLit:tlg0003.tlg001.perseus-grc2" in [str(text.urn) for text in texts], True)
             self.assertEqual("urn:cts:latinLit:phi1294.phi002.perseus-lat2" in [str(text.urn) for text in texts], True)
             self.assertEqual("urn:cts:latinLit:phi1294.phi002.perseus-lat3" in [str(text.urn) for text in texts], False)
+
+
+    def test_get_single_text(self):
+        """ Check that texts are filtered
+        """
+        with patch('requests.get', return_value=self.getCapabilities):
+            texts = self.nemo.get_text("greekLIT", "TLG0003", "tlg001", "perseus-grc2")  # With nice filtering
+            self.assertIsInstance(texts, MyCapytain.resources.inventory.Text)
+            self.assertEqual(str(texts.urn), "urn:cts:greekLit:tlg0003.tlg001.perseus-grc2")
+
+    def test_get_validreffs_without_specific_callback(self):
+        """ Try to get valid reffs
+        """
+        self.nemo = Nemo(api_url=NemoTestControllers.endpoint, inventory="annotsrc")
+        with patch('requests.get', return_value=self.getValidReff) as patched:
+            text, callback = self.nemo.get_reffs("latinLit", "phi1294", "phi002", "perseus-lat2")
+            self.assertIsInstance(text, MyCapytain.resources.inventory.Text)
+
+            reffs = callback(level=3)
+            self.assertIsInstance(reffs, list)
+            self.assertEqual(reffs[0], "urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.pr.1")
+            self.assertEqual(patched.mock_calls, [
+                call(
+                    NemoTestControllers.endpoint,
+                    params={
+                        "inv": "annotsrc",
+                        "request": "GetCapabilities"
+                    }
+                ),
+                call(
+                    NemoTestControllers.endpoint,
+                    params={
+                        "inv": "annotsrc",
+                        "request": "GetValidReff",
+                        "level": "3",
+                        "urn": "urn:cts:latinLit:phi1294.phi002.perseus-lat2"
+                    }
+                )
+                ]
+            )
+
+
+class NemoTestRoutes(NemoResource):
+    """ Test Suite for Nemo
+    """
+    endpoint = "http://website.com/cts/api"
+    # Actually
+    def test_route_text(self):
+        """ Try to get valid reffs
+        """
+
+        urn = "urn:cts:latinLit:phi1294.phi002.perseus-lat2"
+        def chunker(text, level):
+            self.assertIsInstance(text, MyCapytain.resources.inventory.Text)
+            self.assertEqual(str(text.urn), "urn:cts:latinLit:phi1294.phi002.perseus-lat2")
+            return True
+
+        nemo = Nemo(
+            api_url=NemoTestControllers.endpoint,
+            inventory="annotsrc",
+            chunker={"default": chunker}
+        )
+
+        with patch('requests.get', return_value=self.getValidReff) as patched:
+            view = nemo.r_version("latinLit", "phi1294", "phi002", "perseus-lat2")
+            self.assertIsInstance(view["version"], MyCapytain.resources.inventory.Text)
+            patched.assert_called_once_with(
+                NemoTestControllers.endpoint,
+                params={
+                    "inv": "annotsrc",
+                    "request": "GetCapabilities"
+                }
+            )
+            self.assertEqual(view["reffs"], True)
