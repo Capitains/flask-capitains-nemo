@@ -101,14 +101,12 @@ class Nemo(object):
         if isinstance(templates, dict):
             self.templates.update(templates)
 
-
         if app is not None:
             self.app = app
             self.init_app(self.app)
         else:
             self.app = None
 
-        self.api_url = ""
         self.api_inventory = inventory
         if self.api_inventory:
             self.endpoint.inventory = self.api_inventory

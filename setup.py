@@ -12,7 +12,7 @@ setup(
     description='',
     test_suite="test_flask_nemo",
     install_requires=[
-        "MyCapytain==0.0.4",
+        "MyCapytain==0.0.5",
         "requests_cache==0.4.9",
         "Flask==0.10.1"
     ],

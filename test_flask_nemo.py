@@ -15,7 +15,7 @@ class RequestPatch(object):
         return self.__text
 
 
-class NemoTest(unittest.TestCase):
+class NemoTestControllers(unittest.TestCase):
     """ Test Suite for Nemo
     """
     endpoint = "http://website.com/cts/api"
@@ -23,7 +23,7 @@ class NemoTest(unittest.TestCase):
         with open("testing_data/getcapabilities.xml", "r") as f:
             self.getCapabilities = RequestPatch(f)
         self.nemo = Nemo(
-            api_url=NemoTest.endpoint
+            api_url=NemoTestControllers.endpoint
         )
 
     def test_flask_nemo(self):
@@ -32,30 +32,32 @@ class NemoTest(unittest.TestCase):
         self.assertIsInstance(a, Nemo)
         a = Nemo()
 
-    def test_inventory_request(self):
+    def test_without_inventory_request(self):
         """ Check that endpoint are derived from nemo.api_endpoint setting
         """
         #  Test without inventory
         with patch('requests.get', return_value=self.getCapabilities) as patched_get:
             self.nemo.get_inventory()
             patched_get.assert_called_once_with(
-                NemoTest.endpoint, params={
+                NemoTestControllers.endpoint, params={
                     "request": "GetCapabilities"
                 }
             )
 
-        #  Test with inventory
+    def test_with_inventory_request(self):
+        """ Check that endpoint are derived from nemo.api_endpoint setting
+        """
         with patch('requests.get', return_value=self.getCapabilities) as patched_get:
+            #  Test with inventory
             self.nemo.api_inventory = "annotsrc"
             self.nemo.get_inventory()
             patched_get.assert_called_once_with(
-                NemoTest.endpoint, params={
+                NemoTestControllers.endpoint, params={
                     "request": "GetCapabilities",
                     "inv": "annotsrc"
                 }
             )
             self.nemo.api_inventory = None
-
 
     def test_inventory_parsing(self):
         """ Check that endpoint request leads to the creation of a TextInventory object
@@ -63,7 +65,7 @@ class NemoTest(unittest.TestCase):
         with patch('requests.get', return_value=self.getCapabilities) as patched_get:
             inventory = self.nemo.get_inventory()
             patched_get.assert_called_once_with(
-                NemoTest.endpoint, params={
+                NemoTestControllers.endpoint, params={
                     "request": "GetCapabilities"
                 }
             )
