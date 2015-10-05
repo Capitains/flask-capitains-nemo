@@ -2,13 +2,14 @@ import unittest
 from flask.ext.nemo import Nemo
 from mock import patch, call
 import MyCapytain
+from lxml import etree
+from flask import Markup
 
 
 class RequestPatch(object):
     """ Request patch object to deal with patching reply in flask.ext.nemo
     """
     def __init__(self, f):
-        self.f = f
         self.__text = f.read()
 
     @property
@@ -16,14 +17,11 @@ class RequestPatch(object):
         return self.__text
 
 
-class DoubleRequestPatch(object):
+class RequestPatchChained(object):
     """ Request patch object to deal with patching reply in flask.ext.nemo
     """
-    def __init__(self, first_request, f):
-        self.f = f
-        self.__text = f.read()
-
-        self.resource = [first_request.text, self.__text]
+    def __init__(self, requests):
+        self.resource = [other.text for other in requests]
 
     @property
     def text(self):
@@ -34,14 +32,24 @@ class NemoResource(unittest.TestCase):
     """ Test Suite for Nemo
     """
     endpoint = "http://website.com/cts/api"
+    body_xsl = "testing_data/xsl_test.xml"
+
     def setUp(self):
         with open("testing_data/getcapabilities.xml", "r") as f:
             self.getCapabilities = RequestPatch(f)
+
         with open("testing_data/getvalidreff.xml", "r") as f:
-            self.getValidReff = DoubleRequestPatch(self.getCapabilities, f)
+            self.getValidReff_single = RequestPatch(f)
+            self.getValidReff = RequestPatchChained([self.getCapabilities, self.getValidReff_single])
+
         with open("testing_data/getpassage.xml", "r") as f:
             self.getPassage = RequestPatch(f)
-            self.getPassage_Capabilities = DoubleRequestPatch(self.getCapabilities, f)
+            self.getPassage_Capabilities = RequestPatchChained([self.getCapabilities, self.getPassage])
+
+        with open("testing_data/getprevnext.xml", "r") as f:
+            self.getPrevNext = RequestPatch(f)
+            self.getPassage_Route = RequestPatchChained([self.getCapabilities, self.getPassage, self.getPrevNext])
+
         self.nemo = Nemo(
             api_url=NemoTestControllers.endpoint
         )
@@ -248,7 +256,6 @@ class NemoTestControllers(NemoResource):
             self.assertEqual(len(passage.xml.xpath("//tei:l[@n]", namespaces={"tei":"http://www.tei-c.org/ns/1.0"})), 6)
 
 
-
 class NemoTestRoutes(NemoResource):
     """ Test Suite for Nemo
     """
@@ -257,7 +264,32 @@ class NemoTestRoutes(NemoResource):
         """
         self.assertEqual(self.nemo.r_index(), {"template": self.nemo.templates["index"]})
 
-    def test_route_text(self):
+    def test_route_collection(self):
+        """ Test return values of route collection (list of textgroups
+        """
+
+        with patch('requests.get', return_value=self.getCapabilities) as patched:
+            view = self.nemo.r_collection("latinLit")
+            self.assertEqual(view["template"], self.nemo.templates["textgroups"])
+            self.assertEqual(len(view["textgroups"]), 3)
+            self.assertIn("urn:cts:latinLit:phi1294", [str(textgroup.urn) for textgroup in view["textgroups"]])
+            self.assertIsInstance(view["textgroups"][0], MyCapytain.resources.inventory.TextGroup)
+
+    def test_route_texts(self):
+        """ Test return values of route texts (list of texts for a textgroup
+        """
+
+        with patch('requests.get', return_value=self.getCapabilities) as patched:
+            view = self.nemo.r_texts("latinLit", "phi1294")
+            self.assertEqual(view["template"], self.nemo.templates["texts"])
+            self.assertEqual(len(view["texts"]), 2)
+            self.assertEqual(
+                sorted([str(view["texts"][0].urn), str(view["texts"][1].urn)]),
+                sorted(["urn:cts:latinLit:phi1294.phi002.perseus-lat2", "urn:cts:latinLit:phi1294.phi002.perseus-eng2"])
+            )
+            self.assertIsInstance(view["texts"][0], MyCapytain.resources.inventory.Text)
+
+    def test_route_version_chunker_replacement(self):
         """ Try to get valid reffs
         """
 
@@ -284,3 +316,121 @@ class NemoTestRoutes(NemoResource):
                 }
             )
             self.assertEqual(view["reffs"], True)
+
+    def test_route_version_default_chunker(self):
+        """ Try to get valid reffs
+        """
+        urn = "urn:cts:latinLit:phi1294.phi002.perseus-lat2"
+
+        with patch('requests.get', return_value=self.getValidReff) as patched:
+            view = self.nemo.r_version("latinLit", "phi1294", "phi002", "perseus-lat2")
+            self.assertIsInstance(view["version"], MyCapytain.resources.inventory.Text)
+            self.assertEqual(view["reffs"][0], ("1.pr.1", "1.pr.1"))
+
+    def test_route_text_without_transform(self):
+        """ Try to get valid reffs
+        """
+        urn = "urn:cts:latinLit:phi1294.phi002.perseus-lat2"
+
+        with patch('requests.get', return_value=self.getValidReff) as patched:
+            view = self.nemo.r_version("latinLit", "phi1294", "phi002", "perseus-lat2")
+            self.assertIsInstance(view["version"], MyCapytain.resources.inventory.Text)
+            self.assertEqual(view["reffs"][0], ("1.pr.1", "1.pr.1"))
+
+    def test_route_passage_without_xslt(self):
+        nemo = Nemo(
+            api_url=NemoTestControllers.endpoint,
+            inventory="annotsrc"
+        )
+        with patch('requests.get', return_value=self.getPassage_Route) as patched:
+            view = self.nemo.r_passage("latinLit", "phi1294", "phi002", "perseus-lat2", "1.pr.1")
+            self.assertEqual(view["template"], nemo.templates["text"])
+            self.assertIsInstance(view["version"], MyCapytain.resources.inventory.Text)
+            self.assertEqual(str(view["version"].urn), "urn:cts:latinLit:phi1294.phi002.perseus-lat2")
+            self.assertEqual(view["prev"], "1.1.1")
+            self.assertEqual(view["next"], "1.1.3")
+            self.assertIsInstance(view["text_passage"], Markup)
+
+            # Reparsing xml
+            xml = etree.fromstring(str(view["text_passage"]))
+            self.assertEqual(
+                len(xml.xpath("//tei:body", namespaces={"tei":"http://www.tei-c.org/ns/1.0"})),
+                1
+            )
+            self.assertEqual(
+                len(xml.xpath("//tei:l", namespaces={"tei":"http://www.tei-c.org/ns/1.0"})),
+                6
+            )
+
+    def test_route_passage_with_transform(self):
+        """ Try with a non xslt just to be sure
+        """
+        urn = "urn:cts:latinLit:phi1294.phi002.perseus-lat2"
+        def transformer(version, text):
+            self.assertEqual(str(version.urn), "urn:cts:latinLit:phi1294.phi002.perseus-lat2")
+            self.assertIsInstance(text, etree._Element)
+            return "<a>Hello</a>"
+        nemo = Nemo(
+            api_url=NemoTestControllers.endpoint,
+            inventory="annotsrc",
+            transform={"default": transformer}
+        )
+        with patch('requests.get', return_value=self.getPassage_Route) as patched:
+            view = nemo.r_passage("latinLit", "phi1294", "phi002", "perseus-lat2", "1.pr.1")
+            self.assertEqual(view["text_passage"], Markup("<a>Hello</a>"))
+
+    def test_route_passage_with_xslt(self):
+        nemo = Nemo(
+            api_url=NemoTestControllers.endpoint,
+            inventory="annotsrc",
+            transform={"default": NemoTestControllers.body_xsl}
+        )
+        with patch('requests.get', return_value=self.getPassage_Route) as patched:
+            view = nemo.r_passage("latinLit", "phi1294", "phi002", "perseus-lat2", "1.pr.1")
+            self.assertEqual(view["template"], nemo.templates["text"])
+            self.assertIsInstance(view["version"], MyCapytain.resources.inventory.Text)
+            self.assertEqual(str(view["version"].urn), "urn:cts:latinLit:phi1294.phi002.perseus-lat2")
+            self.assertEqual(view["prev"], "1.1.1")
+            self.assertEqual(view["next"], "1.1.3")
+            self.assertIsInstance(view["text_passage"], Markup)
+
+            # Reparsing xml
+            xml = etree.fromstring(str(view["text_passage"]))
+            self.assertEqual(
+                len(xml.xpath("//tei:notbody", namespaces={"tei":"http://www.tei-c.org/ns/1.0"})),
+                1
+            )
+
+    def test_route_passage_with_urn_xslt(self):
+        nemo = Nemo(
+            api_url=NemoTestControllers.endpoint,
+            inventory="annotsrc",
+            transform={"urn:cts:latinLit:phi1294.phi002.perseus-lat2": NemoTestControllers.body_xsl}
+        )
+        with patch('requests.get', return_value=self.getPassage_Route) as patched:
+            view = nemo.r_passage("latinLit", "phi1294", "phi002", "perseus-lat2", "1.pr.1")
+            # Reparsing xml
+            xml = etree.fromstring(str(view["text_passage"]))
+            self.assertEqual(
+                len(xml.xpath("//tei:notbody", namespaces={"tei": "http://www.tei-c.org/ns/1.0"})),
+                1
+            )
+
+    def test_route_passage_without_urn_xslt(self):
+        nemo = Nemo(
+            api_url=NemoTestControllers.endpoint,
+            inventory="annotsrc",
+            transform={"urn:cts:latinLit:phi1294.phi002.perseus-lat3": NemoTestControllers.body_xsl}
+        )
+        with patch('requests.get', return_value=self.getPassage_Route) as patched:
+            view = nemo.r_passage("latinLit", "phi1294", "phi002", "perseus-lat2", "1.pr.1")
+            # Reparsing xml
+            xml = etree.fromstring(str(view["text_passage"]))
+            self.assertEqual(
+                len(xml.xpath("//tei:body", namespaces={"tei": "http://www.tei-c.org/ns/1.0"})),
+                1
+            )
+
+    def test_route_assets(self):
+        with patch('flask_nemo.abort') as abort:
+            pass
