@@ -66,7 +66,7 @@ class Nemo(object):
         ("/read/<collection>", "r_collection", ["GET"]),
         ("/read/<collection>/<textgroup>", "r_texts", ["GET"]),
         ("/read/<collection>/<textgroup>/<work>/<version>", "r_version", ["GET"]),
-        ("/read/<collection>/<textgroup>/<work>/<version>/<passage_identifier>", "r_text", ["GET"])
+        ("/read/<collection>/<textgroup>/<work>/<version>/<passage_identifier>", "r_passage", ["GET"])
     ]
     TEMPLATES = {
         "container": "container.html",
@@ -470,7 +470,7 @@ class Nemo(object):
             "reffs": reffs
         }
 
-    def r_text(self, collection, textgroup, work, version, passage_identifier):
+    def r_passage(self, collection, textgroup, work, version, passage_identifier):
         """ Retrieve the text of the passage
 
         :param collection: Collection identifier
@@ -486,15 +486,14 @@ class Nemo(object):
         :return: Template, version inventory object and Markup object representing the text
         :rtype: {str: Any}
         """
+        edition = self.get_text(collection, textgroup, work, version)
         text = self.get_passage(collection, textgroup, work, version, passage_identifier)
-        version = self.get_text(collection, textgroup, work, version)
 
-        passage = self.transform(version, text.xml)
+        passage = self.transform(edition, text.xml)
         prev, next = self.getprevnext(text, Nemo.prevnext_callback_generator(text))
-
         return {
             "template": self.templates["text"],
-            "version": version,
+            "version": edition,
             "text_passage": Markup(passage),
             "prev": prev,
             "next": next

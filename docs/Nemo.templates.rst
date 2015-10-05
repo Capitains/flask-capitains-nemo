@@ -88,7 +88,7 @@ text.html
 #########
 
 
-See `r_text` in :ref:`Nemo.api.r_text`
+See `r_passage` in :ref:`Nemo.api.r_passage`
 
 +-----------------+----------------------------------------------------------------------------------------+
 | Variable Name   | Details                                                                                |

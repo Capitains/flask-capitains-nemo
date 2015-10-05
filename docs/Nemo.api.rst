@@ -59,8 +59,8 @@ Routes
 .. _Nemo.api.r_version::
 .. automethod:: flask.ext.nemo.Nemo.r_version
 
-.. _Nemo.api.r_text::
-.. automethod:: flask.ext.nemo.Nemo.r_text
+.. _Nemo.api.r_passage::
+.. automethod:: flask.ext.nemo.Nemo.r_passage
 
 .. _Nemo.api.r_assets::
 .. automethod:: flask.ext.nemo.Nemo.r_assets
