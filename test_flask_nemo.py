@@ -1,9 +1,18 @@
 import unittest
 from flask.ext.nemo import Nemo
-from mock import patch, call
+from mock import patch, call, Mock
 import MyCapytain
 from lxml import etree
-from flask import Markup
+from flask import Markup, Flask
+
+
+def create_test_app(debug=False, config=None):
+    app = Flask(__name__)
+    app.debug = debug
+
+    if config:
+        app.config.update(**config)
+    return app
 
 
 class RequestPatch(object):
@@ -26,7 +35,6 @@ class RequestPatchChained(object):
     @property
     def text(self):
         return self.resource.pop(0)
-
 
 class NemoResource(unittest.TestCase):
     """ Test Suite for Nemo
@@ -431,6 +439,37 @@ class NemoTestRoutes(NemoResource):
                 1
             )
 
-    def test_route_assets(self):
+    def test_route_assets_404(self):
         with patch('flask_nemo.abort') as abort:
-            pass
+            self.nemo.r_assets("js", "wrong-js.js")
+            abort.assert_called_once_with(404)
+
+    def test_route_assets_all(self):
+        nemo = Nemo(
+            statics=["testing_data/getcapabilities.xml"],
+            js=["testing_data/getcapabilities.xml"],
+            css=["testing_data/style.css"]
+        )
+
+        nemo.blueprint = Mock()
+        nemo.register_assets()
+        with patch("flask_nemo.send_from_directory") as patched:
+            nemo.r_assets("js", "getcapabilities.xml")
+            nemo.r_assets("static", "getcapabilities.xml")
+            nemo.r_assets("css", "style.css")
+            patched.assert_has_calls([
+                call(directory="testing_data", filename="getcapabilities.xml"),
+                call(directory="testing_data", filename="getcapabilities.xml"),
+                call(directory="testing_data", filename="style.css")
+            ])
+
+    def test_view_maker(self):
+        """ View maker should take care of returning a lambda using the function self.route and the function
+        identified by the parameter name
+        """
+        nemo = Nemo()
+        nemo.route = Mock()
+
+        view = nemo.view_maker("r_collection")
+        view(collection="latinLit")
+        nemo.route.assert_called_with(nemo.r_collection, collection="latinLit")

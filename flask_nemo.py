@@ -170,7 +170,7 @@ class Nemo(object):
             self.statics = statics
 
         self.__assets = {
-            "js" : OrderedDict(),
+            "js": OrderedDict(),
             "css": OrderedDict(),
             "static": OrderedDict()
         }
@@ -509,7 +509,7 @@ class Nemo(object):
             return send_from_directory(directory=self.__assets[type][asset], filename=asset)
         abort(404)
 
-    def __register_assets(self):
+    def register_assets(self):
         """ Merge and register assets, both as routes and dictionary
 
         :return: None
@@ -556,7 +556,7 @@ class Nemo(object):
                 methods=methods
             )
 
-        self.__register_assets()
+        self.register_assets()
 
         # If we have added or overriden the default templates
         if self.templates != Nemo.TEMPLATES:
