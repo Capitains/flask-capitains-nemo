@@ -473,3 +473,94 @@ class NemoTestRoutes(NemoResource):
         view = nemo.view_maker("r_collection")
         view(collection="latinLit")
         nemo.route.assert_called_with(nemo.r_collection, collection="latinLit")
+
+    def test_render_normal(self):
+        """ Render adds informations, including url parameters in a url dict
+        """
+        with patch("requests.get", return_value=self.getCapabilities):
+            with patch("flask_nemo.render_template") as patched:
+                self.nemo.render("index.html", test="123", value="value", url={})
+                patched.assert_called_once_with(
+                    "index.html",
+                    collections={'latinLit', 'greekLit'},
+                    test="123",
+                    value="value",
+                    lang="eng",
+                    templates=self.nemo.templates,
+                    assets=self.nemo.assets,
+                    url={}
+                )
+
+    def test_render_textgroups(self):
+        """ Render adds informations, including url parameters in a url dict
+        """
+        with patch("requests.get", return_value=self.getCapabilities):
+            with patch("flask_nemo.render_template") as patched:
+                self.nemo.render(
+                    "index.html",
+                    test="123",
+                    value="value",
+                    url={
+                        "collection": "latinLit",
+                        "textgroup": "phi1294"
+                    })
+                patched.assert_called_once_with(
+                    "index.html",
+                    collections={'latinLit', 'greekLit'},
+                    test="123",
+                    value="value",
+                    lang="eng",
+                    templates=self.nemo.templates,
+                    assets=self.nemo.assets,
+                    url={
+                        "collection": "latinLit",
+                        "textgroup": "phi1294",
+
+                    },
+                    textgroups=self.nemo.get_textgroups("latinLit")
+                )
+
+    def test_render_text(self):
+        """ Render adds informations, including url parameters in a url dict
+        """
+        with patch("requests.get", return_value=self.getCapabilities):
+            with patch("flask_nemo.render_template") as patched:
+                self.nemo.render(
+                    "index.html",
+                    test="123",
+                    value="value",
+                    url={
+                        "collection": "latinLit",
+                        "textgroup": "phi1294",
+                        "work": "phi002",
+                        "text": "perseus-lat2"
+                    })
+                patched.assert_called_once_with(
+                    "index.html",
+                    collections={'latinLit', 'greekLit'},
+                    test="123",
+                    value="value",
+                    lang="eng",
+                    templates=self.nemo.templates,
+                    assets=self.nemo.assets,
+                    url={
+                        "collection": "latinLit",
+                        "textgroup": "phi1294",
+                        "work": "phi002",
+                        "text": "perseus-lat2"
+                    },
+                    textgroups=self.nemo.get_textgroups("latinLit"),
+                    texts=self.nemo.get_texts("latinLit", "phi1294")
+                )
+
+    def test_route(self):
+        """ nemo.route should apply fn and the args given
+        """
+        self.nemo.render = Mock()
+        with patch("requests.get", return_value=self.getCapabilities):
+            route = self.nemo.route(self.nemo.r_collection, collection="latinLit")
+            self.nemo.render.assert_called_once_wite(
+                template="textgroups.html",
+                textgroups=self.nemo.get_textgroups("latinLit"),
+                url={"collection": "latinLit"}
+            )

@@ -169,7 +169,7 @@ class Nemo(object):
         if isinstance(statics, list):
             self.statics = statics
 
-        self.__assets = {
+        self.assets = {
             "js": OrderedDict(),
             "css": OrderedDict(),
             "static": OrderedDict()
@@ -505,8 +505,8 @@ class Nemo(object):
         :param asset: Filename of an asset
         :return: Response
         """
-        if type in self.__assets and asset in self.__assets[type]:
-            return send_from_directory(directory=self.__assets[type][asset], filename=asset)
+        if type in self.assets and asset in self.assets[type]:
+            return send_from_directory(directory=self.assets[type][asset], filename=asset)
         abort(404)
 
     def register_assets(self):
@@ -517,13 +517,13 @@ class Nemo(object):
         # Save assets routes
         for css in self.css:
             directory, filename = op.split(css)
-            self.__assets["css"][filename] = directory
+            self.assets["css"][filename] = directory
         for js in self.js:
             directory, filename = op.split(js)
-            self.__assets["js"][filename] = directory
+            self.assets["js"][filename] = directory
         for static in self.statics:
             directory, filename = op.split(static)
-            self.__assets["static"][filename] = directory
+            self.assets["static"][filename] = directory
 
         self.blueprint.add_url_rule(
             # Register another path to ensure assets compatibility
@@ -600,7 +600,7 @@ class Nemo(object):
             if Nemo.in_and_not_int("text", "texts", kwargs):
                 kwargs["texts"] = self.get_texts(kwargs["url"]["collection"], kwargs["url"]["textgroup"])
 
-        kwargs["assets"] = self.__assets
+        kwargs["assets"] = self.assets
         kwargs["templates"] = self.templates
 
         return render_template(template, **kwargs)
@@ -626,9 +626,10 @@ class Nemo(object):
         :rtype: flask.Blueprint
         """
         if self.app is not None:
-            blueprint = self.create_blueprint()
-            self.app.register_blueprint(blueprint)
-            return blueprint
+            if not self.blueprint:
+                self.blueprint = self.create_blueprint()
+            self.app.register_blueprint(self.blueprint)
+            return self.blueprint
         return None
 
     def register_filters(self):
