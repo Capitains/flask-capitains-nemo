@@ -594,10 +594,10 @@ class Nemo(object):
         kwargs["collections"] = self.get_collections()
         kwargs["lang"] = "eng"
 
-        if Nemo.in_and_not_int("textgroup", "textgroups", kwargs):
+        if Nemo.in_and_not_in("textgroup", "textgroups", kwargs):
             kwargs["textgroups"] = self.get_textgroups(kwargs["url"]["collection"])
 
-            if Nemo.in_and_not_int("text", "texts", kwargs):
+            if Nemo.in_and_not_in("text", "texts", kwargs):
                 kwargs["texts"] = self.get_texts(kwargs["url"]["collection"], kwargs["url"]["textgroup"])
 
         kwargs["assets"] = self.assets
@@ -671,7 +671,7 @@ class Nemo(object):
         return self.prevnext["default"](passage, callback)
 
     @staticmethod
-    def in_and_not_int(identifier, collection, kwargs):
+    def in_and_not_in(identifier, collection, kwargs):
         """ Check if an element identified by identifier is in kwargs but not the collection containing it
 
         :param identifier: URL Identifier of one kind of element (Textgroup, work, etc.)

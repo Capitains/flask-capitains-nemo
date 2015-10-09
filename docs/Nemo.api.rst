@@ -82,7 +82,7 @@ Helpers
 
 .. automethod:: flask.ext.nemo.Nemo.map_urns
 .. automethod:: flask.ext.nemo.Nemo.filter_urn
-.. automethod:: flask.ext.nemo.Nemo.in_and_not_int
+.. automethod:: flask.ext.nemo.Nemo.in_and_not_in
 .. automethod:: flask.ext.nemo.Nemo.prevnext_callback_generator
 
 Chunkers
