@@ -147,7 +147,9 @@ class Nemo(object):
             "default" : None
         }
 
-        if isinstance(transform, dict):
+        if transform is True:
+            self.__transform["default"] = op.join("data", "epidoc", "full.xsl")
+        elif isinstance(transform, dict):
             self.__transform.update(transform)
 
         self.chunker = {}

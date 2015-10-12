@@ -4,7 +4,7 @@ from mock import patch, call, Mock
 import MyCapytain
 from lxml import etree
 from flask import Markup, Flask
-
+from jinja2.exceptions import TemplateNotFound
 
 def create_test_app(debug=False, config=None):
     app = Flask(__name__)
@@ -262,6 +262,55 @@ class NemoTestControllers(NemoResource):
             passage = self.nemo.get_passage("latinLit", "phi1294", "phi002", "perseus-lat2", "1.pr")
             self.assertIsInstance(passage, MyCapytain.resources.texts.api.Passage)
             self.assertEqual(len(passage.xml.xpath("//tei:l[@n]", namespaces={"tei":"http://www.tei-c.org/ns/1.0"})), 6)
+
+
+class TestNemoInit(NemoResource):
+    def test_init_app(self):
+        app = Flask(__name__)
+        app.config["CTS_API_URL"] = "http://localhost"
+        app.config["CTS_API_INVENTORY"] = "annotsrc"
+        self.nemo.init_app(app)
+
+        self.assertEqual(self.nemo.api_inventory, "annotsrc")
+        self.assertEqual(self.nemo.api_url, "http://localhost")
+        self.assertEqual(self.nemo.app, app)
+
+    def test_overwrite_urls(self):
+        routes = [("/index.html", "r_index", ["GET"])] + Nemo.ROUTES[1:]
+        app = Flask(__name__)
+        nemo = Nemo(app=app, urls=routes)
+        nemo.register_routes()
+        self.assertIn("flask_nemo", app.blueprints)
+
+        rules = [(rule.rule, rule.endpoint) for rule in app.url_map.iter_rules()]
+        self.assertIn("/nemo/index.html", [rule[0] for rule in rules])
+        self.assertNotIn("/nemo/", [rule[0] for rule in rules])
+
+    def test_static_url_path(self):
+        app = Flask(__name__)
+        nemo = Nemo(app=app, static_url_path="/assets/nemoOo")
+        nemo.register_routes()
+        self.assertIn("flask_nemo", app.blueprints)
+
+        rules = [(rule.rule, rule.endpoint) for rule in app.url_map.iter_rules()]
+        self.assertIn("/nemo/assets/nemoOo/<path:filename>", [rule[0] for rule in rules])
+        self.assertIn("/nemo/assets/nemoOo.secondary/<type>/<asset>", [rule[0] for rule in rules])
+
+    def test_static_folder(self):
+        app = Flask(__name__)
+        nemo = Nemo(app=app, static_folder="/examples")
+        nemo.register_routes()
+
+        self.assertEqual(nemo.static_folder, "/examples")
+        self.assertEqual(nemo.blueprint.static_folder, "/examples")
+
+    def test_template_folder(self):
+        app = Flask(__name__)
+        nemo = Nemo(app=app, template_folder="/examples")
+        nemo.register_routes()
+
+        self.assertEqual(nemo.template_folder, "/examples")
+        self.assertEqual(nemo.blueprint.template_folder, "/examples")
 
 
 class NemoTestRoutes(NemoResource):
@@ -565,6 +614,40 @@ class NemoTestRoutes(NemoResource):
                 url={"collection": "latinLit"}
             )
 
+    def test_register_route(self):
+        app = Flask(__name__)
+        nemo = Nemo(app=app, base_url="/perseus")
+        nemo.register_routes()
+        self.assertIn("flask_nemo", app.blueprints)
+
+        rules = [(rule.rule, rule.endpoint) for rule in app.url_map.iter_rules()]
+        self.assertIn("/perseus/read/<collection>/<textgroup>/<work>/<version>/<passage_identifier>", [rule[0] for rule in rules])
+        self.assertIn("flask_nemo.r_passage", [rule[1] for rule in rules])
+
+        app = Flask(__name__)
+        nemo = Nemo("nemo", app=app)
+        nemo.register_routes()
+        self.assertIn("nemo", app.blueprints)
+
+        rules = [(rule.rule, rule.endpoint) for rule in app.url_map.iter_rules()]
+        self.assertIn("/nemo/read/<collection>/<textgroup>/<work>/<version>/<passage_identifier>", [rule[0] for rule in rules])
+        self.assertIn("nemo.r_passage", [rule[1] for rule in rules])
+
+        nemo = Nemo()
+        self.assertEqual(nemo.register_routes(), None)
+
+    def test_additional_template(self):
+        # Line 568-575
+        app = Flask(__name__)
+        nemo = Nemo(app=app, templates={"menu": "examples/ciham.menu.html"})
+        blueprint = nemo.create_blueprint()
+
+        html, path, function = blueprint.jinja_loader.get_source("", "examples/ciham.menu.html")
+        self.assertIn("Text provided by CIHAM", html)
+
+        with self.assertRaises(TemplateNotFound):
+            html, path, function = blueprint.jinja_loader.get_source("", "examples/unknown.html")
+
 
 class TestCustomizer(NemoResource):
     """ Test customization appliers
@@ -737,6 +820,13 @@ class TestFilters(NemoResource):
         self.assertEqual(Nemo.f_formatting_passage_reference("1.1-1.2"), "1.1")
         self.assertEqual(Nemo.f_formatting_passage_reference("1.1"), "1.1")
 
+    def test_register_filter(self):
+        app = Flask(__name__)
+        self.nemo = Nemo(app=app)
+        self.nemo.register_filters()
+        self.assertEqual(self.nemo.app.jinja_env.filters["formatting_passage_reference"], Nemo.f_formatting_passage_reference)
+        self.assertEqual(self.nemo.app.jinja_env.filters["collection_i18n"], Nemo.f_collection_i18n)
+        self.assertEqual(self.nemo.app.jinja_env.filters["active_link"], Nemo.f_active_link)
 
 class TestChunkers(NemoResource):
 
