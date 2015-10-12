@@ -6,7 +6,7 @@
 </header>
 <ul class="menu">
     {% for collection in collections %}
-        <li><a class="{{collection|active_link}}" href="{{url_for('nemo.r_collection', collection=collection)}}">{{collection|collection_i18n}}</a></li>
+        <li><a class="{{collection|active_link(url)}}" href="{{url_for('nemo.r_collection', collection=collection)}}">{{collection|collection_i18n}}</a></li>
     {% endfor %}
 </ul>
 {% if textgroups %}
@@ -24,7 +24,7 @@
 </header>
 <ul class="menu">
     {% for textgroup in textgroups %}
-        <li><a class="{{textgroup.urn[3]|active_link}}" href="{{url_for('nemo.r_texts', collection=textgroup.urn[2], textgroup=textgroup.urn[3])}}">{{textgroup.metadata['groupname'][lang]}}</a></li>
+        <li><a class="{{textgroup.urn[3]|active_link(url)}}" href="{{url_for('nemo.r_texts', collection=textgroup.urn[2], textgroup=textgroup.urn[3])}}">{{textgroup.metadata['groupname'][lang]}}</a></li>
     {% endfor %}
 </ul>
 {% endif %}

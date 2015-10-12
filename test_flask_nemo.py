@@ -559,7 +559,7 @@ class NemoTestRoutes(NemoResource):
         self.nemo.render = Mock()
         with patch("requests.get", return_value=self.getCapabilities):
             route = self.nemo.route(self.nemo.r_collection, collection="latinLit")
-            self.nemo.render.assert_called_once_wite(
+            self.nemo.render.assert_called_once_with(
                 template="textgroups.html",
                 textgroups=self.nemo.get_textgroups("latinLit"),
                 url={"collection": "latinLit"}
@@ -711,3 +711,90 @@ class TestCustomizer(NemoResource):
             etree.fromstring('<tei:body xmlns:tei="http://www.tei-c.org/ns/1.0" />')
         )
         self.assertEqual(transformed, '<tei:notbody xmlns:tei="http://www.tei-c.org/ns/1.0"/>')
+
+class TestFilters(NemoResource):
+
+    def test_f_active_link(self):
+        """ Test checking if something is in the path
+        """
+        wrong = Nemo.f_active_link("phi003", {"collection": "latinLit"})
+        wrong2 = Nemo.f_active_link("phi003", {"collection": "latinLit", "textgroup": "phi0003"})
+        right = Nemo.f_active_link("phi003", {"collection": "latinLit", "textgroup": "phi0003", "work": "phi003"})
+        self.assertEqual(wrong, "")
+        self.assertEqual(wrong2, "")
+        self.assertEqual(right, "active")
+
+    def test_f_collection_i18n(self):
+        """ Test internationalization of collection identifier
+        """
+        self.assertEqual(Nemo.f_collection_i18n("latinLit"), "Latin")
+        self.assertEqual(Nemo.f_collection_i18n("greekLit"), "Ancient Greek")
+        self.assertEqual(Nemo.f_collection_i18n("freLit"), "freLit")
+
+    def test_f_formatting_passage_reference(self):
+        """ Test split of passage range identifier
+        """
+        self.assertEqual(Nemo.f_formatting_passage_reference("1.1-1.2"), "1.1")
+        self.assertEqual(Nemo.f_formatting_passage_reference("1.1"), "1.1")
+
+
+class TestChunkers(NemoResource):
+
+    def setUp(self):
+        super(TestChunkers, self).setUp()
+        self.inventory = MyCapytain.resources.inventory.TextInventory(resource=self.getCapabilities.text)
+
+    def make_get_reff(self, asserted_level):
+        def GetReff(level=1):
+            self.assertEqual(level, asserted_level) # Depth of the Citation Scheme
+            return ["urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.pr.5", "urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.1.7"]
+        return GetReff
+
+    def test_default_chunker(self):
+        """ Test default chunker
+        """
+        text = self.inventory["urn:cts:latinLit:phi1294.phi002.perseus-lat2"]
+        reffs = Nemo.default_chunker(text, self.make_get_reff(3))
+        self.assertEqual(reffs, [
+            ("1.pr.5", "1.pr.5"),
+            ("1.1.7", "1.1.7")
+        ])
+        Nemo.default_chunker(self.inventory["urn:cts:latinLit:phi0959.phi003.perseus-lat2"], self.make_get_reff(2))
+
+    def test_line_chunker(self):
+        """ Test line grouping chunker
+        """
+        def validReff(level):
+            self.assertEqual(level, 3)
+            return ["urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.pr.1","urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.pr.2","urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.pr.3","urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.pr.4","urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.pr.5","urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.pr.6","urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.pr.7","urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.pr.8","urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.pr.9","urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.pr.10","urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.pr.11","urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.pr.12","urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.pr.13","urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.pr.14","urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.pr.15","urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.pr.16","urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.pr.17","urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.pr.18","urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.pr.19","urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.pr.20","urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.pr.21","urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.pr.22"]
+
+        reffs = Nemo.line_chunker(self.inventory["urn:cts:latinLit:phi1294.phi002.perseus-lat2"], validReff, 5)
+        self.assertEqual(reffs, [
+            ("1.pr.1-1.pr.5","1.pr.1"),
+            ("1.pr.6-1.pr.10","1.pr.6"),
+            ("1.pr.11-1.pr.15","1.pr.11"),
+            ("1.pr.16-1.pr.20","1.pr.16"),
+            ("1.pr.21-1.pr.22","1.pr.21")
+        ])
+
+        reffs = Nemo.line_chunker(self.inventory["urn:cts:latinLit:phi1294.phi002.perseus-lat2"], validReff, 11)
+        self.assertEqual(reffs, [
+            ("1.pr.1-1.pr.11","1.pr.1"),
+            ("1.pr.12-1.pr.22","1.pr.12")
+        ])
+
+    def test_scheme_chunker(self):
+        """ Test chunking according to scheme
+        """
+        text = self.inventory["urn:cts:latinLit:phi1294.phi002.perseus-lat2"] # book, poem
+        reffs = Nemo.scheme_chunker(text, self.make_get_reff(2))
+        self.assertEqual(reffs, [
+            ("1.pr.5", "1.pr.5"),
+            ("1.1.7", "1.1.7")
+        ])
+
+        with patch("flask_nemo.Nemo.line_chunker", return_value=True) as line_chunker:
+            self.assertEqual(Nemo.scheme_chunker(
+                self.inventory["urn:cts:latinLit:phi0959.phi007.perseus-lat2"],
+                self.make_get_reff(2)
+            ), True)

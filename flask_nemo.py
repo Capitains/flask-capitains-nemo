@@ -688,14 +688,14 @@ class Nemo(object):
         return identifier in kwargs["url"] and collection not in kwargs
 
     @staticmethod
-    def f_active_link(string):
+    def f_active_link(string, url):
         """ Check if current string is in the list of names
 
         :param string: String to check for in url
         :return: CSS class "active" if valid
         :rtype: str
         """
-        if string in request.path:
+        if string in url.values():
             return "active"
         return ""
 
@@ -755,7 +755,7 @@ class Nemo(object):
         types = [citation.name for citation in text.citation]
         if types == ["book", "poem", "line"]:
             level = 2
-        elif types == ["book", "lines"]:
+        elif types == ["book", "line"]:
             return Nemo.line_chunker(text, getreffs)
         return [tuple([reff.split(":")[-1]]*2) for reff in getreffs(level=level)]
 
@@ -777,8 +777,10 @@ class Nemo(object):
         reffs = []
         i = 0
         while i + lines - 1 < len(source_reffs):
-            reffs.append(tuple(source_reffs[i]+"-"+source_reffs[i+lines-1], source_reffs[i]))
+            reffs.append(tuple([source_reffs[i]+"-"+source_reffs[i+lines-1], source_reffs[i]]))
             i += lines
+        if i < len(source_reffs):
+            reffs.append(tuple([source_reffs[i]+"-"+source_reffs[len(source_reffs)-1], source_reffs[i]]))
         return reffs
 
     @staticmethod
