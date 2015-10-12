@@ -49,6 +49,8 @@ class Nemo(object):
     :type transform: bool|dict
     :param chunker: Dictionary of function to group responses of GetValidReff
     :type chunker: {str: function(str, function(int))}
+    :param prevnext: Dictionary of function to execute GetPrevNext
+    :type prevnext: {str: function(str, function())}
     :param css: Path to additional stylesheets to load
     :type css: [str]
     :param js: Path to additional javascripts to load
@@ -66,7 +68,7 @@ class Nemo(object):
         ("/read/<collection>", "r_collection", ["GET"]),
         ("/read/<collection>/<textgroup>", "r_texts", ["GET"]),
         ("/read/<collection>/<textgroup>/<work>/<version>", "r_version", ["GET"]),
-        ("/read/<collection>/<textgroup>/<work>/<version>/<passage_identifier>", "r_text", ["GET"])
+        ("/read/<collection>/<textgroup>/<work>/<version>/<passage_identifier>", "r_passage", ["GET"])
     ]
     TEMPLATES = {
         "container": "container.html",
@@ -88,11 +90,14 @@ class Nemo(object):
         "f_formatting_passage_reference"
     ]
 
-    def __init__(self, app=None, api_url="/", base_url="/nemo", cache=None, expire=3600,
+    def __init__(self, name=None, app=None, api_url="/", base_url="/nemo", cache=None, expire=3600,
                  template_folder=None, static_folder=None, static_url_path=None,
                  urls=None, inventory=None, transform=None, chunker=None, prevnext=None,
                  css=None, js=None, templates=None, statics=None):
         __doc__ = Nemo.__doc__
+        self.name = __name__
+        if name:
+            self.name = name
         self.prefix = base_url
         self.api_url = api_url
         self.endpoint = MyCapytain.endpoints.cts5.CTS(self.api_url)
@@ -101,14 +106,12 @@ class Nemo(object):
         if isinstance(templates, dict):
             self.templates.update(templates)
 
-
         if app is not None:
             self.app = app
             self.init_app(self.app)
         else:
             self.app = None
 
-        self.api_url = ""
         self.api_inventory = inventory
         if self.api_inventory:
             self.endpoint.inventory = self.api_inventory
@@ -144,9 +147,7 @@ class Nemo(object):
             "default" : None
         }
 
-        if transform is True:
-            self.__transform["default"] = op.join("data", "epidoc", "full.xsl")
-        elif isinstance(transform, dict):
+        if isinstance(transform, dict):
             self.__transform.update(transform)
 
         self.chunker = {}
@@ -171,8 +172,8 @@ class Nemo(object):
         if isinstance(statics, list):
             self.statics = statics
 
-        self.__assets = {
-            "js" : OrderedDict(),
+        self.assets = {
+            "js": OrderedDict(),
             "css": OrderedDict(),
             "static": OrderedDict()
         }
@@ -472,7 +473,7 @@ class Nemo(object):
             "reffs": reffs
         }
 
-    def r_text(self, collection, textgroup, work, version, passage_identifier):
+    def r_passage(self, collection, textgroup, work, version, passage_identifier):
         """ Retrieve the text of the passage
 
         :param collection: Collection identifier
@@ -488,15 +489,14 @@ class Nemo(object):
         :return: Template, version inventory object and Markup object representing the text
         :rtype: {str: Any}
         """
+        edition = self.get_text(collection, textgroup, work, version)
         text = self.get_passage(collection, textgroup, work, version, passage_identifier)
-        version = self.get_text(collection, textgroup, work, version)
 
-        passage = self.transform(version, text.xml)
+        passage = self.transform(edition, text.xml)
         prev, next = self.getprevnext(text, Nemo.prevnext_callback_generator(text))
-
         return {
             "template": self.templates["text"],
-            "version": version,
+            "version": edition,
             "text_passage": Markup(passage),
             "prev": prev,
             "next": next
@@ -508,11 +508,11 @@ class Nemo(object):
         :param asset: Filename of an asset
         :return: Response
         """
-        if type in self.__assets and asset in self.__assets[type]:
-            return send_from_directory(directory=self.__assets[type][asset], filename=asset)
+        if type in self.assets and asset in self.assets[type]:
+            return send_from_directory(directory=self.assets[type][asset], filename=asset)
         abort(404)
 
-    def __register_assets(self):
+    def register_assets(self):
         """ Merge and register assets, both as routes and dictionary
 
         :return: None
@@ -520,13 +520,13 @@ class Nemo(object):
         # Save assets routes
         for css in self.css:
             directory, filename = op.split(css)
-            self.__assets["css"][filename] = directory
+            self.assets["css"][filename] = directory
         for js in self.js:
             directory, filename = op.split(js)
-            self.__assets["js"][filename] = directory
+            self.assets["js"][filename] = directory
         for static in self.statics:
             directory, filename = op.split(static)
-            self.__assets["static"][filename] = directory
+            self.assets["static"][filename] = directory
 
         self.blueprint.add_url_rule(
             # Register another path to ensure assets compatibility
@@ -543,7 +543,7 @@ class Nemo(object):
         :rtype: flask.Blueprint
         """
         self.blueprint = Blueprint(
-            "nemo",
+            self.name,
             "nemo",
             url_prefix=self.prefix,
             template_folder=self.template_folder,
@@ -559,7 +559,7 @@ class Nemo(object):
                 methods=methods
             )
 
-        self.__register_assets()
+        self.register_assets()
 
         # If we have added or overriden the default templates
         if self.templates != Nemo.TEMPLATES:
@@ -597,13 +597,13 @@ class Nemo(object):
         kwargs["collections"] = self.get_collections()
         kwargs["lang"] = "eng"
 
-        if Nemo.in_and_not_int("textgroup", "textgroups", kwargs):
+        if Nemo.in_and_not_in("textgroup", "textgroups", kwargs):
             kwargs["textgroups"] = self.get_textgroups(kwargs["url"]["collection"])
 
-            if Nemo.in_and_not_int("text", "texts", kwargs):
+            if Nemo.in_and_not_in("text", "texts", kwargs):
                 kwargs["texts"] = self.get_texts(kwargs["url"]["collection"], kwargs["url"]["textgroup"])
 
-        kwargs["assets"] = self.__assets
+        kwargs["assets"] = self.assets
         kwargs["templates"] = self.templates
 
         return render_template(template, **kwargs)
@@ -629,9 +629,10 @@ class Nemo(object):
         :rtype: flask.Blueprint
         """
         if self.app is not None:
-            blueprint = self.create_blueprint()
-            self.app.register_blueprint(blueprint)
-            return blueprint
+            if not self.blueprint:
+                self.blueprint = self.create_blueprint()
+            self.app.register_blueprint(self.blueprint)
+            return self.blueprint
         return None
 
     def register_filters(self):
@@ -673,7 +674,7 @@ class Nemo(object):
         return self.prevnext["default"](passage, callback)
 
     @staticmethod
-    def in_and_not_int(identifier, collection, kwargs):
+    def in_and_not_in(identifier, collection, kwargs):
         """ Check if an element identified by identifier is in kwargs but not the collection containing it
 
         :param identifier: URL Identifier of one kind of element (Textgroup, work, etc.)
@@ -688,14 +689,14 @@ class Nemo(object):
         return identifier in kwargs["url"] and collection not in kwargs
 
     @staticmethod
-    def f_active_link(string):
+    def f_active_link(string, url):
         """ Check if current string is in the list of names
 
         :param string: String to check for in url
         :return: CSS class "active" if valid
         :rtype: str
         """
-        if string in request.path:
+        if string in url.values():
             return "active"
         return ""
 
@@ -755,7 +756,7 @@ class Nemo(object):
         types = [citation.name for citation in text.citation]
         if types == ["book", "poem", "line"]:
             level = 2
-        elif types == ["book", "lines"]:
+        elif types == ["book", "line"]:
             return Nemo.line_chunker(text, getreffs)
         return [tuple([reff.split(":")[-1]]*2) for reff in getreffs(level=level)]
 
@@ -777,8 +778,10 @@ class Nemo(object):
         reffs = []
         i = 0
         while i + lines - 1 < len(source_reffs):
-            reffs.append(tuple(source_reffs[i]+"-"+source_reffs[i+lines-1], source_reffs[i]))
+            reffs.append(tuple([source_reffs[i]+"-"+source_reffs[i+lines-1], source_reffs[i]]))
             i += lines
+        if i < len(source_reffs):
+            reffs.append(tuple([source_reffs[i]+"-"+source_reffs[len(source_reffs)-1], source_reffs[i]]))
         return reffs
 
     @staticmethod

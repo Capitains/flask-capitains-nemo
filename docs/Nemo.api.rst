@@ -42,7 +42,6 @@ Shared methods
 .. automethod:: flask.ext.nemo.Nemo.render
 .. automethod:: flask.ext.nemo.Nemo.view_maker
 .. automethod:: flask.ext.nemo.Nemo.route
-.. automethod:: flask.ext.nemo.Nemo.route
 
 Routes
 ######
@@ -59,8 +58,8 @@ Routes
 .. _Nemo.api.r_version::
 .. automethod:: flask.ext.nemo.Nemo.r_version
 
-.. _Nemo.api.r_text::
-.. automethod:: flask.ext.nemo.Nemo.r_text
+.. _Nemo.api.r_passage::
+.. automethod:: flask.ext.nemo.Nemo.r_passage
 
 .. _Nemo.api.r_assets::
 .. automethod:: flask.ext.nemo.Nemo.r_assets
@@ -82,7 +81,7 @@ Helpers
 
 .. automethod:: flask.ext.nemo.Nemo.map_urns
 .. automethod:: flask.ext.nemo.Nemo.filter_urn
-.. automethod:: flask.ext.nemo.Nemo.in_and_not_int
+.. automethod:: flask.ext.nemo.Nemo.in_and_not_in
 .. automethod:: flask.ext.nemo.Nemo.prevnext_callback_generator
 
 Chunkers

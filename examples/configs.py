@@ -5,7 +5,7 @@ from flask import Markup
 configs = {
     # The CIHAM project is made of critical editions. We load for it a specific xslt to render the result of GetPassage
     # And specifics assets
-    "ciham" : {
+    "ciham": {
         "api_url": "http://services2.perseids.org/exist/restxq/cts",
         "base_url": "",
         "inventory": "nemo",
@@ -99,9 +99,9 @@ class NemoDouble(Nemo):
         """
 
         # Simply call the url of the
-        args = self.r_text(collection, textgroup, work, version, passage_identifier)
+        args = self.r_passage(collection, textgroup, work, version, passage_identifier)
         # Call with other identifiers and add "visavis_" front of the argument
-        args.update({ "visavis_{0}".format(key):value for key, value in self.r_text(collection, textgroup, work, visavis, passage_identifier).items()})
+        args.update({"visavis_{0}".format(key): value for key, value in self.r_passage(collection, textgroup, work, visavis, passage_identifier).items()})
         args["template"] = self.templates["r_double"]
         return args
 

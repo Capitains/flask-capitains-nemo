@@ -1,0 +1,26 @@
+<CTS:GetPrevNextUrn xmlns:tei="http://www.tei-c.org/ns/1.0" xmlns:CTS="http://chs.harvard.edu/xmlns/cts">
+    <CTS:request elapsed-time="321">
+        <CTS:requestName>GetPrevNextUrn</CTS:requestName>
+        <CTS:requestUrn>urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.1.2</CTS:requestUrn>
+        <CTS:psg>1.1.2</CTS:psg>
+        <CTS:workurn>urn:cts:latinLit:phi1294.phi002</CTS:workurn>
+        <CTS:groupname xml:lang="eng">Martial</CTS:groupname>
+        <CTS:title xml:lang="eng">Epigrammata</CTS:title>
+        <CTS:label xml:lang="eng">Epigrammata</CTS:label>
+        <CTS:citation xmlns:ti="http://chs.harvard.edu/xmlns/cts" label="book" xpath="/tei:div[@n='?']" scope="/tei:TEI/tei:text/tei:body/tei:div">
+            <ti:citation label="poem" xpath="/tei:div[@n='?']" scope="/tei:TEI/tei:text/tei:body/tei:div/tei:div[@n='?']">
+                <ti:citation label="line" xpath="/tei:l[@n='?']" scope="/tei:TEI/tei:text/tei:body/tei:div/tei:div[@n='?']/tei:div[@n='?']"/>
+            </ti:citation>
+        </CTS:citation>
+    </CTS:request>
+    <CTS:reply>
+        <CTS:prevnext>
+            <CTS:prev>
+                <CTS:urn>urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.1.1</CTS:urn>
+            </CTS:prev>
+            <CTS:next>
+                <CTS:urn>urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.1.3</CTS:urn>
+            </CTS:next>
+        </CTS:prevnext>
+    </CTS:reply>
+</CTS:GetPrevNextUrn>

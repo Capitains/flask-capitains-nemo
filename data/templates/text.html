@@ -9,12 +9,12 @@
     </header>
     <nav>
         {% if prev %}
-        <a class="btn btn-xs btn-primary" href="{{url_for('nemo.r_text', collection=url['collection'], textgroup=url['textgroup'], work=url['work'], version=url['version'], passage_identifier=prev) }}">
+        <a class="btn btn-xs btn-primary" href="{{url_for('nemo.r_passage', collection=url['collection'], textgroup=url['textgroup'], work=url['work'], version=url['version'], passage_identifier=prev) }}">
             <span class="glyphicon glyphicon-chevron-left"></span>
         </a>
         {% endif %}
         {% if next %}
-        <a class="btn btn-xs btn-primary" href="{{url_for('nemo.r_text', collection=url['collection'], textgroup=url['textgroup'], work=url['work'], version=url['version'], passage_identifier=next) }}">
+        <a class="btn btn-xs btn-primary" href="{{url_for('nemo.r_passage', collection=url['collection'], textgroup=url['textgroup'], work=url['work'], version=url['version'], passage_identifier=next) }}">
             <span class="glyphicon glyphicon-chevron-right"></span>
         </a>
         {% endif %}

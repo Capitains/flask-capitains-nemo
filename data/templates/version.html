@@ -5,7 +5,7 @@
     <section class="row">
         <ul class="reffs">
             {% for reff, human_reff in reffs %}
-                <li class="col-md-1"><a href="{{url_for('nemo.r_text', collection=version.urn[2], textgroup=version.urn[3], work=version.urn[4], version=version.urn[5], passage_identifier=reff)}}">{{ human_reff }}</a></li>
+                <li class="col-md-1"><a href="{{url_for('nemo.r_passage', collection=version.urn[2], textgroup=version.urn[3], work=version.urn[4], version=version.urn[5], passage_identifier=reff)}}">{{ human_reff }}</a></li>
             {% endfor %}
         </ul>
     </section>
