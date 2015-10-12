@@ -49,6 +49,8 @@ class Nemo(object):
     :type transform: bool|dict
     :param chunker: Dictionary of function to group responses of GetValidReff
     :type chunker: {str: function(str, function(int))}
+    :param prevnext: Dictionary of function to execute GetPrevNext
+    :type prevnext: {str: function(str, function())}
     :param css: Path to additional stylesheets to load
     :type css: [str]
     :param js: Path to additional javascripts to load

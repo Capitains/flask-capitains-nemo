@@ -42,7 +42,6 @@ Shared methods
 .. automethod:: flask.ext.nemo.Nemo.render
 .. automethod:: flask.ext.nemo.Nemo.view_maker
 .. automethod:: flask.ext.nemo.Nemo.route
-.. automethod:: flask.ext.nemo.Nemo.route
 
 Routes
 ######

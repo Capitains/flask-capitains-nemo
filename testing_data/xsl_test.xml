@@ -5,8 +5,6 @@
     exclude-result-prefixes="xs"
     version="2.0">
     <xsl:template match="tei:body">
-        <xsl:element name="tei:notbody">
-            <xsl:apply-templates />>
-        </xsl:element>
+        <xsl:element name="tei:notbody"><xsl:apply-templates /></xsl:element>
     </xsl:template>
 </xsl:stylesheet>
