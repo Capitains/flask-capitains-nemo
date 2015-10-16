@@ -21,6 +21,7 @@ if __name__ == "__main__":
     # We set up Nemo
     nemo = Nemo(
         app=app,
+        name="nemo",
         **configs[key]
     )
     # We register its routes
