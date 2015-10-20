@@ -19,7 +19,7 @@ import requests_cache
 from collections import OrderedDict, Callable
 import jinja2
 from copy import copy
-
+from pkg_resources import resource_filename
 
 class Nemo(object):
     """ Nemo is an extension for Flask python micro-framework which provides
@@ -122,12 +122,12 @@ class Nemo(object):
         if template_folder:
             self.template_folder = template_folder
         else:
-            self.template_folder = op.join('data', 'templates')
+            self.template_folder = resource_filename("flask_nemo", "data/templates")
 
         if static_folder:
             self.static_folder = static_folder
         else:
-            self.static_folder = op.join('data', 'static')
+            self.static_folder = resource_filename("flask_nemo", "data/static")
 
         if static_url_path:
             self.static_url_path = static_url_path

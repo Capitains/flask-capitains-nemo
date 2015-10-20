@@ -4,6 +4,8 @@ from flask import Flask
 from flask.ext.nemo import Nemo
 from examples.configs import configs, classes
 from sys import argv
+from pkg_resources import resource_filename
+
 
 if __name__ == "__main__":
     # We select a configuration, see more in examples/configs
@@ -14,8 +16,7 @@ if __name__ == "__main__":
 
     # We create a Flask app
     app = Flask(
-        __name__,
-        static_folder="data/static"
+        __name__
     )
 
     # We set up Nemo
