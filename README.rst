@@ -21,7 +21,7 @@ as easy as adding a XSL Stylesheet to transform the very own result of a CTS Get
 Install
 #######
 
-For now, flask.ext.nemo is not available on pip, as we are waiting for unit tests to be written.
+You can now install it with pip : `pip install flask_nemo`
 
 If you want to install the latest version, please do the following
 
