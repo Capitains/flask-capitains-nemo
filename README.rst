@@ -32,4 +32,12 @@ If you want to install the latest version, please do the following
 
     git clone https://github.com/Capitains/flask-capitains-nemo.git
     cd flask-capitains-nemo
-    python3 setup.py install
+    virtualenv -p /path/to/python3 venv
+    source venv/bin/activate
+    python setup.py install
+    
+If you have trouble with dependency conflicts with MyCapitains, try running this before install
+
+.. code-block:: shell
+
+   pip install MyCapytain 
