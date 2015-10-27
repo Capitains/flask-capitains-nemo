@@ -34,5 +34,10 @@ If you want to install the latest version, please do the following
     cd flask-capitains-nemo
     virtualenv -p /path/to/python3 venv
     source venv/bin/activate
-    pip install MyCapytain 
     python setup.py install
+    
+If you have trouble with dependency conflicts with MyCapitains, try running this before install
+
+.. code-block:: shell
+
+   pip install MyCapytain 
