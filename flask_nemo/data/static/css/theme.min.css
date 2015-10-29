@@ -32,8 +32,8 @@ ul.menu {
   margin:0em -15px 0;
   padding:0;
   font-size:11px;
-  max-height: 10em;
-  overflow: hidden;
+  max-height: 20em;
+  overflow: auto;
 }
 ul.menu.no-max {
     max-height: none;
