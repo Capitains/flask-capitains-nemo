@@ -92,7 +92,7 @@ class Nemo(object):
 
     def __init__(self, name=None, app=None, api_url="/", base_url="/nemo", cache=None, expire=3600,
                  template_folder=None, static_folder=None, static_url_path=None,
-                 urls=None, inventory=None, transform=None, chunker=None, prevnext=None,
+                 urls=None, inventory=None, transform=None, urntransform=None, chunker=None, prevnext=None,
                  css=None, js=None, templates=None, statics=None):
         __doc__ = Nemo.__doc__
         self.name = __name__
@@ -147,8 +147,16 @@ class Nemo(object):
             "default" : None
         }
 
+        self.__urntransform = {
+            "default" : None
+        }
+
         if isinstance(transform, dict):
             self.__transform.update(transform)
+
+        if isinstance(urntransform, dict):
+            self.__urntransform.update(urntransform)
+
 
         self.chunker = {}
         self.chunker["default"] = Nemo.default_chunker
@@ -236,6 +244,27 @@ class Nemo(object):
         # If we have None, it meants we just give back the xml
         elif func is None:
             return etree.tostring(xml, encoding=str)
+
+    def transform_urn(self, urn):
+        """ Transform urn according to configurable function
+
+        :param urn: URN to transform
+        :type URN
+        :return: String representation of transformed urn
+        :rtype: str
+        """
+        # We check first that we don't have
+        if str(urn) in self.__urntransform:
+            func = self.__urntransform[str(urn)]
+        else:
+            func = self.__urntransform["default"]
+
+        # If we have a function, it means we return the result of the function
+        if isinstance(func, Callable):
+            return func(str(urn))
+        # If we have None, it meants we just give back the urn as string
+        elif func is None:
+            return str(urn)
 
     def get_inventory(self):
         """ Request the api endpoint to retrieve information about the inventory
@@ -494,10 +523,12 @@ class Nemo(object):
 
         passage = self.transform(edition, text.xml)
         prev, next = self.getprevnext(text, Nemo.prevnext_callback_generator(text))
+        urn = self.transform_urn(text.urn)
         return {
             "template": self.templates["text"],
             "version": edition,
             "text_passage": Markup(passage),
+            "urn" : Markup(urn),
             "prev": prev,
             "next": next
         }

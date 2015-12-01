@@ -730,6 +730,23 @@ class TestCustomizer(NemoResource):
         )
         self.assertEqual(chunked, [("1.pr", "I PR")])
 
+    def test_urntransform_default_function(self):
+        """ Test that the transform default is called and applied
+        """
+        def default(urn):
+          self.assertEqual(str(urn), "urn:cts:phi1294.phi002.perseus-lat2:1.pr")
+          return str(urn)
+
+        nemo = Nemo(urntransform={
+            "default": default
+        })
+        transformed = nemo.transform_urn(
+            MyCapytain.resources.inventory.Text(
+                urn="urn:cts:phi1294.phi002.perseus-lat2:1.pr"
+            ).urn
+        )
+        self.assertEqual(transformed, "urn:cts:phi1294.phi002.perseus-lat2:1.pr")
+    
     def test_transform_default_xslt(self):
         """ Test that the transform default is called and applied
         """
@@ -888,3 +905,4 @@ class TestChunkers(NemoResource):
                 self.inventory["urn:cts:latinLit:phi0959.phi007.perseus-lat2"],
                 self.make_get_reff(2)
             ), True)
+
