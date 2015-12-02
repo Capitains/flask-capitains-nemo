@@ -17,7 +17,8 @@ To replace all templates, just change your templates folder with the same filena
         "textgroups": "textgroups.html",
         "index": "index.html",
         "texts": "texts.html",
-        "version": "version.html"
+        "version": "version.html",
+        "passage_footer": "passage_footer.html"
     }
 
 Variables shared across templates
@@ -102,4 +103,22 @@ See `r_passage` in :ref:`Nemo.api.r_passage`
 | `prev`          | Previous Passage Reference                                                             |
 +-----------------+----------------------------------------------------------------------------------------+
 | `next`          | Following Passage Reference                                                            |
++-----------------+----------------------------------------------------------------------------------------+
+
+passage_footer.html
+#########
+
+
+See `r_passage` in :ref:`Nemo.api.r_passage`
+
++-----------------+----------------------------------------------------------------------------------------+
+| Variable Name   | Details                                                                                |
++=================+========================================================================================+
+| `version`       | Version object with metadata about current text                                        |
++-----------------+----------------------------------------------------------------------------------------+
+| `text_passage`  | Markup object representing the text                                                    |
++-----------------+----------------------------------------------------------------------------------------+
+| `urn`  | Markup object containing the URN of the passage for display
++-----------------+----------------------------------------------------------------------------------------+
+| `prev`          | Previous Passage Reference                                                             |
 +-----------------+----------------------------------------------------------------------------------------+
