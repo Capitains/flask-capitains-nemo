@@ -76,6 +76,8 @@ Because Python is not a natural language and because not everybody knows it in a
         inventory="ciham",
         # For transform parameters, we provide a path to an xsl which will be used for every
         transform={"default" : "examples/ciham.xslt"},
+        # For urntransform parameters, we provide a function which will be used to transform the urn for display
+        urntransform={"default" : lambda urn: "<a href='http://data.perseus.org/citations/" + urn + "' target='_blank'>Download XML</a>" },
         # CSS value should be a list of path to CSS own files
         css=[
             "examples/ciham.css"
