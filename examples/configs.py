@@ -58,8 +58,7 @@ configs = {
         },
         "css" : [
             # Use teibp from default nemo configuration
-            "examples/tei.pb.min.css",
-            "static/nemo.min.css"
+            "examples/tei.pb.min.css"
         ]
     },
     "default": {
