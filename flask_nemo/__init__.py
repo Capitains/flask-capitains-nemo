@@ -79,7 +79,8 @@ class Nemo(object):
         "textgroups": "textgroups.html",
         "index": "index.html",
         "texts": "texts.html",
-        "version": "version.html"
+        "version": "version.html",
+        "passage_footer": "passage_footer.html"
     }
     COLLECTIONS = {
         "latinLit": "Latin",
@@ -251,9 +252,9 @@ class Nemo(object):
         """ Transform urn according to configurable function
 
         :param urn: URN to transform
-        :type URN
-        :return: String representation of transformed urn
-        :rtype: str
+        :type urn: URN
+        :return: the URN (transformed or not)
+        :rtype: URN
         """
         # We check first that we don't have an override function
         # N.B. overrides will be on the text level, not the passage
@@ -264,10 +265,10 @@ class Nemo(object):
 
         # If we have a function, it means we return the result of the function
         if isinstance(func, Callable):
-            return func(str(urn))
+            return func(urn)
         # If we have None, it meants we just give back the urn as string
-        elif func is None:
-            return str(urn)
+        else
+            return urn
 
     def get_inventory(self):
         """ Request the api endpoint to retrieve information about the inventory
@@ -288,7 +289,7 @@ class Nemo(object):
 
         :return: A set of CTS Namespaces
         :rtype: set(str)
-        """
+	"""
         inventory = self.get_inventory()
         urns = set(
             [inventory.textgroups[textgroup].urn[2] for textgroup in inventory.textgroups]
@@ -531,7 +532,7 @@ class Nemo(object):
             "template": self.templates["text"],
             "version": edition,
             "text_passage": Markup(passage),
-            "urn" : Markup(urn),
+            "urn" : urn,
             "prev": prev,
             "next": next
         }
