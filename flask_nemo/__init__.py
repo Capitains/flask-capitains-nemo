@@ -253,9 +253,10 @@ class Nemo(object):
         :return: String representation of transformed urn
         :rtype: str
         """
-        # We check first that we don't have
-        if str(urn) in self.__urntransform:
-            func = self.__urntransform[str(urn)]
+        # We check first that we don't have an override function
+        # N.B. overrides will be on the text level, not the passage
+        if str(urn["text"]) in self.__urntransform:
+            func = self.__urntransform[str(urn["text"])]
         else:
             func = self.__urntransform["default"]
 
