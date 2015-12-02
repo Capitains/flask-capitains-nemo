@@ -47,6 +47,8 @@ class Nemo(object):
     :type inventory: str
     :param transform: Dictionary of XSL filepath or transform function where default key is the default applied function
     :type transform: bool|dict
+    :param urntransform: Dictionary of urn transform functions where default key is the default applied function
+    :type urntransform: bool|dict
     :param chunker: Dictionary of function to group responses of GetValidReff
     :type chunker: {str: function(str, function(int))}
     :param prevnext: Dictionary of function to execute GetPrevNext
@@ -77,7 +79,8 @@ class Nemo(object):
         "textgroups": "textgroups.html",
         "index": "index.html",
         "texts": "texts.html",
-        "version": "version.html"
+        "version": "version.html",
+        "passage_footer": "passage_footer.html"
     }
     COLLECTIONS = {
         "latinLit": "Latin",
@@ -92,7 +95,7 @@ class Nemo(object):
 
     def __init__(self, name=None, app=None, api_url="/", base_url="/nemo", cache=None, expire=3600,
                  template_folder=None, static_folder=None, static_url_path=None,
-                 urls=None, inventory=None, transform=None, chunker=None, prevnext=None,
+                 urls=None, inventory=None, transform=None, urntransform=None, chunker=None, prevnext=None,
                  css=None, js=None, templates=None, statics=None):
         __doc__ = Nemo.__doc__
         self.name = __name__
@@ -147,8 +150,16 @@ class Nemo(object):
             "default" : None
         }
 
+        self.__urntransform = {
+            "default" : None
+        }
+
         if isinstance(transform, dict):
             self.__transform.update(transform)
+
+        if isinstance(urntransform, dict):
+            self.__urntransform.update(urntransform)
+
 
         self.chunker = {}
         self.chunker["default"] = Nemo.default_chunker
@@ -237,6 +248,27 @@ class Nemo(object):
         elif func is None:
             return etree.tostring(xml, encoding=str)
 
+    def transform_urn(self, urn):
+        """ Transform urn according to configurable function
+
+        :param urn: URN to transform
+        :type urn: URN
+        :return: the URN (transformed or not)
+        :rtype: URN
+        """
+        # We check first that we don't have an override function
+        # N.B. overrides will be on the text level, not the passage
+        if str(urn["text"]) in self.__urntransform:
+            func = self.__urntransform[str(urn["text"])]
+        else:
+            func = self.__urntransform["default"]
+
+        # If we have a function, it means we return the result of the function
+        if isinstance(func, Callable):
+            return func(urn)
+        # If we have None, it meants we just give back the urn as string
+        return urn
+
     def get_inventory(self):
         """ Request the api endpoint to retrieve information about the inventory
 
@@ -256,7 +288,7 @@ class Nemo(object):
 
         :return: A set of CTS Namespaces
         :rtype: set(str)
-        """
+	"""
         inventory = self.get_inventory()
         urns = set(
             [inventory.textgroups[textgroup].urn[2] for textgroup in inventory.textgroups]
@@ -494,10 +526,12 @@ class Nemo(object):
 
         passage = self.transform(edition, text.xml)
         prev, next = self.getprevnext(text, Nemo.prevnext_callback_generator(text))
+        urn = self.transform_urn(text.urn)
         return {
             "template": self.templates["text"],
             "version": edition,
             "text_passage": Markup(passage),
+            "urn" : urn,
             "prev": prev,
             "next": next
         }

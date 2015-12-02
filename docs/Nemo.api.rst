@@ -35,6 +35,7 @@ Customization appliers
 .. automethod:: flask.ext.nemo.Nemo.chunk
 .. automethod:: flask.ext.nemo.Nemo.getprevnext
 .. automethod:: flask.ext.nemo.Nemo.transform
+.. automethod:: flask.ext.nemo.Nemo.transform_urn
 
 Shared methods
 **************
