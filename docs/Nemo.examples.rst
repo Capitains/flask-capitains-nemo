@@ -78,7 +78,7 @@ Because Python is not a natural language and because not everybody knows it in a
         transform={"default" : "examples/ciham.xslt"},
         # For urntransform parameters, we provide a function which will be used to transform the urn for display
         # this example just adds explanatory text
-        urntransform={"default" : lambda urn: "Stable URI:" + urn},
+        urntransform={"default" : lambda urn: "Stable URI:" + str(urn)},
         # CSS value should be a list of path to CSS own files
         css=[
             "examples/ciham.css"
