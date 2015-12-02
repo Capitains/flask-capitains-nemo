@@ -1857,8 +1857,3 @@ div.facsImage img:first-child {
   font-weight: normal;
 }
 
-/** Nemo extension **/
-.ctsurn {
-  font-size: smaller;
-  text-align: right;
-}

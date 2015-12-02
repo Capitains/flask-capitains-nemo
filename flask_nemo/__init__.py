@@ -267,8 +267,7 @@ class Nemo(object):
         if isinstance(func, Callable):
             return func(urn)
         # If we have None, it meants we just give back the urn as string
-        else
-            return urn
+        return urn
 
     def get_inventory(self):
         """ Request the api endpoint to retrieve information about the inventory
