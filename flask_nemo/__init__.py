@@ -47,6 +47,8 @@ class Nemo(object):
     :type inventory: str
     :param transform: Dictionary of XSL filepath or transform function where default key is the default applied function
     :type transform: bool|dict
+    :param urntransform: Dictionary of urn transform functions where default key is the default applied function
+    :type urntransform: bool|dict
     :param chunker: Dictionary of function to group responses of GetValidReff
     :type chunker: {str: function(str, function(int))}
     :param prevnext: Dictionary of function to execute GetPrevNext
