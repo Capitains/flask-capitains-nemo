@@ -6,7 +6,7 @@
     <section>
         <ul class="row">
             {% for text in texts %}
-                <li><a href="{{url_for('nemo.r_version', collection=text.urn[2], textgroup=text.urn[3], work=text.urn[4], version=text.urn[5])}}">{{ text.metadata['label'][lang] }}</a><br />{{text.metadata['description'][lang] }}</li>
+                <li><a href="{{url_for('.r_version', collection=text.urn[2], textgroup=text.urn[3], work=text.urn[4], version=text.urn[5])}}">{{ text.metadata['label'][lang] }}</a><br />{{text.metadata['description'][lang] }}</li>
             {% endfor %}
         </ul>
     </section>
