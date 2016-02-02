@@ -830,15 +830,15 @@ class Nemo(object):
         :return: Tuple representing previous and following reference
         :rtype: (str, str)
         """
-        previous, following = passage._next, passage._prev
+        previous, following = passage.prev, passage.next
 
         if previous is None and following is None:
             previous, following = callback()
 
         if previous is not None:
-            previous = previous.split(":")[-1]
+            previous = str(previous.reference)
         if following is not None:
-            following = following.split(":")[-1]
+            following = str(following.reference)
         return previous, following
 
     @staticmethod
