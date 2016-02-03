@@ -870,7 +870,7 @@ class TestChunkers(NemoResource):
 
     def make_get_reff(self, asserted_level):
         def GetReff(level=1):
-            self.assertEqual(level, asserted_level) # Depth of the Citation Scheme
+            self.assertEqual(level, asserted_level)  # Depth of the Citation Scheme
             return ["urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.pr.5", "urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.1.7"]
         return GetReff
 
@@ -923,3 +923,9 @@ class TestChunkers(NemoResource):
                 self.make_get_reff(2)
             ), True)
 
+    def test_level_chunker(self):
+        """ Test chunking according to scheme
+        """
+        text = self.inventory["urn:cts:latinLit:phi1294.phi002.perseus-lat2"]  # book, poem
+        reffs = Nemo.level_chunker(text, self.make_get_reff(2), level=2)
+        """ A test is run with make_get_reff """
