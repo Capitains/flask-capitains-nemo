@@ -76,6 +76,7 @@ Filters follow a naming convention : they should always start with "f_"
 .. automethod:: flask.ext.nemo.Nemo.f_active_link
 .. automethod:: flask.ext.nemo.Nemo.f_collection_i18n
 .. automethod:: flask.ext.nemo.Nemo.f_formatting_passage_reference
+.. automethod:: flask.ext.nemo.Nemo.f_order_text_edition_translation
 
 Helpers
 *******

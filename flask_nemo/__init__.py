@@ -20,6 +20,8 @@ from collections import OrderedDict, Callable
 import jinja2
 from copy import copy
 from pkg_resources import resource_filename
+import flask_nemo._data
+from collections import defaultdict
 
 class Nemo(object):
     """ Nemo is an extension for Flask python micro-framework which provides
@@ -90,7 +92,10 @@ class Nemo(object):
     FILTERS = [
         "f_active_link",
         "f_collection_i18n",
-        "f_formatting_passage_reference"
+        "f_formatting_passage_reference",
+        "f_i18n_iso",
+        "f_group_texts",
+        "f_order_text_edition_translation"
     ]
 
     def __init__(self, name=None, app=None, api_url="/", base_url="/nemo", cache=None, expire=3600,
@@ -288,7 +293,7 @@ class Nemo(object):
 
         :return: A set of CTS Namespaces
         :rtype: set(str)
-	"""
+	    """
         inventory = self.get_inventory()
         urns = set(
             [inventory.textgroups[textgroup].urn[2] for textgroup in inventory.textgroups]
@@ -904,3 +909,54 @@ class Nemo(object):
         :rtype: list(items.children)
         """
         return item.urn[part_of_urn].lower() == query.lower().strip()
+
+    @staticmethod
+    def f_i18n_iso(isocode, lang="eng"):
+        """ Replace isocode by its language equivalent
+
+        :param isocode: Three character long language code
+        :param lang: Lang in which to return the language name
+        :return: Full Text Language Name
+        """
+        if lang not in flask_nemo._data.AVAILABLE_TRANSLATIONS:
+            lang = "eng"
+
+        return flask_nemo._data.ISOCODES[isocode][lang]
+
+    @staticmethod
+    def f_group_texts(versions_list):
+        """ Takes a list of versions and regroup them by work identifier
+
+        :param versions_list: List of text versions
+        :type versions_list: [Text]
+        :return: List of texts grouped by work
+        :rtype: [(Work, [Text])]
+        """
+        works = {}
+        texts = defaultdict(list)
+        for version in versions_list:
+            if version.urn[4] not in works:
+                works[version.urn[4]] = version.parents[0]
+            texts[version.urn[4]].append(version)
+        return [
+            (works[index], texts[index])
+            for index in works
+        ]
+
+    @staticmethod
+    def f_order_text_edition_translation(versions_list):
+        """ Takes a list of versions and put translations after editions
+
+        :param versions_list: List of text versions
+        :type versions_list: [Text]
+        :return: List where first members will be editions
+        :rtype: [Text]
+        """
+        translations = []
+        editions = []
+        for version in versions_list:
+            if version.subtype == "Translation":
+                translations.append(version)
+            else:
+                editions.append(version)
+        return editions + translations
