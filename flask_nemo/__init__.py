@@ -20,6 +20,7 @@ from collections import OrderedDict, Callable
 import jinja2
 from copy import copy
 from pkg_resources import resource_filename
+from functools import reduce
 
 class Nemo(object):
     """ Nemo is an extension for Flask python micro-framework which provides
@@ -904,3 +905,44 @@ class Nemo(object):
         :rtype: list(items.children)
         """
         return item.urn[part_of_urn].lower() == query.lower().strip()
+
+    @staticmethod
+    def hierarchical_passages(version, reffs, params):
+        """
+        A function to construct a hierarchical dictionary representing the
+        different citation layers of a text
+        :param version:
+        :type version: MyCapytain.resources.inventory.Text
+        :param reffs:
+        :type reffs: list of tuples
+        :param params:
+        :return:
+        :rtype: OrderedDict
+        """
+        d = OrderedDict()
+        levels = [x for x in version.citation]
+        for cit, name in reffs:
+            ref = cit.split('-')[0]
+            levs = ['%{}% {}'.format(levels[i], v) for i, v in enumerate(ref.split('.'))]
+            _getFromDict(d, levs[:-1])[name] = cit
+        return d
+
+def _getFromDict(dataDict, keyList):
+    """
+
+    :param dataDict:
+    :param keyList:
+    :return:
+    """
+    return reduce(_create_hierarchy, keyList, dataDict)
+
+def _create_hierarchy(self, hierarchy, level):
+    """
+
+    :param hierarchy:
+    :param level:
+    :return:
+    """
+    if level not in hierarchy:
+        hierarchy[level] = OrderedDict()
+    return hierarchy[level]
