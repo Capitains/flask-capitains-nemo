@@ -202,3 +202,9 @@ ul.reffs > li {
   font-size: smaller;
   text-align: right;
 }
+
+.textlist h2 {
+    font-size:1.1em!important;
+    margin:0!important;
+    padding:0!important;
+}

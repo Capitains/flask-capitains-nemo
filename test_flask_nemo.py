@@ -829,6 +829,7 @@ class TestCustomizer(NemoResource):
         )
         self.assertEqual(transformed, '<tei:notbody xmlns:tei="http://www.tei-c.org/ns/1.0"/>')
 
+
 class TestFilters(NemoResource):
 
     def test_f_active_link(self):
@@ -854,6 +855,20 @@ class TestFilters(NemoResource):
         self.assertEqual(Nemo.f_formatting_passage_reference("1.1-1.2"), "1.1")
         self.assertEqual(Nemo.f_formatting_passage_reference("1.1"), "1.1")
 
+    def test_f_i18n_iso(self):
+        """ Test split of passage range identifier
+        """
+        self.assertEqual(Nemo.f_i18n_iso("eng"), "English")
+        self.assertEqual(Nemo.f_i18n_iso("eng", "fre"), "anglais")
+        self.assertEqual(Nemo.f_i18n_iso("eng", "ger"), "English")
+
+    def test_f_order_text_edition_translation(self):
+        """ Check the reordering filter
+        """
+        Text = MyCapytain.resources.inventory.Text
+        a, b, c, d = Text(subtype="Translation"), Text(subtype="Edition"), Text(subtype="Edition"), Text(subtype="Translation")
+        self.assertEqual(Nemo.f_order_text_edition_translation([a,b,c,d]), [b, c, a, d])
+
     def test_register_filter(self):
         app = Flask(__name__)
         self.nemo = Nemo(app=app)
@@ -861,6 +876,7 @@ class TestFilters(NemoResource):
         self.assertEqual(self.nemo.app.jinja_env.filters["formatting_passage_reference"], Nemo.f_formatting_passage_reference)
         self.assertEqual(self.nemo.app.jinja_env.filters["collection_i18n"], Nemo.f_collection_i18n)
         self.assertEqual(self.nemo.app.jinja_env.filters["active_link"], Nemo.f_active_link)
+
 
 class TestChunkers(NemoResource):
 
