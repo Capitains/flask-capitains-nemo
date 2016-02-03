@@ -537,7 +537,8 @@ class NemoTestRoutes(NemoResource):
                     lang="eng",
                     templates=self.nemo.templates,
                     assets=self.nemo.assets,
-                    url={}
+                    url={},
+                    breadcrumbs=[]
                 )
 
     def test_render_textgroups(self):
@@ -566,6 +567,10 @@ class NemoTestRoutes(NemoResource):
                         "textgroup": "phi1294",
 
                     },
+                    breadcrumbs=[
+                      {'link': '.r_collection', 'title': 'latinLit', 'args': {'collection': 'latinLit'}}, 
+                      {'link': None, 'title': 'Martial', 'args': {'textgroup': 'phi1294', 'collection': 'latinLit'}}
+                    ],
                     textgroups=self.nemo.get_textgroups("latinLit")
                 )
 
@@ -598,6 +603,10 @@ class NemoTestRoutes(NemoResource):
                         "work": "phi002",
                         "text": "perseus-lat2"
                     },
+                    breadcrumbs=[
+                      {'link': '.r_collection', 'title': 'latinLit', 'args': {'collection': 'latinLit'}}, 
+                      {'link': None, 'title': 'Martial', 'args': {'textgroup': 'phi1294', 'collection': 'latinLit'}}
+                    ],
                     textgroups=self.nemo.get_textgroups("latinLit"),
                     texts=self.nemo.get_texts("latinLit", "phi1294")
                 )
