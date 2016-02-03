@@ -84,7 +84,8 @@ class Nemo(object):
         "index": "index.html",
         "texts": "texts.html",
         "version": "version.html",
-        "passage_footer": "passage_footer.html"
+        "passage_footer": "passage_footer.html",
+        "reference_display": "reference_display.html"
     }
     COLLECTIONS = {
         "latinLit": "Latin",
@@ -98,7 +99,9 @@ class Nemo(object):
         "f_i18n_iso",
         "f_group_texts",
         "f_order_text_edition_translation",
-        "f_hierarchical_passages"
+        "f_hierarchical_passages",
+        "f_is_str",
+        "f_i18n_citation_type"
     ]
 
     def __init__(self, name=None, app=None, api_url="/", base_url="/nemo", cache=None, expire=3600,
@@ -924,7 +927,10 @@ class Nemo(object):
         if lang not in flask_nemo._data.AVAILABLE_TRANSLATIONS:
             lang = "eng"
 
-        return flask_nemo._data.ISOCODES[isocode][lang]
+        try:
+            return flask_nemo._data.ISOCODES[isocode][lang]
+        except KeyError:
+            return "Unknown"
 
     @staticmethod
     def f_group_texts(versions_list):
@@ -965,13 +971,13 @@ class Nemo(object):
         return editions + translations
 
     @staticmethod
-    def f_hierarchical_passages(version, reffs):
+    def f_hierarchical_passages(reffs, version):
         """ A function to construct a hierarchical dictionary representing the different citation layers of a text
 
-        :param version: text from which the reference comes
-        :type version: MyCapytain.resources.inventory.Text
         :param reffs: passage references with human-readable equivalent
         :type reffs: [(str, str)]
+        :param version: text from which the reference comes
+        :type version: MyCapytain.resources.inventory.Text
         :return: nested dictionary representing where keys represent the names of the levels and the final values represent the passage reference
         :rtype: OrderedDict
         """
@@ -982,6 +988,28 @@ class Nemo(object):
             levs = ['%{}|{}%'.format(levels[i].name, v) for i, v in enumerate(ref.split('.'))]
             _getFromDict(d, levs[:-1])[name] = cit
         return d
+
+    @staticmethod
+    def f_is_str(value):
+        """ Check if object is a string
+
+        :param value: object to check against
+        :return: Return if value is a string
+        """
+        return isinstance(value, str)
+
+    @staticmethod
+    def f_i18n_citation_type(string, lang="eng"):
+        """ Take a string of form %citation_type|passage% and format it for human
+
+        :param string: String of formation %citation_type|passage%
+        :param lang: Language to translate to
+        :return: Human Readable string
+
+        .. todo :: use i18n tools and provide real i18n
+        """
+        s = " ".join(string.strip("%").split("|"))
+        return s.capitalize()
 
 
 def _getFromDict(dataDict, keyList):

@@ -6,6 +6,7 @@ from lxml import etree
 from flask import Markup, Flask
 from jinja2.exceptions import TemplateNotFound
 
+
 def create_test_app(debug=False, config=None):
     app = Flask(__name__)
     app.debug = debug
@@ -887,7 +888,7 @@ class TestFilters(NemoResource):
         citation_book = MyCapytain.common.reference.Citation(name="book", child=citation_poem)
         text = MyCapytain.resources.inventory.Text()
         text.citation = citation_book
-        converted = Nemo.f_hierarchical_passages(text, reffs)
+        converted = Nemo.f_hierarchical_passages(reffs, text)
         self.assertEqual(converted["%book|1%"]["%poem|5%"]["Line 8"], "1.5.8")
         self.assertEqual(converted["%book|1%"]["%poem|5%"]["Line 9"], "1.5.9")
         self.assertEqual(converted["%book|1%"]["%poem|6%"]["Line 7"], "1.6.8")
@@ -908,7 +909,7 @@ class TestFilters(NemoResource):
         citation_book = MyCapytain.common.reference.Citation(name="book", child=citation_poem)
         text = MyCapytain.resources.inventory.Text()
         text.citation = citation_book
-        converted = Nemo.f_hierarchical_passages(text, reffs)
+        converted = Nemo.f_hierarchical_passages(reffs, text)
         self.assertEqual(converted["%book|1%"]["%poem|5%"]["Line 8"], "1.5.8-1.5.9")
         self.assertEqual(converted["%book|1%"]["%poem|5%"]["Line 9"], "1.5.9-1.5.15")
         self.assertEqual(converted["%book|1%"]["%poem|6%"]["Line 7"], "1.6.8-2.9.16")
@@ -918,6 +919,16 @@ class TestFilters(NemoResource):
         self.assertEqual(len(converted["%book|1%"]["%poem|5%"]), 2)
         self.assertEqual(len(converted["%book|1%"]["%poem|6%"]), 1)
         self.assertEqual(len(converted["%book|2%"]), 1)
+
+    def test_f_is_str(self):
+        """ Test string
+        """
+        self.assertEqual(Nemo.f_is_str("h"), True)
+        self.assertEqual(Nemo.f_is_str([]), False)
+
+    def test_f_i18n_citation_type(self):
+        self.assertEqual(Nemo.f_i18n_citation_type("%book|1%", "Book 1"))
+
 
 class TestChunkers(NemoResource):
 
