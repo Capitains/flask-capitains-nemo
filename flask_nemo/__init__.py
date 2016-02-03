@@ -20,12 +20,10 @@ from collections import OrderedDict, Callable
 import jinja2
 from copy import copy
 from pkg_resources import resource_filename
-<<<<<<< HEAD
 from functools import reduce
-=======
 import flask_nemo._data
 from collections import defaultdict
->>>>>>> upstream/0.0.2dev
+
 
 class Nemo(object):
     """ Nemo is an extension for Flask python micro-framework which provides
@@ -99,7 +97,8 @@ class Nemo(object):
         "f_formatting_passage_reference",
         "f_i18n_iso",
         "f_group_texts",
-        "f_order_text_edition_translation"
+        "f_order_text_edition_translation",
+        "f_hierarchical_passages"
     ]
 
     def __init__(self, name=None, app=None, api_url="/", base_url="/nemo", cache=None, expire=3600,
@@ -966,41 +965,41 @@ class Nemo(object):
         return editions + translations
 
     @staticmethod
-    def hierarchical_passages(version, reffs, params):
-        """
-        A function to construct a hierarchical dictionary representing the
-        different citation layers of a text
-        :param version:
+    def f_hierarchical_passages(version, reffs):
+        """ A function to construct a hierarchical dictionary representing the different citation layers of a text
+
+        :param version: text from which the reference comes
         :type version: MyCapytain.resources.inventory.Text
-        :param reffs:
-        :type reffs: list of tuples
-        :param params:
-        :return:
+        :param reffs: passage references with human-readable equivalent
+        :type reffs: [(str, str)]
+        :return: nested dictionary representing where keys represent the names of the levels and the final values represent the passage reference
         :rtype: OrderedDict
         """
         d = OrderedDict()
         levels = [x for x in version.citation]
         for cit, name in reffs:
             ref = cit.split('-')[0]
-            levs = ['%{}% {}'.format(levels[i], v) for i, v in enumerate(ref.split('.'))]
+            levs = ['%{}|{}%'.format(levels[i].name, v) for i, v in enumerate(ref.split('.'))]
             _getFromDict(d, levs[:-1])[name] = cit
         return d
 
-def _getFromDict(dataDict, keyList):
-    """
 
-    :param dataDict:
-    :param keyList:
-    :return:
+def _getFromDict(dataDict, keyList):
+    """Retrieves and creates when necessary a dictionary in nested dictionaries
+
+    :param dataDict: a dictionary
+    :param keyList: list of keys
+    :return: target dictionary
     """
     return reduce(_create_hierarchy, keyList, dataDict)
 
-def _create_hierarchy(self, hierarchy, level):
-    """
 
-    :param hierarchy:
-    :param level:
-    :return:
+def _create_hierarchy(hierarchy, level):
+    """Create an OrderedDict
+
+    :param hierarchy: a dictionary
+    :param level: single key
+    :return: deeper dictionary
     """
     if level not in hierarchy:
         hierarchy[level] = OrderedDict()

@@ -877,6 +877,47 @@ class TestFilters(NemoResource):
         self.assertEqual(self.nemo.app.jinja_env.filters["collection_i18n"], Nemo.f_collection_i18n)
         self.assertEqual(self.nemo.app.jinja_env.filters["active_link"], Nemo.f_active_link)
 
+    def test_f_hierarchical_passages(self):
+        """Test for normal, simple passage hierarchical conversion
+        :return:
+        """
+        reffs = [("1.5.8", "Line 8"), ("1.5.9", "Line 9"), ("1.6.8", "Line 7"), ("2.5.8", "Line 12")]
+        citation_line = MyCapytain.common.reference.Citation(name="line")
+        citation_poem = MyCapytain.common.reference.Citation(name="poem", child=citation_line)
+        citation_book = MyCapytain.common.reference.Citation(name="book", child=citation_poem)
+        text = MyCapytain.resources.inventory.Text()
+        text.citation = citation_book
+        converted = Nemo.f_hierarchical_passages(text, reffs)
+        self.assertEqual(converted["%book|1%"]["%poem|5%"]["Line 8"], "1.5.8")
+        self.assertEqual(converted["%book|1%"]["%poem|5%"]["Line 9"], "1.5.9")
+        self.assertEqual(converted["%book|1%"]["%poem|6%"]["Line 7"], "1.6.8")
+        self.assertEqual(converted["%book|2%"]["%poem|5%"]["Line 12"], "2.5.8")
+        self.assertEqual(len(converted), 2)
+        self.assertEqual(len(converted["%book|1%"]), 2)
+        self.assertEqual(len(converted["%book|1%"]["%poem|5%"]), 2)
+        self.assertEqual(len(converted["%book|1%"]["%poem|6%"]), 1)
+        self.assertEqual(len(converted["%book|2%"]), 1)
+
+    def test_f_hierarchical_range_passages(self):
+        """Test for range passage hierarchical conversion
+        :return:
+        """
+        reffs = [("1.5.8-1.5.9", "Line 8"), ("1.5.9-1.5.15", "Line 9"), ("1.6.8-2.9.16", "Line 7"), ("2.5.8-16.45.928", "Line 12")]
+        citation_line = MyCapytain.common.reference.Citation(name="line")
+        citation_poem = MyCapytain.common.reference.Citation(name="poem", child=citation_line)
+        citation_book = MyCapytain.common.reference.Citation(name="book", child=citation_poem)
+        text = MyCapytain.resources.inventory.Text()
+        text.citation = citation_book
+        converted = Nemo.f_hierarchical_passages(text, reffs)
+        self.assertEqual(converted["%book|1%"]["%poem|5%"]["Line 8"], "1.5.8-1.5.9")
+        self.assertEqual(converted["%book|1%"]["%poem|5%"]["Line 9"], "1.5.9-1.5.15")
+        self.assertEqual(converted["%book|1%"]["%poem|6%"]["Line 7"], "1.6.8-2.9.16")
+        self.assertEqual(converted["%book|2%"]["%poem|5%"]["Line 12"], "2.5.8-16.45.928")
+        self.assertEqual(len(converted), 2)
+        self.assertEqual(len(converted["%book|1%"]), 2)
+        self.assertEqual(len(converted["%book|1%"]["%poem|5%"]), 2)
+        self.assertEqual(len(converted["%book|1%"]["%poem|6%"]), 1)
+        self.assertEqual(len(converted["%book|2%"]), 1)
 
 class TestChunkers(NemoResource):
 
