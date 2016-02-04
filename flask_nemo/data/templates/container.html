@@ -28,7 +28,17 @@
     </nav>
     <div class="col-md-10" id="reading-container">
         <nav id="breadcrumb">
-            Home / Cicero / Against Catiline / 1.1
+            <ol class="breadcrumb">
+              <li><a href="{{url_for(".r_index")}}">Home</a></li>
+              {% for crumb in breadcrumbs: %}
+                {%if crumb["link"] != None %}
+           
+                  <li><a href="{{url_for(crumb["link"],**crumb["args"])}}">{{crumb["title"]}}</a></li>
+                {% else %}
+                  <li class="active">{{crumb["title"]}}</li>
+                {% endif %}
+              {% endfor %}
+            </ol>
         </nav>
           {% block article %}
           {% endblock %}
