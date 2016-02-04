@@ -927,7 +927,7 @@ class TestFilters(NemoResource):
         self.assertEqual(Nemo.f_is_str([]), False)
 
     def test_f_i18n_citation_type(self):
-        self.assertEqual(Nemo.f_i18n_citation_type("%book|1%", "Book 1"))
+        self.assertEqual(Nemo.f_i18n_citation_type("%book|1%"), "Book 1")
 
 
 class TestChunkers(NemoResource):
