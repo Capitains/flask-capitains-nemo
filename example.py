@@ -10,9 +10,12 @@ from pkg_resources import resource_filename
 if __name__ == "__main__":
     # We select a configuration, see more in examples/configs
     key = "default"
+    port = 5000
     if len(argv) > 1 and argv[1] in configs:
         key = argv[1]
         Nemo = classes[key]
+        if len(argv) > 2:
+            port = int(argv[2])
 
     # We create a Flask app
     app = Flask(
@@ -33,4 +36,5 @@ if __name__ == "__main__":
 
     # We run the app
     app.debug = True
-    app.run()
+
+    app.run(port=port)

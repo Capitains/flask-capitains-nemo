@@ -101,7 +101,8 @@ class Nemo(object):
         "f_order_text_edition_translation",
         "f_hierarchical_passages",
         "f_is_str",
-        "f_i18n_citation_type"
+        "f_i18n_citation_type",
+        "f_order_author"
     ]
 
     def __init__(self, name=None, app=None, api_url="/", base_url="/nemo", cache=None, expire=3600,
@@ -781,6 +782,24 @@ class Nemo(object):
         :rtype: bool
         """
         return identifier in kwargs["url"] and collection not in kwargs
+
+    @staticmethod
+    def f_order_author(textgroups, lang="eng"):
+        """ Order a list of textgroups
+
+        :param textgroups: list of textgroups to be sorted
+        :param lang: Language to display
+        :return: Sorted list
+        """
+        __textgroups__ = {
+            tg.metadata["groupname"][lang]: tg
+            for tg in textgroups
+        }
+
+        return [
+           __textgroups__[key]
+           for key in sorted(list(__textgroups__.keys()))
+       ]
 
     @staticmethod
     def f_active_link(string, url):

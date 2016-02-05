@@ -912,6 +912,26 @@ class TestCustomizer(NemoResource):
 
 class TestFilters(NemoResource):
 
+    def test_f_order_author(self):
+        """ Test ordering authors
+        """
+        a = MyCapytain.resources.inventory.TextGroup()
+        b = MyCapytain.resources.inventory.TextGroup()
+        c = MyCapytain.resources.inventory.TextGroup()
+        d = MyCapytain.resources.inventory.TextGroup()
+        e = MyCapytain.resources.inventory.TextGroup()
+        a.metadata["groupname"]["eng"] = "Martial"
+        b.metadata["groupname"]["eng"] = "Virgil"
+        c.metadata["groupname"]["eng"] = "Cicero"
+        d.metadata["groupname"]["eng"] = "Augustine"
+        e.metadata["groupname"]["eng"] = "Suetone"
+
+        sort = Nemo.f_order_author([a, b, c, d, e])
+        self.assertEqual(
+            sort,
+            [d, c, a, e, b]
+        )
+
     def test_f_active_link(self):
         """ Test checking if something is in the path
         """
