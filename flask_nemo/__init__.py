@@ -792,7 +792,7 @@ class Nemo(object):
         :return: Sorted list
         """
         __textgroups__ = {
-            tg.metadata["groupname"][lang]: tg
+            tg.metadata["groupname"][lang] or str(tg.urn): tg
             for tg in textgroups
         }
 

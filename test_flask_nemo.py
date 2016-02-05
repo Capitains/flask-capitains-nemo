@@ -920,16 +920,19 @@ class TestFilters(NemoResource):
         c = MyCapytain.resources.inventory.TextGroup()
         d = MyCapytain.resources.inventory.TextGroup()
         e = MyCapytain.resources.inventory.TextGroup()
+        f = MyCapytain.resources.inventory.TextGroup(
+            urn="urn:cts:latinLit:phi1294.phi002.perseus-lat2"
+        )
         a.metadata["groupname"]["eng"] = "Martial"
         b.metadata["groupname"]["eng"] = "Virgil"
         c.metadata["groupname"]["eng"] = "Cicero"
         d.metadata["groupname"]["eng"] = "Augustine"
         e.metadata["groupname"]["eng"] = "Suetone"
-
-        sort = Nemo.f_order_author([a, b, c, d, e])
+        f.metadata["groupname"]["eng"] = None
+        sort = Nemo.f_order_author([a, b, c, d, e, f])
         self.assertEqual(
             sort,
-            [d, c, a, e, b]
+            [d, c, a, e, b, f]
         )
 
     def test_f_active_link(self):
