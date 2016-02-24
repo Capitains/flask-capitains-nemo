@@ -1164,6 +1164,8 @@ def cmd():
                        help='Port to use for the HTTP Server')
     parser.add_argument('--host', type=str, default="127.0.0.1",
                        help='Host to use for the HTTP Server')
+    parser.add_argument('--inventory', type=str, default=None,
+                       help='Inventory to request from the endpoint')
     parser.add_argument('--groupby', type=int, default=25,
                        help='Number of passage to group in the deepest level of the hierarchy')
     parser.add_argument('--debug', action="store_true", default=False, help="Set-up the application for debugging")
@@ -1180,6 +1182,7 @@ def cmd():
             app=app,
             name="nemo",
             base_url="",
+            inventory = args.inventory,
             api_url=args.endpoint,
             chunker={"default": lambda x, y: Nemo.level_grouper(x, y, groupby=args.groupby)}
         )
