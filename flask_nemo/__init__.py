@@ -9,20 +9,19 @@
 __version__ = "0.0.1"
 
 import os.path as op
-from flask import request, render_template, Blueprint, abort, Markup, send_from_directory
+import requests_cache
+import jinja2
+from flask import request, render_template, Blueprint, abort, Markup, send_from_directory, Flask
 import MyCapytain.endpoints.cts5
 import MyCapytain.resources.texts.tei
 import MyCapytain.resources.texts.api
 import MyCapytain.resources.inventory
 from lxml import etree
-import requests_cache
-from collections import OrderedDict, Callable
-import jinja2
 from copy import copy
 from pkg_resources import resource_filename
 from functools import reduce
+from collections import defaultdict, OrderedDict, Callable
 import flask_nemo._data
-from collections import defaultdict, OrderedDict
 
 
 class Nemo(object):
@@ -163,7 +162,7 @@ class Nemo(object):
         }
 
         self.__urntransform = {
-            "default" : None
+            "default": None
         }
 
         if isinstance(transform, dict):
@@ -300,7 +299,7 @@ class Nemo(object):
 
         :return: A set of CTS Namespaces
         :rtype: set(str)
-	    """
+        """
         inventory = self.get_inventory()
         urns = set(
             [inventory.textgroups[textgroup].urn[2] for textgroup in inventory.textgroups]
@@ -555,7 +554,10 @@ class Nemo(object):
         :return: Response
         """
         if type in self.assets and asset in self.assets[type]:
-            return send_from_directory(directory=self.assets[type][asset], filename=asset)
+            return send_from_directory(
+                directory=self.assets[type][asset],
+                filename=asset
+            )
         abort(404)
 
     def register_assets(self):
@@ -1151,3 +1153,44 @@ def _join_or_single(start, end):
             start,
             end
         )
+
+
+def cmd():
+    import argparse
+    parser = argparse.ArgumentParser(description='Capitains Nemo CTS UI')
+    parser.add_argument('endpoint', metavar='endpoint', type=str,
+                       help='CTS API Endpoint')
+    parser.add_argument('--port', type=int, default=8000,
+                       help='Port to use for the HTTP Server')
+    parser.add_argument('--host', type=str, default="127.0.0.1",
+                       help='Host to use for the HTTP Server')
+    parser.add_argument('--groupby', type=int, default=25,
+                       help='Number of passage to group in the deepest level of the hierarchy')
+    parser.add_argument('--debug', action="store_true", default=False, help="Set-up the application for debugging")
+
+    args = parser.parse_args()
+
+    if args.endpoint:
+        app = Flask(
+            __name__
+        )
+
+        # We set up Nemo
+        nemo = Nemo(
+            app=app,
+            name="nemo",
+            base_url="",
+            api_url=args.endpoint,
+            chunker={"default": lambda x, y: Nemo.level_grouper(x, y, groupby=args.groupby)}
+        )
+        # We register its routes
+        nemo.register_routes()
+        # We register its filters
+        nemo.register_filters()
+
+        # We run the app
+        app.debug = args.debug
+        app.run(port=args.port, host=args.host)
+
+if __name__ == "__main__":
+    cmd()
