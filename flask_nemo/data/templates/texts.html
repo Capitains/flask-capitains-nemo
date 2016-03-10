@@ -10,7 +10,7 @@
                     <h2>{{title.metadata['title'][lang]}}</h2>
                     <ul class=" list-unstyled" style="margin-left:1%;">
                         {% for text in texts|order_text_edition_translation %}
-                            <li><a href="{{url_for('.r_version', collection=text.urn[2], textgroup=text.urn[3], work=text.urn[4], version=text.urn[5])}}">{{text.lang|i18n_iso}} </a> <small>{{text.metadata['description'][lang] }}</small></li>
+                            <li><a href="{{url_for('.r_version', collection=text.urn.namespace, textgroup=text.urn.textgroup, work=text.urn.work, version=text.urn.version)}}">{{text.lang|i18n_iso}} </a> <small>{{text.metadata['description'][lang] }}</small></li>
                         {% endfor %}
                     </ul>
                 </li>

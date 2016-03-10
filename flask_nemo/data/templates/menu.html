@@ -24,7 +24,7 @@
 </header>
 <ul class="menu">
     {% for textgroup in textgroups %}
-        <li><a class="{{textgroup.urn[3]|active_link(url)}}" href="{{url_for('.r_texts', collection=textgroup.urn[2], textgroup=textgroup.urn[3])}}">{{textgroup.metadata['groupname'][lang]}}</a></li>
+        <li><a class="{{textgroup.urn.textgroup|active_link(url)}}" href="{{url_for('.r_texts', collection=textgroup.urn.namespace, textgroup=textgroup.urn.textgroup)}}">{{textgroup.metadata['groupname'][lang]}}</a></li>
     {% endfor %}
 </ul>
 {% endif %}
