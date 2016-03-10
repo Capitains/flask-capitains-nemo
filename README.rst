@@ -9,7 +9,7 @@
 
 .. image:: https://coveralls.io/repos/Capitains/flask-capitains-nemo/badge.svg?branch=master&service=github
     :alt: Coverage
-  :target: https://coveralls.io/github/Capitains/flask-capitains-nemo?branch=master
+    :target: https://coveralls.io/github/Capitains/flask-capitains-nemo?branch=master
 
 .. image:: https://badge.fury.io/py/flask_nemo.svg
     :target: https://badge.fury.io/py/flask_nemo
