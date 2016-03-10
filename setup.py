@@ -18,9 +18,6 @@ setup(
     tests_require=[
         "mock==1.0.1"
     ],
-    dependency_links=[
-        "https://github.com/Capitains/MyCapytain/tarball/0.1.0dev#egg=MyCapytain-0.1.0"
-    ],
     entry_points={
         'console_scripts': ['capitains-nemo=flask_nemo:cmd'],
     },

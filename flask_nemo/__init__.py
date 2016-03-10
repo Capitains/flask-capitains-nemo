@@ -16,6 +16,7 @@ import MyCapytain.endpoints.cts5
 import MyCapytain.resources.texts.tei
 import MyCapytain.resources.texts.api
 import MyCapytain.resources.inventory
+from MyCapytain.common.reference import URN
 from lxml import etree
 from copy import copy
 from pkg_resources import resource_filename
@@ -269,8 +270,8 @@ class Nemo(object):
         """
         # We check first that we don't have an override function
         # N.B. overrides will be on the text level, not the passage
-        if str(urn["text"]) in self.__urntransform:
-            func = self.__urntransform[str(urn["text"])]
+        if urn.upTo(URN.NO_PASSAGE) in self.__urntransform:
+            func = self.__urntransform[urn.upTo(URN.NO_PASSAGE)]
         else:
             func = self.__urntransform["default"]
 
@@ -302,7 +303,7 @@ class Nemo(object):
         """
         inventory = self.get_inventory()
         urns = set(
-            [inventory.textgroups[textgroup].urn[2] for textgroup in inventory.textgroups]
+            [inventory.textgroups[textgroup].urn.namespace for textgroup in inventory.textgroups]
         )
         return urns
 
@@ -400,7 +401,7 @@ class Nemo(object):
         else:
             texts = []
 
-        texts = [text for text in texts if text.urn[5] == version_urn]
+        texts = [text for text in texts if text.urn.version == version_urn]
         if len(texts) == 1:
             return texts[0]
         abort(404)
@@ -679,7 +680,7 @@ class Nemo(object):
                 # this logic here
                 if crumb_type[0] == "textgroup":
                    # get the groupname of the current textgroup
-                   item = list(filter(lambda textgroup: textgroup.urn[3] == kwargs["url"]["textgroup"], kwargs["textgroups"]))
+                   item = list(filter(lambda textgroup: textgroup.urn.textgroup == kwargs["url"]["textgroup"], kwargs["textgroups"]))
                    crumb["title"] = item[0].metadata["groupname"][kwargs["lang"]]
                 elif crumb_type[0] == "version":
                     # get the label of the current version
@@ -867,9 +868,9 @@ class Nemo(object):
         works = {}
         texts = defaultdict(list)
         for version in versions_list:
-            if version.urn[4] not in works:
-                works[version.urn[4]] = version.parents[0]
-            texts[version.urn[4]].append(version)
+            if version.urn.work not in works:
+                works[version.urn.work] = version.parents[0]
+            texts[version.urn.work].append(version)
         return [
             (works[index], texts[index])
             for index in works
@@ -1114,7 +1115,10 @@ class Nemo(object):
         :return: Items corresponding to the object children filtered by the query
         :rtype: list(items.children)
         """
-        return item.urn[part_of_urn].lower() == query.lower().strip()
+
+        return str(item.urn.__getattribute__([
+            "", "urn_namespace", "namespace", "textgroup", "work", "version", "reference"
+        ][part_of_urn]).lower()) == query.lower().strip()
 
 
 def _getFromDict(dataDict, keyList):
@@ -1164,6 +1168,8 @@ def cmd():
                        help='Port to use for the HTTP Server')
     parser.add_argument('--host', type=str, default="127.0.0.1",
                        help='Host to use for the HTTP Server')
+    parser.add_argument('--inventory', type=str, default=None,
+                       help='Inventory to use')
     parser.add_argument('--groupby', type=int, default=25,
                        help='Number of passage to group in the deepest level of the hierarchy')
     parser.add_argument('--debug', action="store_true", default=False, help="Set-up the application for debugging")
@@ -1181,7 +1187,8 @@ def cmd():
             name="nemo",
             base_url="",
             api_url=args.endpoint,
-            chunker={"default": lambda x, y: Nemo.level_grouper(x, y, groupby=args.groupby)}
+            chunker={"default": lambda x, y: Nemo.level_grouper(x, y, groupby=args.groupby)},
+            inventory=args.inventory
         )
         # We register its routes
         nemo.register_routes()
