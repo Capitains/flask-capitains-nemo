@@ -4,8 +4,8 @@
 <article class="nav">
     <section class="row">
         <nav>
-            {% for textgroup in textgroups %}
-                <div><a href="{{url_for('nemo.r_texts', collection=textgroup.urn[2], textgroup=textgroup.urn[3])}}">{{ textgroup.metadata['groupname'][lang] }}</a></div>
+            {% for textgroup in textgroups|order_author %}
+                <div><a href="{{url_for('.r_texts', collection=textgroup.urn.namespace, textgroup=textgroup.urn.textgroup)}}">{{ textgroup.metadata['groupname'][lang] }}</a></div>
             {% endfor %}
         </nav>
     </section>

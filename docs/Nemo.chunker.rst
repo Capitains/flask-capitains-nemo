@@ -92,6 +92,7 @@ Available chunkers
 .. automethod:: flask.ext.nemo.Nemo.default_chunker
 .. automethod:: flask.ext.nemo.Nemo.line_chunker
 .. automethod:: flask.ext.nemo.Nemo.scheme_chunker
+.. automethod:: flask.ext.nemo.Nemo.level_chunker
 
 PrevNext
 ########

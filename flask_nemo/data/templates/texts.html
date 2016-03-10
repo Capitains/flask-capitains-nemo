@@ -3,10 +3,17 @@
 {% block article %}
 <article>
     <head><h1>Texts</h1></head>
-    <section>
-        <ul class="row">
-            {% for text in texts %}
-                <li><a href="{{url_for('nemo.r_version', collection=text.urn[2], textgroup=text.urn[3], work=text.urn[4], version=text.urn[5])}}">{{ text.metadata['label'][lang] }}</a><br />{{text.metadata['description'][lang] }}</li>
+    <section class="textlist">
+        <ul class="row list-unstyled">
+            {% for title, texts in texts|group_texts %}
+                <li>
+                    <h2>{{title.metadata['title'][lang]}}</h2>
+                    <ul class=" list-unstyled" style="margin-left:1%;">
+                        {% for text in texts|order_text_edition_translation %}
+                            <li><a href="{{url_for('.r_version', collection=text.urn.namespace, textgroup=text.urn.textgroup, work=text.urn.work, version=text.urn.version)}}">{{text.lang|i18n_iso}} </a> <small>{{text.metadata['description'][lang] }}</small></li>
+                        {% endfor %}
+                    </ul>
+                </li>
             {% endfor %}
         </ul>
     </section>

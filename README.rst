@@ -36,8 +36,21 @@ If you want to install the latest version, please do the following
     source venv/bin/activate
     python setup.py install
     
-If you have trouble with dependency conflicts with MyCapitains, try running this before install
+If you have trouble with dependency conflicts with MyCapitains, try running :code:`pip install MyCapytain` this before install
 
-.. code-block:: shell
 
-   pip install MyCapytain 
+Running Nemo from the command line
+######################################
+
+This small tutorial takes that you have a CTS API endpoint available, here :code:`http://localhost:8000`
+
+
+1. (Advised) Create a virtual environment and source it : :code:`virtualenv -p /usr/bin/python3 env`, :code:`source env/bin/activate`
+2. **With development version:**
+    - Clone the repository : :code:`git clone https://github.com/Capitains/flask-capitains-nemo.git`
+    - Go to the directory : :code:`cd Nemo`
+    - Install the source with develop option : :code:`python setup.py develop`
+2. **With production version:**
+    - Install from pip : :code:`pip install flask_nemo`
+3. You will be able now to call capitains nemo help information through :code:`capitains-nemo --help`
+4. Basic setting for testing an api is :code:`capitains-nemo http://localhost:8000`.

@@ -1,0 +1,26 @@
+{% macro single_ref(version, reff, human_reff) -%}
+    <li class="col-md-1">
+        <a href="{{url_for('.r_passage', collection=version.urn.namespace, textgroup=version.urn.textgroup, work=version.urn.work, version=version.urn.version, passage_identifier=reff)}}">{{ human_reff }}</a>
+    </li>
+{%- endmacro %}
+
+{% macro reff_dict(version, reffs) -%}
+    {% for human_reff, dict_or_reff in reffs.items() %}
+        {% if dict_or_reff|is_str %}
+            {{ single_ref(version, dict_or_reff, human_reff) }}
+        {% else %}
+            <ul class="level row list-unstyled">
+                <li>
+                    <h2>{{human_reff|i18n_citation_type}}</h2>
+                    <ul class="reffs">
+                        {{ reff_dict(version, dict_or_reff) }}
+                    </ul>
+                </li>
+            </ul>
+        {% endif %}
+    {% endfor %}
+{%- endmacro %}
+
+{% macro hierarchical_dispatcher(version, reffs) -%}
+    {{ reff_dict(version, (reffs|hierarchical_passages(version))) }}
+{%- endmacro %}

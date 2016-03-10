@@ -9,17 +9,21 @@
 __version__ = "0.0.1"
 
 import os.path as op
-from flask import request, render_template, Blueprint, abort, Markup, send_from_directory
+import requests_cache
+import jinja2
+from flask import request, render_template, Blueprint, abort, Markup, send_from_directory, Flask
 import MyCapytain.endpoints.cts5
 import MyCapytain.resources.texts.tei
 import MyCapytain.resources.texts.api
 import MyCapytain.resources.inventory
+from MyCapytain.common.reference import URN
 from lxml import etree
-import requests_cache
-from collections import OrderedDict, Callable
-import jinja2
 from copy import copy
 from pkg_resources import resource_filename
+from functools import reduce
+from collections import defaultdict, OrderedDict, Callable
+import flask_nemo._data
+
 
 class Nemo(object):
     """ Nemo is an extension for Flask python micro-framework which provides
@@ -80,7 +84,8 @@ class Nemo(object):
         "index": "index.html",
         "texts": "texts.html",
         "version": "version.html",
-        "passage_footer": "passage_footer.html"
+        "passage_footer": "passage_footer.html",
+        "reference_display": "reference_display.html"
     }
     COLLECTIONS = {
         "latinLit": "Latin",
@@ -90,7 +95,14 @@ class Nemo(object):
     FILTERS = [
         "f_active_link",
         "f_collection_i18n",
-        "f_formatting_passage_reference"
+        "f_formatting_passage_reference",
+        "f_i18n_iso",
+        "f_group_texts",
+        "f_order_text_edition_translation",
+        "f_hierarchical_passages",
+        "f_is_str",
+        "f_i18n_citation_type",
+        "f_order_author"
     ]
 
     def __init__(self, name=None, app=None, api_url="/", base_url="/nemo", cache=None, expire=3600,
@@ -151,7 +163,7 @@ class Nemo(object):
         }
 
         self.__urntransform = {
-            "default" : None
+            "default": None
         }
 
         if isinstance(transform, dict):
@@ -258,8 +270,8 @@ class Nemo(object):
         """
         # We check first that we don't have an override function
         # N.B. overrides will be on the text level, not the passage
-        if str(urn["text"]) in self.__urntransform:
-            func = self.__urntransform[str(urn["text"])]
+        if urn.upTo(URN.NO_PASSAGE) in self.__urntransform:
+            func = self.__urntransform[urn.upTo(URN.NO_PASSAGE)]
         else:
             func = self.__urntransform["default"]
 
@@ -288,10 +300,10 @@ class Nemo(object):
 
         :return: A set of CTS Namespaces
         :rtype: set(str)
-	"""
+        """
         inventory = self.get_inventory()
         urns = set(
-            [inventory.textgroups[textgroup].urn[2] for textgroup in inventory.textgroups]
+            [inventory.textgroups[textgroup].urn.namespace for textgroup in inventory.textgroups]
         )
         return urns
 
@@ -389,7 +401,7 @@ class Nemo(object):
         else:
             texts = []
 
-        texts = [text for text in texts if text.urn[5] == version_urn]
+        texts = [text for text in texts if text.urn.version == version_urn]
         if len(texts) == 1:
             return texts[0]
         abort(404)
@@ -543,7 +555,10 @@ class Nemo(object):
         :return: Response
         """
         if type in self.assets and asset in self.assets[type]:
-            return send_from_directory(directory=self.assets[type][asset], filename=asset)
+            return send_from_directory(
+                directory=self.assets[type][asset],
+                filename=asset
+            )
         abort(404)
 
     def register_assets(self):
@@ -639,8 +654,57 @@ class Nemo(object):
 
         kwargs["assets"] = self.assets
         kwargs["templates"] = self.templates
-
+        kwargs["breadcrumbs"] = self.make_breadcrumbs(**kwargs)
         return render_template(template, **kwargs)
+
+    def make_breadcrumbs(self,**kwargs):
+        """ Make breadcrumbs for a route
+
+        :param kwargs: dictionary of named arguments used to construct the view
+        :type kwargs: dict
+        :return: List of dict items the view can use to construct the link. 
+        :rtype: list({ "link": str, "title", str, "args", dict})
+        """
+        breadcrumbs = []
+        # this is the list of items we want to accumulate in the breadcrumb trail.  
+        # item[0] is the key into the kwargs["url"] object and item[1] is the  name of the route
+        # setting a route name to None means that it's needed to construct the route of the next item in the list
+        # but shouldn't be included in the list itself (this is currently the case for work -- 
+        # at some point we probably should include work in the navigation)
+        crumbtypes = [["collection",".r_collection"],["textgroup",".r_texts"],["work",None],["version",".r_version"],["passage_identifier",".r_passage"]]
+        for idx,crumb_type in enumerate(crumbtypes) :
+            if kwargs["url"] and crumb_type[0] in kwargs["url"]:
+                crumb = {}
+                # what we want to display as the crumb title depends upon what it is
+                # in the future, having a common display_name property on the model would be helpful to avoid
+                # this logic here
+                if crumb_type[0] == "textgroup":
+                   # get the groupname of the current textgroup
+                   item = list(filter(lambda textgroup: textgroup.urn.textgroup == kwargs["url"]["textgroup"], kwargs["textgroups"]))
+                   crumb["title"] = item[0].metadata["groupname"][kwargs["lang"]]
+                elif crumb_type[0] == "version":
+                    # get the label of the current version
+                    crumb["title"] = kwargs["version"].metadata["label"][kwargs["lang"]]
+                else:
+                    # for everything else, just use the value as metadata isn't applicable
+                    crumb["title"] = kwargs["url"][crumb_type[0]]
+                # iterate through the crumb types and pull together the args that lead up to this type
+                # so that we can reconstruct the route to just this part of the breadcrumb trail
+                crumb_args = {}
+                iteridx = idx
+                while iteridx >= 0:
+                     crumb_args[crumbtypes[iteridx][0]] = kwargs["url"][crumbtypes[iteridx][0]]
+                     iteridx = iteridx - 1
+                crumb["link"] = crumb_type[1]
+                crumb["args"] = crumb_args
+                # skip items in the trail that are only used to construct others
+                if crumb_type[1] != None:
+                    breadcrumbs.append(crumb)
+        # don't link the last item in the trail
+        if len(breadcrumbs) > 0:
+            breadcrumbs[-1]["link"] = None
+        return breadcrumbs
+
 
     def route(self, fn, **kwargs):
         """ Route helper : apply fn function but keep the calling object, *ie* kwargs, for other functions
@@ -723,6 +787,24 @@ class Nemo(object):
         return identifier in kwargs["url"] and collection not in kwargs
 
     @staticmethod
+    def f_order_author(textgroups, lang="eng"):
+        """ Order a list of textgroups
+
+        :param textgroups: list of textgroups to be sorted
+        :param lang: Language to display
+        :return: Sorted list
+        """
+        __textgroups__ = {
+            tg.metadata["groupname"][lang] or str(tg.urn): tg
+            for tg in textgroups
+        }
+
+        return [
+           __textgroups__[key]
+           for key in sorted(list(__textgroups__.keys()))
+       ]
+
+    @staticmethod
     def f_active_link(string, url):
         """ Check if current string is in the list of names
 
@@ -757,6 +839,101 @@ class Nemo(object):
         :rtype: str
         """
         return string.split("-")[0]
+
+    @staticmethod
+    def f_i18n_iso(isocode, lang="eng"):
+        """ Replace isocode by its language equivalent
+
+        :param isocode: Three character long language code
+        :param lang: Lang in which to return the language name
+        :return: Full Text Language Name
+        """
+        if lang not in flask_nemo._data.AVAILABLE_TRANSLATIONS:
+            lang = "eng"
+
+        try:
+            return flask_nemo._data.ISOCODES[isocode][lang]
+        except KeyError:
+            return "Unknown"
+
+    @staticmethod
+    def f_group_texts(versions_list):
+        """ Takes a list of versions and regroup them by work identifier
+
+        :param versions_list: List of text versions
+        :type versions_list: [Text]
+        :return: List of texts grouped by work
+        :rtype: [(Work, [Text])]
+        """
+        works = {}
+        texts = defaultdict(list)
+        for version in versions_list:
+            if version.urn.work not in works:
+                works[version.urn.work] = version.parents[0]
+            texts[version.urn.work].append(version)
+        return [
+            (works[index], texts[index])
+            for index in works
+        ]
+
+    @staticmethod
+    def f_order_text_edition_translation(versions_list):
+        """ Takes a list of versions and put translations after editions
+
+        :param versions_list: List of text versions
+        :type versions_list: [Text]
+        :return: List where first members will be editions
+        :rtype: [Text]
+        """
+        translations = []
+        editions = []
+        for version in versions_list:
+            if version.subtype == "Translation":
+                translations.append(version)
+            else:
+                editions.append(version)
+        return editions + translations
+
+    @staticmethod
+    def f_hierarchical_passages(reffs, version):
+        """ A function to construct a hierarchical dictionary representing the different citation layers of a text
+
+        :param reffs: passage references with human-readable equivalent
+        :type reffs: [(str, str)]
+        :param version: text from which the reference comes
+        :type version: MyCapytain.resources.inventory.Text
+        :return: nested dictionary representing where keys represent the names of the levels and the final values represent the passage reference
+        :rtype: OrderedDict
+        """
+        d = OrderedDict()
+        levels = [x for x in version.citation]
+        for cit, name in reffs:
+            ref = cit.split('-')[0]
+            levs = ['%{}|{}%'.format(levels[i].name, v) for i, v in enumerate(ref.split('.'))]
+            _getFromDict(d, levs[:-1])[name] = cit
+        return d
+
+    @staticmethod
+    def f_is_str(value):
+        """ Check if object is a string
+
+        :param value: object to check against
+        :return: Return if value is a string
+        """
+        return isinstance(value, str)
+
+    @staticmethod
+    def f_i18n_citation_type(string, lang="eng"):
+        """ Take a string of form %citation_type|passage% and format it for human
+
+        :param string: String of formation %citation_type|passage%
+        :param lang: Language to translate to
+        :return: Human Readable string
+
+        .. todo :: use i18n tools and provide real i18n
+        """
+        s = " ".join(string.strip("%").split("|"))
+        return s.capitalize()
 
     @staticmethod
     def default_chunker(text, getreffs):
@@ -819,6 +996,55 @@ class Nemo(object):
         return reffs
 
     @staticmethod
+    def level_chunker(text, getValidReff, level=1):
+        """ Chunk a text at the passage level
+
+        :param text: Text object
+        :type text: MyCapytains.resources.text.api
+        :param getreffs: Callback function to retrieve text
+        :type getreffs: function(level)
+        :return: List of urn references with their human readable version
+        :rtype: [(str, str)]
+        """
+        references = getValidReff(level=level)
+        return [(ref.split(":")[-1], ref.split(":")[-1]) for ref in references]
+
+    @staticmethod
+    def level_grouper(text, getValidReff, level=None, groupby=20):
+        """ Alternative to level_chunker: groups levels together at the latest level
+
+        :param text: Text object
+        :param getValidReff: GetValidReff query callback
+        :param level: Level of citation to retrieve
+        :param groupby: Number of level to groupby
+        :return: Automatically curated references
+        """
+        if level is None or level > len(text.citation):
+            level = len(text.citation)
+
+        references = [ref.split(":")[-1] for ref in getValidReff(level=level)]
+        _refs = OrderedDict()
+
+        for key in references:
+            k = ".".join(key.split(".")[:level-1])
+            if k not in _refs:
+                _refs[k] = []
+            _refs[k].append(key)
+            del k
+
+        return [
+            (
+                _join_or_single(ref[0], ref[-1]),
+                _join_or_single(ref[0], ref[-1])
+            )
+            for sublist in _refs.values()
+            for ref in [
+                sublist[i:i+groupby]
+                for i in range(0, len(sublist), groupby)
+            ]
+        ]
+
+    @staticmethod
     def default_prevnext(passage, callback):
         """ Default deliver of prevnext informations
 
@@ -830,15 +1056,15 @@ class Nemo(object):
         :return: Tuple representing previous and following reference
         :rtype: (str, str)
         """
-        previous, following = passage._next, passage._prev
+        previous, following = passage.prev, passage.next
 
         if previous is None and following is None:
             previous, following = callback()
 
         if previous is not None:
-            previous = previous.split(":")[-1]
+            previous = str(previous.reference)
         if following is not None:
-            following = following.split(":")[-1]
+            following = str(following.reference)
         return previous, following
 
     @staticmethod
@@ -889,4 +1115,92 @@ class Nemo(object):
         :return: Items corresponding to the object children filtered by the query
         :rtype: list(items.children)
         """
-        return item.urn[part_of_urn].lower() == query.lower().strip()
+
+        return str(item.urn.__getattribute__([
+            "", "urn_namespace", "namespace", "textgroup", "work", "version", "reference"
+        ][part_of_urn]).lower()) == query.lower().strip()
+
+
+def _getFromDict(dataDict, keyList):
+    """Retrieves and creates when necessary a dictionary in nested dictionaries
+
+    :param dataDict: a dictionary
+    :param keyList: list of keys
+    :return: target dictionary
+    """
+    return reduce(_create_hierarchy, keyList, dataDict)
+
+
+def _create_hierarchy(hierarchy, level):
+    """Create an OrderedDict
+
+    :param hierarchy: a dictionary
+    :param level: single key
+    :return: deeper dictionary
+    """
+    if level not in hierarchy:
+        hierarchy[level] = OrderedDict()
+    return hierarchy[level]
+
+
+def _join_or_single(start, end):
+    """
+
+    :param start:
+    :param end:
+    :return:
+    """
+    if start == end:
+        return start
+    else:
+        return "{}-{}".format(
+            start,
+            end
+        )
+
+
+def cmd():
+    import argparse
+    parser = argparse.ArgumentParser(description='Capitains Nemo CTS UI')
+    parser.add_argument('endpoint', metavar='endpoint', type=str,
+                       help='CTS API Endpoint')
+    parser.add_argument('--port', type=int, default=8000,
+                       help='Port to use for the HTTP Server')
+    parser.add_argument('--host', type=str, default="127.0.0.1",
+                       help='Host to use for the HTTP Server')
+    parser.add_argument('--inventory', type=str, default=None,
+                       help='Inventory to request from the endpoint')
+    parser.add_argument('--css', type=str, default="",
+                       help='Full path to secondary css file')
+    parser.add_argument('--groupby', type=int, default=25,
+                       help='Number of passage to group in the deepest level of the hierarchy')
+    parser.add_argument('--debug', action="store_true", default=False, help="Set-up the application for debugging")
+
+    args = parser.parse_args()
+
+    if args.endpoint:
+        app = Flask(
+            __name__
+        )
+
+        # We set up Nemo
+        nemo = Nemo(
+            app=app,
+            name="nemo",
+            base_url="",
+            css=[ args.css ],
+            inventory = args.inventory,
+            api_url=args.endpoint,
+            chunker={"default": lambda x, y: Nemo.level_grouper(x, y, groupby=args.groupby)}
+        )
+        # We register its routes
+        nemo.register_routes()
+        # We register its filters
+        nemo.register_filters()
+
+        # We run the app
+        app.debug = args.debug
+        app.run(port=args.port, host=args.host)
+
+if __name__ == "__main__":
+    cmd()

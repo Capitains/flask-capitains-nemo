@@ -12,7 +12,7 @@ Welcome to the flask extension Nemo documentation!
    :maxdepth: 2
 
    Nemo.examples
-   Nemo.contributing
+   Nemo.developer_guide
    Nemo.templates
    Nemo.chunker
    LXML
