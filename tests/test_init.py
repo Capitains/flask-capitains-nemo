@@ -1,3 +1,6 @@
+"""
+    Test for simple init parameters override
+"""
 from .resources import NemoResource, NautilusDummy
 from flask_nemo import Nemo
 from flask import Flask

@@ -1,3 +1,9 @@
+"""
+
+Test only controllers functions, ie function that should not be accessible directly from http routes but are still
+greatly tied to the app/blueprint instance
+
+"""
 from flask.ext.nemo import Nemo
 from mock import patch, call, Mock
 import MyCapytain

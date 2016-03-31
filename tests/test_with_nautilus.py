@@ -1,6 +1,8 @@
 """
-    Test the Nautilus endpoint with the app
+    Test the Nautilus endpoint with the app.test_client
 """
+
+
 from unittest import TestCase
 from .resources import NautilusDummy
 from flask_nemo import Nemo

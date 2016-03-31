@@ -1,3 +1,7 @@
+"""
+    Test for routes functions : ensure responses are correct with mocked call to API
+"""
+
 from .resources import NemoResource
 from .test_controller import NemoTestControllers
 from flask_nemo import Nemo

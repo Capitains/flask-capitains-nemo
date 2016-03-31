@@ -1,3 +1,9 @@
+"""
+
+    Test implementation of customization through init for example
+
+"""
+
 from .resources import NemoResource
 from flask_nemo import Nemo
 import MyCapytain
