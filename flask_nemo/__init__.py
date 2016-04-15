@@ -12,8 +12,8 @@ import os.path as op
 import requests_cache
 import jinja2
 from flask import request, render_template, Blueprint, abort, Markup, send_from_directory, Flask
-import MyCapytain.endpoints.cts5
-from MyCapytain.endpoints.proto import CTS as CtsProtoEndpoint
+import MyCapytain.retrievers.cts5
+from MyCapytain.retrievers.proto import CTS as CtsProtoRetriever
 import MyCapytain.resources.texts.tei
 import MyCapytain.resources.texts.api
 import MyCapytain.resources.inventory
@@ -34,8 +34,8 @@ class Nemo(object):
     :type app: Flask
     :param api_url: URL of the API Endpoint
     :type api_url: str
-    :param endpoint: CTS Endpoint (Will be defaulted to api_url using cts5 endpoint if necessary)
-    :type endpoint: MyCapytain.endpoints.proto.CTS
+    :param retriever: CTS Retriever (Will be defaulted to api_url using cts5 retriever if necessary)
+    :type retriever: MyCapytain.retrievers.proto.CTS
     :param base_url: Base URL to use when registering the endpoint
     :type base_url: str
     :param cache: SQLITE cache file name
@@ -108,7 +108,7 @@ class Nemo(object):
         "f_order_author"
     ]
 
-    def __init__(self, name=None, app=None, api_url="/", endpoint=None, base_url="/nemo", cache=None, expire=3600,
+    def __init__(self, name=None, app=None, api_url="/", retriever=None, base_url="/nemo", cache=None, expire=3600,
                  template_folder=None, static_folder=None, static_url_path=None,
                  urls=None, inventory=None, transform=None, urntransform=None, chunker=None, prevnext=None,
                  css=None, js=None, templates=None, statics=None):
@@ -119,10 +119,10 @@ class Nemo(object):
         self.prefix = base_url
         self.api_url = api_url
 
-        if isinstance(endpoint, CtsProtoEndpoint):
-            self.endpoint = endpoint
+        if isinstance(retriever, CtsProtoRetriever):
+            self.retriever = retriever
         else:
-            self.endpoint = MyCapytain.endpoints.cts5.CTS(self.api_url)
+            self.retriever = MyCapytain.retrievers.cts5.CTS(self.api_url)
 
         self.templates = copy(Nemo.TEMPLATES)
         if isinstance(templates, dict):
@@ -136,7 +136,7 @@ class Nemo(object):
 
         self.api_inventory = inventory
         if self.api_inventory:
-            self.endpoint.inventory = self.api_inventory
+            self.retriever.inventory = self.api_inventory
         self.cache = None
         if cache is not None:
             self.__register_cache(cache, expire)
@@ -297,7 +297,7 @@ class Nemo(object):
         if self._inventory:
             return self._inventory
 
-        reply = self.endpoint.getCapabilities(inventory=self.api_inventory)
+        reply = self.retriever.getCapabilities(inventory=self.api_inventory)
         inventory = MyCapytain.resources.inventory.TextInventory(resource=reply)
         self._inventory = inventory
         return self._inventory
@@ -433,7 +433,7 @@ class Nemo(object):
         text = self.get_text(collection, textgroup, work, version)
         reffs = MyCapytain.resources.texts.api.Text(
             "urn:cts:{0}:{1}.{2}.{3}".format(collection, textgroup, work, version),
-            self.endpoint,
+            self.retriever,
             citation=text.citation
         )
         return text, lambda level: reffs.getValidReff(level=level)
@@ -457,7 +457,7 @@ class Nemo(object):
         """
         text = MyCapytain.resources.texts.api.Text(
             "urn:cts:{0}:{1}.{2}.{3}".format(collection, textgroup, work, version),
-            self.endpoint
+            self.retriever
         )
         passage = text.getPassage(passage_identifier)
         return passage

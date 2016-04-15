@@ -66,11 +66,11 @@ class TestNemoInit(NemoResource):
 
     def test_other_endpoint(self):
         """ Test when an endpoint is set """
-        nemo = Nemo(endpoint=NautilusDummy)
-        self.assertEqual(nemo.endpoint, NautilusDummy, "Endpoint should be set through endpoint parameter")
+        nemo = Nemo(retriever=NautilusDummy)
+        self.assertEqual(nemo.retriever, NautilusDummy, "Endpoint should be set through endpoint parameter")
 
-        nemo = Nemo(api_url="http://foo.bar", endpoint=NautilusDummy)
-        self.assertEqual(nemo.endpoint, NautilusDummy,
+        nemo = Nemo(api_url="http://foo.bar", retriever=NautilusDummy)
+        self.assertEqual(nemo.retriever, NautilusDummy,
                          "Endpoint should be set through endpoint parameter, regardless of api_url")
         self.assertEqual(nemo.api_url, "http://foo.bar",
                          "api_urlshould be set through endpoint parameter, regardless of endpoint")

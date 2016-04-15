@@ -17,7 +17,7 @@ class NemoTestRoutes(TestCase):
         nemo = Nemo(
             app=app,
             base_url="",
-            endpoint=NautilusDummy,
+            retriever=NautilusDummy,
             chunker={"default": lambda x, y: Nemo.level_grouper(x, y, groupby=30)}
         )
         nemo.register_routes()
