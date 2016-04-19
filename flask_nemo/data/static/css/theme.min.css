@@ -42,7 +42,7 @@ ul.menu li a,
 #menu-container header .content,
 #menu-container header .search  {
     display:block;
-    height:4;
+    min-height:1.618em;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

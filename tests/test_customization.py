@@ -188,4 +188,6 @@ class TestCustomizer(NemoResource):
             ),
             etree.fromstring('<tei:body xmlns:tei="http://www.tei-c.org/ns/1.0" />')
         )
-        self.assertEqual(transformed, '<tei:notbody xmlns:tei="http://www.tei-c.org/ns/1.0"/>')
+        self.assertEqual(transformed, '<tei:notbody xmlns:tei="http://www.tei-c.org/ns/1.0"></tei:notbody>',
+            "It should autoclose the tag"
+        )

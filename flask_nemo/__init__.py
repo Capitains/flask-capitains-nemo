@@ -179,7 +179,6 @@ class Nemo(object):
         if isinstance(urntransform, dict):
             self.__urntransform.update(urntransform)
 
-
         self.chunker = {}
         self.chunker["default"] = Nemo.default_chunker
         if isinstance(chunker, dict):
@@ -258,7 +257,7 @@ class Nemo(object):
         if isinstance(func, str):
             with open(func) as f:
                 xslt = etree.XSLT(etree.parse(f))
-            return etree.tostring(xslt(xml), encoding=str)
+            return etree.tostring(xslt(xml), encoding=str, method="html", xml_declaration=None, pretty_print=False, with_tail=True, standalone=None)
 
         # If we have a function, it means we return the result of the function
         elif isinstance(func, Callable):
@@ -969,7 +968,6 @@ class Nemo(object):
         :return: List of urn references with their human readable version
         :rtype: [(str, str)]
         """
-        # print(text)
         level = len(text.citation)
         types = [citation.name for citation in text.citation]
         if types == ["book", "poem", "line"]:
@@ -1177,7 +1175,7 @@ def cmd():
                        help='Host to use for the HTTP Server')
     parser.add_argument('--inventory', type=str, default=None,
                        help='Inventory to request from the endpoint')
-    parser.add_argument('--css', type=str, default="",
+    parser.add_argument('--css', type=str, default=None, nargs='*',
                        help='Full path to secondary css file')
     parser.add_argument('--groupby', type=int, default=25,
                        help='Number of passage to group in the deepest level of the hierarchy')
@@ -1189,14 +1187,13 @@ def cmd():
         app = Flask(
             __name__
         )
-
         # We set up Nemo
         nemo = Nemo(
             app=app,
             name="nemo",
             base_url="",
-            css=[args.css],
-            inventory=args.inventory,
+            css=args.css,
+            inventory = args.inventory,
             api_url=args.endpoint,
             chunker={"default": lambda x, y: Nemo.level_grouper(x, y, groupby=args.groupby)}
         )
