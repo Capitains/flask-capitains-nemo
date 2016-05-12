@@ -9,10 +9,10 @@ Flask related function
 ######################
 
 .. automethod:: flask.ext.nemo.Nemo.init_app
-.. automethod:: flask.ext.nemo.Nemo.register_routes
-.. automethod:: flask.ext.nemo.Nemo.register_filters
 .. automethod:: flask.ext.nemo.Nemo.create_blueprint
-.. automethod:: flask.ext.nemo.Nemo.__register_assets
+.. automethod:: flask.ext.nemo.Nemo.register_assets
+.. automethod:: flask.ext.nemo.Nemo.register_plugins
+.. automethod:: flask.ext.nemo.Nemo.register_filters
 
 Controller
 ##########
@@ -74,12 +74,12 @@ Filters
 
 Filters follow a naming convention : they should always start with "f_"
 
-.. automethod:: flask.ext.nemo.Nemo.f_active_link
-.. automethod:: flask.ext.nemo.Nemo.f_collection_i18n
-.. automethod:: flask.ext.nemo.Nemo.f_formatting_passage_reference
-.. automethod:: flask.ext.nemo.Nemo.f_order_text_edition_translation
-.. automethod:: flask.ext.nemo.Nemo.f_i18n_citation_type
-.. automethod:: flask.ext.nemo.Nemo.f_is_string
+.. automethod:: flask.ext.nemo.filters.f_active_link
+.. automethod:: flask.ext.nemo.filters.f_collection_i18n
+.. automethod:: flask.ext.nemo.filters.f_formatting_passage_reference
+.. automethod:: flask.ext.nemo.filters.f_order_text_edition_translation
+.. automethod:: flask.ext.nemo.filters.f_i18n_citation_type
+.. automethod:: flask.ext.nemo.filters.f_is_string
 
 Helpers
 *******
@@ -92,12 +92,34 @@ Helpers
 Chunkers
 ********
 
-.. automethod:: flask.ext.nemo.Nemo.default_chunker
-.. automethod:: flask.ext.nemo.Nemo.line_chunker
-.. automethod:: flask.ext.nemo.Nemo.scheme_chunker
+.. automethod:: flask.ext.nemo.chunker.default_chunker
+.. automethod:: flask.ext.nemo.chunker.line_chunker
+.. automethod:: flask.ext.nemo.chunker.scheme_chunker
+.. automethod:: flask.ext.nemo.chunker.level_grouper
+.. automethod:: flask.ext.nemo.chunker.level_chunker
 
 PrevNexter
 **********
 
 .. automethod:: flask.ext.nemo.Nemo.default_prevnext
 
+Plugin
+######
+
+.. _pluginInit:
+.. autoclass:: flask.ext.nemo.plugin.PluginPrototype
+.. automethod:: flask.ext.nemo.plugin.PluginPrototype.render
+
+
+Default Plugins
+###############
+
+.. autoclass:: flask.ext.nemo.default.Breadcrumb
+
+.. _pluginRender:
+.. automethod:: flask.ext.nemo.default.Breadcrumb.render
+
+Common
+######
+
+.. autofunction:: flask.ext.nemo.common.resource_qualifier

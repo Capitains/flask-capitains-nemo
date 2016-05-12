@@ -6,12 +6,10 @@
     Extensions for Flask to propose a Nemo extensions
 """
 
-__version__ = "0.0.1"
 
 import os.path as op
-import requests_cache
 import jinja2
-from flask import request, render_template, Blueprint, abort, Markup, send_from_directory, Flask
+from flask import render_template, Blueprint, abort, Markup, send_from_directory, Flask
 import MyCapytain.retrievers.cts5
 from MyCapytain.retrievers.proto import CTS as CtsProtoRetriever
 import MyCapytain.resources.texts.tei
@@ -19,11 +17,14 @@ import MyCapytain.resources.texts.api
 import MyCapytain.resources.inventory
 from MyCapytain.common.reference import URN
 from lxml import etree
-from copy import copy
+from copy import deepcopy as copy
 from pkg_resources import resource_filename
-from functools import reduce
-from collections import defaultdict, OrderedDict, Callable
+from collections import Callable, OrderedDict
 import flask_nemo._data
+import flask_nemo.filters
+from flask_nemo.chunker import default_chunker as __default_chunker__
+from flask_nemo.default import Breadcrumb
+from flask_nemo.common import resource_qualifier, ASSETS_STRUCTURE
 
 
 class Nemo(object):
@@ -41,8 +42,10 @@ class Nemo(object):
     :param cache: SQLITE cache file name
     :type base_url: str
     :param expire: TIme before expiration of cache, default 3600
-    :type exipre: int
-    :param template_folder: Folder in which the templates can be found
+    :type expire: int
+    :param plugins: List of plugins to connect to the Nemo instance
+    :type plugins: list(flask_nemo.plugin.PluginPrototype)
+    :param template_folder: Folder in which the full set of main namespace templates can be found
     :type template_folder: str
     :param static_folder: Folder in which statics file can be found
     :type static_folder: str
@@ -64,10 +67,17 @@ class Nemo(object):
     :type css: [str]
     :param js: Path to additional javascripts to load
     :type js: [str]
-    :param templates: Register or override templates (Dictionary of index / path)
+    :param templates: Register or override templates (Dictionary of namespace / directory containing template)
     :type templates: {str: str}
     :param statics: Path to additional statics such as picture to load
     :type statics: [str]
+    :param prevent_plugin_clearing_assets: Prevent plugins to clear the static folder route
+    :type prevent_plugin_clearing_assets: bool
+    :param original_breadcrumb: Use the default Breadcrumb plugin packaged with Nemo (Default: True)
+    :type original_breadcrumb: bool
+
+    :ivar assets: Dictionary of assets loaded individually
+    :ivar plugins: List of loaded plugins
 
     .. warning:: Until a C libxslt error is fixed ( https://bugzilla.gnome.org/show_bug.cgi?id=620102 ), it is not possible to use strip spaces in the xslt given to this application. See :ref:`lxml.strip-spaces`
     """
@@ -79,22 +89,6 @@ class Nemo(object):
         ("/read/<collection>/<textgroup>/<work>/<version>", "r_version", ["GET"]),
         ("/read/<collection>/<textgroup>/<work>/<version>/<passage_identifier>", "r_passage", ["GET"])
     ]
-    TEMPLATES = {
-        "container": "container.html",
-        "menu": "menu.html",
-        "text": "text.html",
-        "textgroups": "textgroups.html",
-        "index": "index.html",
-        "texts": "texts.html",
-        "version": "version.html",
-        "passage_footer": "passage_footer.html",
-        "reference_display": "reference_display.html"
-    }
-    COLLECTIONS = {
-        "latinLit": "Latin",
-        "greekLit": "Ancient Greek",
-        "froLit": "Medieval French"
-    }
     FILTERS = [
         "f_active_link",
         "f_collection_i18n",
@@ -108,11 +102,19 @@ class Nemo(object):
         "f_order_author"
     ]
 
+    """ Assets dictionary model
+    """
+    ASSETS = copy(ASSETS_STRUCTURE)
+    default_chunker = __default_chunker__
+
     def __init__(self, name=None, app=None, api_url="/", retriever=None, base_url="/nemo", cache=None, expire=3600,
+                 plugins=None,
                  template_folder=None, static_folder=None, static_url_path=None,
                  urls=None, inventory=None, transform=None, urntransform=None, chunker=None, prevnext=None,
-                 css=None, js=None, templates=None, statics=None):
-        __doc__ = Nemo.__doc__
+                 css=None, js=None, templates=None, statics=None,
+                 prevent_plugin_clearing_assets=False,
+                 original_breadcrumb=True):
+
         self.name = __name__
         if name:
             self.name = name
@@ -124,22 +126,17 @@ class Nemo(object):
         else:
             self.retriever = MyCapytain.retrievers.cts5.CTS(self.api_url)
 
-        self.templates = copy(Nemo.TEMPLATES)
-        if isinstance(templates, dict):
-            self.templates.update(templates)
-
         if app is not None:
             self.app = app
-            self.init_app(self.app)
         else:
             self.app = None
 
         self.api_inventory = inventory
         if self.api_inventory:
             self.retriever.inventory = self.api_inventory
+
         self.cache = None
-        if cache is not None:
-            self.__register_cache(cache, expire)
+        self.prevent_plugin_clearing_assets = prevent_plugin_clearing_assets
 
         if template_folder:
             self.template_folder = template_folder
@@ -160,13 +157,18 @@ class Nemo(object):
         if urls:
             self._urls = urls
         else:
-            self._urls = Nemo.ROUTES
+            self._urls = copy(type(self).ROUTES)
+
+        # Adding instance information
+        self._urls = [tuple(list(url) + [None]) for url in self._urls]
 
         self._filters = copy(Nemo.FILTERS)
+        self._filters = [tuple([filt] + [None]) for filt in self._filters]
+
         # Reusing self._inventory across requests
         self._inventory = None
         self.__transform = {
-            "default" : None
+            "default": None
         }
 
         self.__urntransform = {
@@ -179,60 +181,76 @@ class Nemo(object):
         if isinstance(urntransform, dict):
             self.__urntransform.update(urntransform)
 
-        self.chunker = {}
-        self.chunker["default"] = Nemo.default_chunker
+        self.chunker = dict()
+        self.chunker["default"] = type(self).default_chunker
         if isinstance(chunker, dict):
             self.chunker.update(chunker)
 
-        self.prevnext = {}
-        self.prevnext["default"] = Nemo.default_prevnext
+        self.prevnext = dict()
+        self.prevnext["default"] = type(self).default_prevnext
         if isinstance(prevnext, dict):
             self.prevnext.update(prevnext)
 
-        self.css = []
-        if isinstance(css, list):
-            self.css = css
+        # Setting up assets
+        self.__assets__ = copy(type(self).ASSETS)
+        if css and isinstance(css, list):
+            for css_s in css:
+                filename, directory = resource_qualifier(css_s)
+                self.__assets__["css"][filename] = directory
+        if js and isinstance(js, list):
+            for javascript in js:
+                filename, directory = resource_qualifier(javascript)
+                self.__assets__["js"][filename] = directory
+        if statics and isinstance(statics, list):
+            for static in statics:
+                directory, filename = op.split(static)
+                self.__assets__["static"][filename] = directory
 
-        self.js = []
-        if isinstance(js, list):
-            self.js = js
+        self.__plugins_render_views__ = []
+        self.__plugins__ = OrderedDict()
+        if original_breadcrumb:
+            self.__plugins__["nemo.breadcrumb"] = Breadcrumb(name="breadcrumb")
+        if isinstance(plugins, list):
+            for plugin in plugins:
+                self.__plugins__[plugin.name] = plugin
 
-        self.statics = []
-        if isinstance(statics, list):
-            self.statics = statics
+        self.__templates_namespaces__ = [
+            ("main", self.template_folder)
+        ]
+        self.__instance_templates__ = []
 
-        self.assets = {
-            "js": OrderedDict(),
-            "css": OrderedDict(),
-            "static": OrderedDict()
-        }
+        if isinstance(templates, dict):
+            self.__instance_templates__.extend(
+                [(namespace, folder) for namespace, folder in templates.items()]
+            )
+        self.__template_loader__ = dict()
 
-    def __register_cache(self, sqlite_path, expire):
-        """ Set up a request cache
+        if app:
+            self.init_app(self.app)
 
-        :param sqlite_path: Set up a sqlite cache system
-        :type sqlite_path: str
-        :param expire: Time for the cache to expire
-        :type expire: int
-        """
-        self.cache = requests_cache.install_cache(
-            sqlite_path,
-            backend="sqlite",
-            expire_after=expire
-        )
+    @property
+    def plugins(self):
+        return self.__plugins__
 
-    def init_app(self, app):
+    @property
+    def assets(self):
+        return self.__assets__
+
+    def init_app(self, app=None):
         """ Initiate the application
 
         :param app: Flask application on which to add the extension
         :type app: flask.Flask
         """
+        # Legacy code
         if "CTS_API_URL" in app.config:
             self.api_url = app.config['CTS_API_URL']
         if "CTS_API_INVENTORY" in app.config:
             self.api_inventory = app.config['CTS_API_INVENTORY']
-        if self.app is None:
+        if app:
             self.app = app
+
+        self.register()
 
     def transform(self, work, xml):
         """ Transform input according to potentiallyregistered XSLT
@@ -284,7 +302,7 @@ class Nemo(object):
         # If we have a function, it means we return the result of the function
         if isinstance(func, Callable):
             return func(urn)
-        # If we have None, it meants we just give back the urn as string
+        # If we have None, it means we just give back the urn as string
         return urn
 
     def get_inventory(self):
@@ -467,7 +485,7 @@ class Nemo(object):
         :return: Template to use for Home page
         :rtype: {str: str}
         """
-        return {"template": self.templates["index"]}
+        return {"template": "main::index.html"}
 
     def r_collection(self, collection):
         """ Collection content browsing route function
@@ -478,7 +496,7 @@ class Nemo(object):
         :rtype: {str: Any}
         """
         return {
-            "template": self.templates["textgroups"],
+            "template": "main::textgroups.html",
             "textgroups": self.get_textgroups(collection)
         }
 
@@ -493,7 +511,7 @@ class Nemo(object):
         :rtype: {str: Any}
         """
         return {
-            "template": self.templates["texts"],
+            "template": "main::texts.html",
             "texts": self.get_texts(collection, textgroup)
         }
 
@@ -518,7 +536,7 @@ class Nemo(object):
         version, reffs = self.get_reffs(collection, textgroup, work, version)
         reffs = self.chunk(version, reffs)
         return {
-            "template": self.templates["version"],
+            "template": "main::version.html",
             "version": version,
             "reffs": reffs
         }
@@ -546,10 +564,10 @@ class Nemo(object):
         prev, next = self.getprevnext(text, Nemo.prevnext_callback_generator(text))
         urn = self.transform_urn(text.urn)
         return {
-            "template": self.templates["text"],
+            "template": "main::text.html",
             "version": edition,
             "text_passage": Markup(passage),
-            "urn" : urn,
+            "urn": urn,
             "prev": prev,
             "next": next
         }
@@ -560,7 +578,7 @@ class Nemo(object):
         :param asset: Filename of an asset
         :return: Response
         """
-        if type in self.assets and asset in self.assets[type]:
+        if type in self.assets and asset in self.assets[type] and self.assets[type][asset]:
             return send_from_directory(
                 directory=self.assets[type][asset],
                 filename=asset
@@ -572,17 +590,6 @@ class Nemo(object):
 
         :return: None
         """
-        # Save assets routes
-        for css in self.css:
-            directory, filename = op.split(css)
-            self.assets["css"][filename] = directory
-        for js in self.js:
-            directory, filename = op.split(js)
-            self.assets["js"][filename] = directory
-        for static in self.statics:
-            directory, filename = op.split(static)
-            self.assets["static"][filename] = directory
-
         self.blueprint.add_url_rule(
             # Register another path to ensure assets compatibility
             "{0}.secondary/<type>/<asset>".format(self.static_url_path),
@@ -597,6 +604,8 @@ class Nemo(object):
         :return: Blueprint of the current nemo app
         :rtype: flask.Blueprint
         """
+        self.register_plugins()
+
         self.blueprint = Blueprint(
             self.name,
             "nemo",
@@ -606,30 +615,34 @@ class Nemo(object):
             static_url_path=self.static_url_path
         )
 
-        for url, name, methods in self._urls:
+        for url, name, methods, instance in self._urls:
             self.blueprint.add_url_rule(
                 url,
-                view_func=self.view_maker(name),
-                endpoint=name,
+                view_func=self.view_maker(name, instance),
+                endpoint=_plugin_endpoint_rename(name, instance),
                 methods=methods
             )
 
         self.register_assets()
+        self.register_filters()
 
-        # If we have added or overriden the default templates
-        if self.templates != Nemo.TEMPLATES:
-            folders = set([op.dirname(path) for path in self.templates if path != self.template_folder])
-            self.loader = jinja2.ChoiceLoader([
-                    self.blueprint.jinja_loader
-                ] + [
-                    jinja2.FileSystemLoader(folder) for folder in folders
-                ]
+        # We extend the loading list by the instance value
+        self.__templates_namespaces__.extend(self.__instance_templates__)
+        # We generate a template loader
+        for namespace, directory in self.__templates_namespaces__[::-1]:
+            if namespace not in self.__template_loader__:
+                self.__template_loader__[namespace] = []
+            self.__template_loader__[namespace].append(
+                jinja2.FileSystemLoader(op.abspath(directory))
             )
-            self.blueprint.jinja_loader = self.loader
+        self.blueprint.jinja_loader = jinja2.PrefixLoader(
+            {namespace: jinja2.ChoiceLoader(paths) for namespace, paths in self.__template_loader__.items()},
+            "::"
+        )
 
         return self.blueprint
 
-    def view_maker(self, name):
+    def view_maker(self, name, instance=None):
         """ Create a view
 
         :param name: Name of the route function to use for the view.
@@ -637,18 +650,22 @@ class Nemo(object):
         :return: Route function which makes use of Nemo context (such as menu informations)
         :rtype: function
         """
-        return lambda **kwargs: self.route(getattr(self, name), **kwargs)
+        if instance:
+            return lambda **kwargs: self.route(getattr(instance, name), **kwargs)
+        else:
+            return lambda **kwargs: self.route(getattr(self, name), **kwargs)
 
     def render(self, template, **kwargs):
         """ Render a route template and adds information to this route.
 
-        :param template: Template name
+        :param template: Template name.
         :type template: str
         :param kwargs: dictionary of named arguments used to be passed to the template
         :type kwargs: dict
         :return: Http Response with rendered template
         :rtype: flask.Response
         """
+
         kwargs["collections"] = self.get_collections()
         kwargs["lang"] = "eng"
 
@@ -659,58 +676,11 @@ class Nemo(object):
                 kwargs["texts"] = self.get_texts(kwargs["url"]["collection"], kwargs["url"]["textgroup"])
 
         kwargs["assets"] = self.assets
-        kwargs["templates"] = self.templates
-        kwargs["breadcrumbs"] = self.make_breadcrumbs(**kwargs)
+
+        for plugin in self.__plugins_render_views__:
+            kwargs.update(plugin.render(**kwargs))
+
         return render_template(template, **kwargs)
-
-    def make_breadcrumbs(self,**kwargs):
-        """ Make breadcrumbs for a route
-
-        :param kwargs: dictionary of named arguments used to construct the view
-        :type kwargs: dict
-        :return: List of dict items the view can use to construct the link. 
-        :rtype: list({ "link": str, "title", str, "args", dict})
-        """
-        breadcrumbs = []
-        # this is the list of items we want to accumulate in the breadcrumb trail.  
-        # item[0] is the key into the kwargs["url"] object and item[1] is the  name of the route
-        # setting a route name to None means that it's needed to construct the route of the next item in the list
-        # but shouldn't be included in the list itself (this is currently the case for work -- 
-        # at some point we probably should include work in the navigation)
-        crumbtypes = [["collection",".r_collection"],["textgroup",".r_texts"],["work",None],["version",".r_version"],["passage_identifier",".r_passage"]]
-        for idx,crumb_type in enumerate(crumbtypes) :
-            if kwargs["url"] and crumb_type[0] in kwargs["url"]:
-                crumb = {}
-                # what we want to display as the crumb title depends upon what it is
-                # in the future, having a common display_name property on the model would be helpful to avoid
-                # this logic here
-                if crumb_type[0] == "textgroup":
-                   # get the groupname of the current textgroup
-                   item = list(filter(lambda textgroup: textgroup.urn.textgroup == kwargs["url"]["textgroup"], kwargs["textgroups"]))
-                   crumb["title"] = item[0].metadata["groupname"][kwargs["lang"]]
-                elif crumb_type[0] == "version":
-                    # get the label of the current version
-                    crumb["title"] = kwargs["version"].metadata["label"][kwargs["lang"]]
-                else:
-                    # for everything else, just use the value as metadata isn't applicable
-                    crumb["title"] = kwargs["url"][crumb_type[0]]
-                # iterate through the crumb types and pull together the args that lead up to this type
-                # so that we can reconstruct the route to just this part of the breadcrumb trail
-                crumb_args = {}
-                iteridx = idx
-                while iteridx >= 0:
-                     crumb_args[crumbtypes[iteridx][0]] = kwargs["url"][crumbtypes[iteridx][0]]
-                     iteridx = iteridx - 1
-                crumb["link"] = crumb_type[1]
-                crumb["args"] = crumb_args
-                # skip items in the trail that are only used to construct others
-                if crumb_type[1] != None:
-                    breadcrumbs.append(crumb)
-        # don't link the last item in the trail
-        if len(breadcrumbs) > 0:
-            breadcrumbs[-1]["link"] = None
-        return breadcrumbs
-
 
     def route(self, fn, **kwargs):
         """ Route helper : apply fn function but keep the calling object, *ie* kwargs, for other functions
@@ -723,11 +693,16 @@ class Nemo(object):
         :rtype: flask.Response
         """
         new_kwargs = fn(**kwargs)
+
+        # If there is no templates, we assume that the response is finalized :
+        if not isinstance(new_kwargs, dict):
+            return new_kwargs
+
         new_kwargs["url"] = kwargs
         return self.render(**new_kwargs)
 
-    def register_routes(self):
-        """ Register routes on app using Blueprint
+    def register(self):
+        """ Register the app using Blueprint
 
         :return: Nemo blueprint
         :rtype: flask.Blueprint
@@ -744,10 +719,50 @@ class Nemo(object):
 
        .. note::  Extends the dictionary filters of jinja_env using self._filters list
         """
-        for _filter in self._filters:
-            self.app.jinja_env.filters[
-                _filter.replace("f_", "")
-            ] = getattr(self.__class__, _filter)
+        for _filter, instance in self._filters:
+            if not instance:
+                self.app.jinja_env.filters[
+                    _filter.replace("f_", "")
+                ] = getattr(flask_nemo.filters, _filter)
+            else:
+                self.app.jinja_env.filters[
+                    _filter.replace("f_", "")
+                ] = getattr(instance, _filter.replace("_{}".format(instance.name), ""))
+
+    def register_plugins(self):
+        """ Register plugins in Nemo instance
+
+        - Clear routes first if asked by one plugin
+        - Clear assets if asked by one plugin and replace by the last plugin registered static_folder
+        - Register each plugin
+            - Append plugin routes to registered routes
+            - Append plugin filters to registered filters
+            - Append templates directory to given namespaces
+            - Append assets (CSS, JS, statics) to given resources 
+            - Append render view (if exists) to Nemo.render stack
+        """
+        if len([plugin for plugin in self.__plugins__.values() if plugin.clear_routes]) > 0:  # Clear current routes
+            self._urls = list()
+
+        clear_assets = [plugin for plugin in self.__plugins__.values() if plugin.clear_assets]
+        if len(clear_assets) > 0 and not self.prevent_plugin_clearing_assets:  # Clear current Assets
+            self.__assets__ = copy(type(self).ASSETS)
+            static_path = [plugin.static_folder for plugin in clear_assets if plugin.static_folder]
+            if len(static_path) > 0:
+                self.static_folder = static_path[-1]
+
+        for plugin in self.__plugins__.values():
+            self._urls.extend([(url, function, methods, plugin) for url, function, methods in plugin.routes])
+            self._filters.extend([(filt, plugin) for filt in plugin.filters])
+            self.__templates_namespaces__.extend(
+                [(namespace, directory) for namespace, directory in plugin.templates.items()]
+            )
+            for asset_type in self.__assets__:
+                for key, value in plugin.assets[asset_type].items():
+                    self.__assets__[asset_type][key] = value
+            if plugin.augment:
+                self.__plugins_render_views__.append(plugin)
+            plugin.register_nemo(self)
 
     def chunk(self, text, reffs):
         """ Handle a list of references depending on the text identifier using the chunker dictionary.
@@ -791,263 +806,6 @@ class Nemo(object):
         :rtype: bool
         """
         return identifier in kwargs["url"] and collection not in kwargs
-
-    @staticmethod
-    def f_order_author(textgroups, lang="eng"):
-        """ Order a list of textgroups
-
-        :param textgroups: list of textgroups to be sorted
-        :param lang: Language to display
-        :return: Sorted list
-        """
-        __textgroups__ = {
-            tg.metadata["groupname"][lang] or str(tg.urn): tg
-            for tg in textgroups
-        }
-
-        return [
-           __textgroups__[key]
-           for key in sorted(list(__textgroups__.keys()))
-       ]
-
-    @staticmethod
-    def f_active_link(string, url):
-        """ Check if current string is in the list of names
-
-        :param string: String to check for in url
-        :return: CSS class "active" if valid
-        :rtype: str
-        """
-        if string in url.values():
-            return "active"
-        return ""
-
-    @staticmethod
-    def f_collection_i18n(string):
-        """ Return a i18n human readable version of a CTS domain such as latinLit
-
-        :param string: CTS Domain identifier
-        :type string: str
-        :return: Human i18n readable version of the CTS Domain
-        :rtype: str
-        """
-        if string in Nemo.COLLECTIONS:
-            return Nemo.COLLECTIONS[string]
-        return string
-
-    @staticmethod
-    def f_formatting_passage_reference(string):
-        """ Get the first part only of a two parts reference
-
-        :param string: A urn reference part
-        :type string: str
-        :return: First part only of the two parts reference
-        :rtype: str
-        """
-        return string.split("-")[0]
-
-    @staticmethod
-    def f_i18n_iso(isocode, lang="eng"):
-        """ Replace isocode by its language equivalent
-
-        :param isocode: Three character long language code
-        :param lang: Lang in which to return the language name
-        :return: Full Text Language Name
-        """
-        if lang not in flask_nemo._data.AVAILABLE_TRANSLATIONS:
-            lang = "eng"
-
-        try:
-            return flask_nemo._data.ISOCODES[isocode][lang]
-        except KeyError:
-            return "Unknown"
-
-    @staticmethod
-    def f_group_texts(versions_list):
-        """ Takes a list of versions and regroup them by work identifier
-
-        :param versions_list: List of text versions
-        :type versions_list: [Text]
-        :return: List of texts grouped by work
-        :rtype: [(Work, [Text])]
-        """
-        works = {}
-        texts = defaultdict(list)
-        for version in versions_list:
-            if version.urn.work not in works:
-                works[version.urn.work] = version.parents[0]
-            texts[version.urn.work].append(version)
-        return [
-            (works[index], texts[index])
-            for index in works
-        ]
-
-    @staticmethod
-    def f_order_text_edition_translation(versions_list):
-        """ Takes a list of versions and put translations after editions
-
-        :param versions_list: List of text versions
-        :type versions_list: [Text]
-        :return: List where first members will be editions
-        :rtype: [Text]
-        """
-        translations = []
-        editions = []
-        for version in versions_list:
-            if version.subtype == "Translation":
-                translations.append(version)
-            else:
-                editions.append(version)
-        return editions + translations
-
-    @staticmethod
-    def f_hierarchical_passages(reffs, version):
-        """ A function to construct a hierarchical dictionary representing the different citation layers of a text
-
-        :param reffs: passage references with human-readable equivalent
-        :type reffs: [(str, str)]
-        :param version: text from which the reference comes
-        :type version: MyCapytain.resources.inventory.Text
-        :return: nested dictionary representing where keys represent the names of the levels and the final values represent the passage reference
-        :rtype: OrderedDict
-        """
-        d = OrderedDict()
-        levels = [x for x in version.citation]
-        for cit, name in reffs:
-            ref = cit.split('-')[0]
-            levs = ['%{}|{}%'.format(levels[i].name, v) for i, v in enumerate(ref.split('.'))]
-            _getFromDict(d, levs[:-1])[name] = cit
-        return d
-
-    @staticmethod
-    def f_is_str(value):
-        """ Check if object is a string
-
-        :param value: object to check against
-        :return: Return if value is a string
-        """
-        return isinstance(value, str)
-
-    @staticmethod
-    def f_i18n_citation_type(string, lang="eng"):
-        """ Take a string of form %citation_type|passage% and format it for human
-
-        :param string: String of formation %citation_type|passage%
-        :param lang: Language to translate to
-        :return: Human Readable string
-
-        .. todo :: use i18n tools and provide real i18n
-        """
-        s = " ".join(string.strip("%").split("|"))
-        return s.capitalize()
-
-    @staticmethod
-    def default_chunker(text, getreffs):
-        """ This is the default chunker which will resolve the reference giving a callback (getreffs) and a text object with its metadata
-
-        :param text: Text Object representing either an edition or a translation
-        :type text: MyCapytains.resources.inventory.Text
-        :param getreffs: callback function which retrieves a list of references
-        :type getreffs: function
-
-        :return: List of urn references with their human readable version
-        :rtype: [(str, str)]
-        """
-        level = len(text.citation)
-        return [tuple([reff.split(":")[-1]]*2) for reff in getreffs(level=level)]
-
-    @staticmethod
-    def scheme_chunker(text, getreffs):
-        """ This is the scheme chunker which will resolve the reference giving a callback (getreffs) and a text object with its metadata
-
-        :param text: Text Object representing either an edition or a translation
-        :type text: MyCapytains.resources.inventory.Text
-        :param getreffs: callback function which retrieves a list of references
-        :type getreffs: function
-
-        :return: List of urn references with their human readable version
-        :rtype: [(str, str)]
-        """
-        level = len(text.citation)
-        types = [citation.name for citation in text.citation]
-        if types == ["book", "poem", "line"]:
-            level = 2
-        elif types == ["book", "line"]:
-            return Nemo.line_chunker(text, getreffs)
-        return [tuple([reff.split(":")[-1]]*2) for reff in getreffs(level=level)]
-
-    @staticmethod
-    def line_chunker(text, getreffs, lines=30):
-        """ Groups line reference together
-
-        :param text: Text object
-        :type text: MyCapytains.resources.text.api
-        :param getreffs: Callback function to retrieve text
-        :type getreffs: function(level)
-        :param lines: Number of lines to use by group
-        :type lines: int
-        :return: List of grouped urn references with their human readable version
-        :rtype: [(str, str)]
-        """
-        level = len(text.citation)
-        source_reffs = [reff.split(":")[-1] for reff in getreffs(level=level)]
-        reffs = []
-        i = 0
-        while i + lines - 1 < len(source_reffs):
-            reffs.append(tuple([source_reffs[i]+"-"+source_reffs[i+lines-1], source_reffs[i]]))
-            i += lines
-        if i < len(source_reffs):
-            reffs.append(tuple([source_reffs[i]+"-"+source_reffs[len(source_reffs)-1], source_reffs[i]]))
-        return reffs
-
-    @staticmethod
-    def level_chunker(text, getValidReff, level=1):
-        """ Chunk a text at the passage level
-
-        :param text: Text object
-        :type text: MyCapytains.resources.text.api
-        :param getreffs: Callback function to retrieve text
-        :type getreffs: function(level)
-        :return: List of urn references with their human readable version
-        :rtype: [(str, str)]
-        """
-        references = getValidReff(level=level)
-        return [(ref.split(":")[-1], ref.split(":")[-1]) for ref in references]
-
-    @staticmethod
-    def level_grouper(text, getValidReff, level=None, groupby=20):
-        """ Alternative to level_chunker: groups levels together at the latest level
-
-        :param text: Text object
-        :param getValidReff: GetValidReff query callback
-        :param level: Level of citation to retrieve
-        :param groupby: Number of level to groupby
-        :return: Automatically curated references
-        """
-        if level is None or level > len(text.citation):
-            level = len(text.citation)
-
-        references = [ref.split(":")[-1] for ref in getValidReff(level=level)]
-        _refs = OrderedDict()
-
-        for key in references:
-            k = ".".join(key.split(".")[:level-1])
-            if k not in _refs:
-                _refs[k] = []
-            _refs[k].append(key)
-            del k
-
-        return [
-            (
-                _join_or_single(ref[0], ref[-1]),
-                _join_or_single(ref[0], ref[-1])
-            )
-            for sublist in _refs.values()
-            for ref in [
-                sublist[i:i+groupby]
-                for i in range(0, len(sublist), groupby)
-            ]
-        ]
 
     @staticmethod
     def default_prevnext(passage, callback):
@@ -1126,42 +884,17 @@ class Nemo(object):
         ][part_of_urn]).lower()) == query.lower().strip()
 
 
-def _getFromDict(dataDict, keyList):
-    """Retrieves and creates when necessary a dictionary in nested dictionaries
+def _plugin_endpoint_rename(fn_name, instance):
+    """ Rename endpoint function name to avoid conflict when namespacing is set to true
 
-    :param dataDict: a dictionary
-    :param keyList: list of keys
-    :return: target dictionary
-    """
-    return reduce(_create_hierarchy, keyList, dataDict)
-
-
-def _create_hierarchy(hierarchy, level):
-    """Create an OrderedDict
-
-    :param hierarchy: a dictionary
-    :param level: single key
-    :return: deeper dictionary
-    """
-    if level not in hierarchy:
-        hierarchy[level] = OrderedDict()
-    return hierarchy[level]
-
-
-def _join_or_single(start, end):
+    :param fn_name: Name of the route function
+    :param instance: Instance bound to the function
+    :return: Name of the new namespaced function name
     """
 
-    :param start:
-    :param end:
-    :return:
-    """
-    if start == end:
-        return start
-    else:
-        return "{}-{}".format(
-            start,
-            end
-        )
+    if instance and instance.namespaced:
+        fn_name = "r_{0}_{1}".format(instance.name, fn_name[2:])
+    return fn_name
 
 
 def cmd():
@@ -1187,20 +920,16 @@ def cmd():
         app = Flask(
             __name__
         )
-        # We set up Nemo
+        # We set up Nemo
         nemo = Nemo(
             app=app,
             name="nemo",
             base_url="",
             css=args.css,
-            inventory = args.inventory,
+            inventory=args.inventory,
             api_url=args.endpoint,
             chunker={"default": lambda x, y: Nemo.level_grouper(x, y, groupby=args.groupby)}
         )
-        # We register its routes
-        nemo.register_routes()
-        # We register its filters
-        nemo.register_filters()
 
         # We run the app
         app.debug = args.debug

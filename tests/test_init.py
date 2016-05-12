@@ -25,7 +25,7 @@ class TestNemoInit(NemoResource):
         routes = [("/index.html", "r_index", ["GET"])] + Nemo.ROUTES[1:]
         app = Flask(__name__)
         nemo = Nemo(app=app, urls=routes)
-        nemo.register_routes()
+        nemo.register()
         self.assertIn("flask_nemo", app.blueprints)
 
         rules = [(rule.rule, rule.endpoint) for rule in app.url_map.iter_rules()]
@@ -37,7 +37,7 @@ class TestNemoInit(NemoResource):
         """
         app = Flask(__name__)
         nemo = Nemo(app=app, static_url_path="/assets/nemoOo")
-        nemo.register_routes()
+        nemo.register()
         self.assertIn("flask_nemo", app.blueprints, "Nemo is a registered blueprint")
 
         rules = [(rule.rule, rule.endpoint) for rule in app.url_map.iter_rules()]
@@ -49,7 +49,7 @@ class TestNemoInit(NemoResource):
         """
         app = Flask(__name__)
         nemo = Nemo(app=app, static_folder="/examples")
-        nemo.register_routes()
+        nemo.register()
 
         self.assertEqual(nemo.static_folder, "/examples")
         self.assertEqual(nemo.blueprint.static_folder, "/examples")
@@ -59,7 +59,7 @@ class TestNemoInit(NemoResource):
         """
         app = Flask(__name__)
         nemo = Nemo(app=app, template_folder="/examples")
-        nemo.register_routes()
+        nemo.register()
 
         self.assertEqual(nemo.template_folder, "/examples")
         self.assertEqual(nemo.blueprint.template_folder, "/examples")

@@ -6,21 +6,12 @@
 </header>
 <ul class="menu">
     {% for collection in collections %}
-        <li><a class="{{collection|active_link(url)}}" href="{{url_for('.r_collection', collection=collection)}}">{{collection|collection_i18n}}</a></li>
+        <li><a class="{{collection|active_link(url)}}" href="{{url_for('.r_collection', collection=collection)}}">{{collection|collection_i18n(lang)}}</a></li>
     {% endfor %}
 </ul>
 {% if textgroups %}
 <header>
-    <span class="content">Authors
-        <div class="icon">
-            <span class="glyphicon glyphicon-plus"></span>
-            <span class="glyphicon glyphicon-chevron-right"></span>
-        </div>
-    </span>
-    <div class="search">
-        <input type="text" placeholder="Search an author" />
-        <span class="icon"><span class="glyphicon glyphicon-search"></span></span>
-    </div>
+    <span class="content">Authors</span>
 </header>
 <ul class="menu">
     {% for textgroup in textgroups %}

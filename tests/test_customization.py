@@ -180,7 +180,7 @@ class TestCustomizer(NemoResource):
         """
 
         nemo = Nemo(transform={
-            "default": "testing_data/xsl_test.xml"
+            "default": "tests/test_data/xsl_test.xml"
         })
         transformed = nemo.transform(
             MyCapytain.resources.inventory.Text(

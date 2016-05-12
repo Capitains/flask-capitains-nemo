@@ -1,6 +1,8 @@
-from flask.ext.nemo import Nemo
 import lxml.etree as etree
 from flask import Markup
+from flask_nemo.chunker import scheme_chunker, level_grouper
+from flask.ext.nemo import Nemo
+
 
 configs = {
     # The CIHAM project is made of critical editions. We load for it a specific xslt to render the result of GetPassage
@@ -19,13 +21,13 @@ configs = {
             "examples/ciham.js"
         ],
         "templates":{
-            "menu": "examples/ciham.menu.html"
+            "menu": "examples/ciham"
         },
         "chunker": {
             # The default chunker takes care of book, poem, lines
             # but it would be cool to have 30 lines group for Nemo
             "urn:cts:froLit:jns915.jns1856.ciham-fro1": lambda text, cb: [(reff.split(":")[-1], reff.split(":")[-1]) for reff in cb(1)],
-            "default": Nemo.scheme_chunker  # lambda text, cb: Nemo.line_grouper(text, cb, 50)
+            "default": scheme_chunker  # lambda text, cb: Nemo.line_grouper(text, cb, 50)
         }
     },
     "translations": {
@@ -40,10 +42,10 @@ configs = {
             # The default chunker takes care of book, poem, lines
             # but it would be cool to have 30 lines group for Nemo
             "urn:cts:froLit:jns915.jns1856.ciham-fro1": lambda text, cb: [(reff.split(":")[-1], reff.split(":")[-1]) for reff in cb(1)],
-            "default": Nemo.scheme_chunker  # lambda text, cb: Nemo.line_grouper(text, cb, 50)
+            "default": scheme_chunker  # lambda text, cb: Nemo.line_grouper(text, cb, 50)
         },
         "templates": {
-            "r_double": "./examples/translations/r_double.html"
+            "double": "./examples/translations"
         }
     },
     "chunker": {
@@ -54,7 +56,7 @@ configs = {
             # The default chunker takes care of book, poem, lines
             # but it would be cool to have 30 lines group for Nemo
             "urn:cts:latinLit:phi1294.phi002.perseus-lat2": lambda text, cb: [(reff.split(":")[-1], reff.split(":")[-1]) for reff in cb(2)],
-            "default": Nemo.level_grouper  # lambda text, cb: Nemo.line_grouper(text, cb, 50)
+            "default": level_grouper  # lambda text, cb: Nemo.line_grouper(text, cb, 50)
         },
         "css" : [
             # Use teibp from default nemo configuration
@@ -103,7 +105,7 @@ class NemoDouble(Nemo):
         args = self.r_passage(collection, textgroup, work, version, passage_identifier)
         # Call with other identifiers and add "visavis_" front of the argument
         args.update({"visavis_{0}".format(key): value for key, value in self.r_passage(collection, textgroup, work, visavis, passage_identifier).items()})
-        args["template"] = self.templates["r_double"]
+        args["template"] = "double::r_double.html"
         return args
 
 

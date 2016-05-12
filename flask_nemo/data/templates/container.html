@@ -11,8 +11,10 @@
     <!--<link rel="stylesheet" href="{{url_for('.static', filename='css/teibp.min.css')}}">-->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
     <link rel="stylesheet" href="{{url_for('.static', filename='css/theme.min.css')}}">
-    {% for css in assets["css"] %}
-      <link rel="stylesheet" href="{{url_for('.secondary_assets', type='css', asset=css)}}">
+    {% for filename, directory in assets["css"].items() %}
+      {% if directory %}<link rel="stylesheet" href="{{url_for('.secondary_assets', type='css', asset=filename)}}">
+      {% else %}<link rel="stylesheet" href="{{ filename }}">
+      {% endif %}
     {% endfor %}
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -23,22 +25,10 @@
   </head>
   <body>
     <nav class="col-md-2" id="menu-container">
-      {% include templates["menu"] %}
+      {% include "main::menu.html" %}
     </nav>
     <div class="col-md-10" id="reading-container">
-        <nav id="breadcrumb">
-            <ol class="breadcrumb">
-              <li><a href="{{url_for(".r_index")}}">Home</a></li>
-              {% for crumb in breadcrumbs: %}
-                {%if crumb["link"] != None %}
-           
-                  <li><a href="{{url_for(crumb["link"],**crumb["args"])}}">{{crumb["title"]}}</a></li>
-                {% else %}
-                  <li class="active">{{crumb["title"]}}</li>
-                {% endif %}
-              {% endfor %}
-            </ol>
-        </nav>
+          {% include "main::breadcrumb.html" %}
           {% block article %}
           {% endblock %}
     </div>
@@ -47,8 +37,10 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
     <!-- Latest compiled and minified JavaScript -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
-    {% for js in assets["js"] %}
-      <script src="{{url_for('.secondary_assets', type='js', asset=js)}}"></script>
+    {% for filename, directory in assets["js"].items() %}
+      {% if directory %}<script src="{{url_for('.secondary_assets', type='js', asset=filename)}}"></script>
+      {% else %}<script src="{{ filename }}"></script>
+      {% endif %}
     {% endfor %}
   </body>
 </html>

@@ -5,6 +5,7 @@
 from .resources import NemoResource
 from .test_controller import NemoTestControllers
 from flask_nemo import Nemo
+from flask_nemo.default import Breadcrumb
 from flask import Markup, Flask
 from lxml import etree
 from mock import Mock, patch, call
@@ -18,7 +19,7 @@ class NemoTestRoutes(NemoResource):
     def test_route_index(self):
         """ Check that index return the template
         """
-        self.assertEqual(self.nemo.r_index(), {"template": self.nemo.templates["index"]})
+        self.assertEqual(self.nemo.r_index(), {"template": "main::index.html"})
 
     def test_route_collection(self):
         """ Test return values of route collection (list of textgroups
@@ -26,7 +27,7 @@ class NemoTestRoutes(NemoResource):
 
         with patch('requests.get', return_value=self.getCapabilities) as patched:
             view = self.nemo.r_collection("latinLit")
-            self.assertEqual(view["template"], self.nemo.templates["textgroups"])
+            self.assertEqual(view["template"], "main::textgroups.html")
             self.assertEqual(len(view["textgroups"]), 3)
             self.assertIn("urn:cts:latinLit:phi1294", [str(textgroup.urn) for textgroup in view["textgroups"]])
             self.assertIsInstance(view["textgroups"][0], MyCapytain.resources.inventory.TextGroup)
@@ -37,7 +38,7 @@ class NemoTestRoutes(NemoResource):
 
         with patch('requests.get', return_value=self.getCapabilities) as patched:
             view = self.nemo.r_texts("latinLit", "phi1294")
-            self.assertEqual(view["template"], self.nemo.templates["texts"])
+            self.assertEqual(view["template"], "main::texts.html")
             self.assertEqual(len(view["texts"]), 2)
             self.assertEqual(
                 sorted([str(view["texts"][0].urn), str(view["texts"][1].urn)]),
@@ -100,7 +101,7 @@ class NemoTestRoutes(NemoResource):
         )
         with patch('requests.get', return_value=self.getPassage_Route) as patched:
             view = self.nemo.r_passage("latinLit", "phi1294", "phi002", "perseus-lat2", "1.pr.1")
-            self.assertEqual(view["template"], nemo.templates["text"])
+            self.assertEqual(view["template"], "main::text.html")
             self.assertIsInstance(view["version"], MyCapytain.resources.inventory.Text)
             self.assertEqual(str(view["version"].urn), "urn:cts:latinLit:phi1294.phi002.perseus-lat2")
             self.assertEqual(view["prev"], "1.1.1")
@@ -143,7 +144,7 @@ class NemoTestRoutes(NemoResource):
         )
         with patch('requests.get', return_value=self.getPassage_Route) as patched:
             view = nemo.r_passage("latinLit", "phi1294", "phi002", "perseus-lat2", "1.pr.1")
-            self.assertEqual(view["template"], nemo.templates["text"])
+            self.assertEqual(view["template"], "main::text.html")
             self.assertIsInstance(view["version"], MyCapytain.resources.inventory.Text)
             self.assertEqual(str(view["version"].urn), "urn:cts:latinLit:phi1294.phi002.perseus-lat2")
             self.assertEqual(view["prev"], "1.1.1")
@@ -198,7 +199,6 @@ class NemoTestRoutes(NemoResource):
             js=["testing_data/getcapabilities.xml"],
             css=["testing_data/style.css"]
         )
-
         nemo.blueprint = Mock()
         nemo.register_assets()
         with patch("flask_nemo.send_from_directory") as patched:
@@ -227,14 +227,13 @@ class NemoTestRoutes(NemoResource):
         """
         with patch("requests.get", return_value=self.getCapabilities):
             with patch("flask_nemo.render_template") as patched:
-                self.nemo.render("index.html", test="123", value="value", url={})
+                self.nemo.render("main::index.html", test="123", value="value", url={})
                 patched.assert_called_once_with(
-                    "index.html",
+                    "main::index.html",
                     collections={'latinLit', 'greekLit'},
                     test="123",
                     value="value",
                     lang="eng",
-                    templates=self.nemo.templates,
                     assets=self.nemo.assets,
                     url={},
                     breadcrumbs=[]
@@ -245,7 +244,7 @@ class NemoTestRoutes(NemoResource):
         """
         with patch("requests.get", return_value=self.getCapabilities):
             with patch("flask_nemo.render_template") as patched:
-                self.nemo.render(
+                data = self.nemo.render(
                     "index.html",
                     test="123",
                     value="value",
@@ -259,7 +258,6 @@ class NemoTestRoutes(NemoResource):
                     test="123",
                     value="value",
                     lang="eng",
-                    templates=self.nemo.templates,
                     assets=self.nemo.assets,
                     url={
                         "collection": "latinLit",
@@ -294,7 +292,6 @@ class NemoTestRoutes(NemoResource):
                     test="123",
                     value="value",
                     lang="eng",
-                    templates=self.nemo.templates,
                     assets=self.nemo.assets,
                     url={
                         "collection": "latinLit",
@@ -317,7 +314,7 @@ class NemoTestRoutes(NemoResource):
         with patch("requests.get", return_value=self.getCapabilities):
             route = self.nemo.route(self.nemo.r_collection, collection="latinLit")
             self.nemo.render.assert_called_once_with(
-                template="textgroups.html",
+                template="main::textgroups.html",
                 textgroups=self.nemo.get_textgroups("latinLit"),
                 url={"collection": "latinLit"}
             )
@@ -325,7 +322,7 @@ class NemoTestRoutes(NemoResource):
     def test_register_route(self):
         app = Flask(__name__)
         nemo = Nemo(app=app, base_url="/perseus")
-        nemo.register_routes()
+        nemo.register()
         self.assertIn("flask_nemo", app.blueprints)
 
         rules = [(rule.rule, rule.endpoint) for rule in app.url_map.iter_rules()]
@@ -334,7 +331,7 @@ class NemoTestRoutes(NemoResource):
 
         app = Flask(__name__)
         nemo = Nemo("nemo", app=app)
-        nemo.register_routes()
+        nemo.register()
         self.assertIn("nemo", app.blueprints)
 
         rules = [(rule.rule, rule.endpoint) for rule in app.url_map.iter_rules()]
@@ -342,86 +339,16 @@ class NemoTestRoutes(NemoResource):
         self.assertIn("nemo.r_passage", [rule[1] for rule in rules])
 
         nemo = Nemo()
-        self.assertEqual(nemo.register_routes(), None)
+        self.assertEqual(nemo.register(), None)
 
     def test_additional_template(self):
         # Line 568-575
         app = Flask(__name__)
-        nemo = Nemo(app=app, templates={"menu": "examples/ciham.menu.html"})
+        nemo = Nemo(app=app, templates={"addendum": "tests/test_data/plugin_templates_main/main"})
         blueprint = nemo.create_blueprint()
 
-        html, path, function = blueprint.jinja_loader.get_source("", "examples/ciham.menu.html")
-        self.assertIn("Text provided by CIHAM", html)
+        html, path, function = blueprint.jinja_loader.get_source("", "addendum::container.html")
+        self.assertIn("I am A CONTAINER ! Isn't it sweet !", html)
 
         with self.assertRaises(TemplateNotFound):
-            html, path, function = blueprint.jinja_loader.get_source("", "examples/unknown.html")
-
-    def test_make_passage_breadcrumb(self):
-        """ passage breadcrumb should include all components up to passage and passage not linked
-        """
-        with patch("requests.get", return_value=self.getCapabilities):
-            bc = self.nemo.make_breadcrumbs(
-                textgroups=self.nemo.get_textgroups(),
-                version = self.nemo.get_text("latinLit","phi1294","phi002","perseus-lat2"),
-                lang="eng",
-                url={
-                    "collection": "latinLit",
-                    "textgroup": "phi1294",
-                    "work": "phi002",
-                    "version": "perseus-lat2",
-                    "passage_identifier": "1.1"
-                    })
-            self.assertEqual(bc,[
-                {'link': '.r_collection', 'title': 'latinLit', 'args': {'collection': 'latinLit'}},
-                {'link': '.r_texts', 'title': 'Martial', 'args': {'textgroup': 'phi1294', 'collection': 'latinLit'}},
-                {'link': '.r_version', 'title': 'Epigrammata Label', 'args': {'textgroup': 'phi1294', 'collection': 'latinLit', 'work':'phi002','version':'perseus-lat2'}},
-                {'link': None, 'title': '1.1', 'args': {'textgroup': 'phi1294', 'collection': 'latinLit', 'work':'phi002','version':'perseus-lat2', 'passage_identifier':"1.1"}}
-            ])
-
-
-    def test_make_version_breadcrumb(self):
-        """ version breadcrumb should include all components up to version and version not linked
-        """
-        with patch("requests.get", return_value=self.getCapabilities):
-            bc = self.nemo.make_breadcrumbs(
-                textgroups=self.nemo.get_textgroups(),
-                version = self.nemo.get_text("latinLit","phi1294","phi002","perseus-lat2"),
-                lang="eng",
-                url={
-                    "collection": "latinLit",
-                    "textgroup": "phi1294",
-                    "work": "phi002",
-                    "version": "perseus-lat2"
-                    })
-            self.assertEqual(bc,[
-                {'link': '.r_collection', 'title': 'latinLit', 'args': {'collection': 'latinLit'}},
-                {'link': '.r_texts', 'title': 'Martial', 'args': {'textgroup': 'phi1294', 'collection': 'latinLit'}},
-                {'link': None, 'title': 'Epigrammata Label', 'args': {'textgroup': 'phi1294', 'collection': 'latinLit', 'work':'phi002','version':'perseus-lat2'}}
-            ])
-
-    def test_make_textgroup_breadcrumb(self):
-        """ textgroup breadcrumb should include all components up to textgroup and textgroup not linked
-        """
-        with patch("requests.get", return_value=self.getCapabilities):
-            bc = self.nemo.make_breadcrumbs(
-                textgroups=self.nemo.get_textgroups(),
-                lang="eng",
-                url={
-                    "collection": "latinLit",
-                    "textgroup": "phi1294",
-                    })
-            self.assertEqual(bc,[
-                {'link': '.r_collection', 'title': 'latinLit', 'args': {'collection': 'latinLit'}},
-                {'link': None, 'title': 'Martial', 'args': {'textgroup': 'phi1294', 'collection': 'latinLit'}}
-            ])
-
-    def test_make_collection_breadcrumb(self):
-        """ collection breadcrumb should include only collection not linked
-        """
-        with patch("requests.get", return_value=self.getCapabilities):
-            bc = self.nemo.make_breadcrumbs(
-                lang="eng",
-                url={ "collection": "latinLit"})
-            self.assertEqual(bc,[
-                {'link': None, 'title': 'latinLit', 'args': {'collection': 'latinLit'}}
-            ])
+            html, path, function = blueprint.jinja_loader.get_source("", "addendum::unknown.html")

@@ -1,4 +1,4 @@
-{% extends templates['container'] %}
+{% extends "main::container.html" %}
 
 {% block article %}
 <article>
@@ -25,7 +25,7 @@
         {{ text_passage }}
     </section>
     <footer>
-      {% include templates['passage_footer'] %}
+      {% include "main::passage_footer.html" %}
     </footer>
 </article>
 {% endblock %}

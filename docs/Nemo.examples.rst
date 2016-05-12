@@ -89,7 +89,7 @@ Because Python is not a natural language and because not everybody knows it in a
             "examples/ciham.js"
         ],
         templates={
-            "menu": "examples/ciham.menu.html"
+            "main": "examples/ciham"
         },
         additional_static=[
             "path/to/picture.png"
@@ -172,7 +172,7 @@ As you will most likely use a new template, don't forget to register it with the
             args = self.r_passage(collection, textgroup, work, version, passage_identifier)
             # Call with other identifiers and add "visavis_" front of the argument
             args.update({ "visavis_{0}".format(key):value for key, value in self.r_passage(collection, textgroup, work, visavis, passage_identifier).items()})
-            args["template"] = self.templates["r_double"]
+            args["template"] = "double::r_double.html"
             return args
 
     nemo = NemoDouble(
@@ -186,11 +186,8 @@ As you will most likely use a new template, don't forget to register it with the
         ],
         # We think about registering the new route
         templates={
-            "r_double": "./examples/translations/r_double.html"
+            "double": "./examples/translations"
         }
     )
 
 .. note:: You can run an example using chunker with `python example.py translations`
-
-Replacing routes
-################
