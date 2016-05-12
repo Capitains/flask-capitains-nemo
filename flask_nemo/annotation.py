@@ -23,6 +23,7 @@ class AnnotationResource(object):
 
     def read(self):
     """ Read the contents of the Annotation Resource
+    :return: the contents of the resource
     :rtype: str
     """
         return self.__resolver__.resolve(uri)
@@ -30,6 +31,7 @@ class AnnotationResource(object):
     def expand(self): 
     """ Expand the contents of the Annotation if it is expandable 
       (i.e. if it references  multiple resources)
+    :return: the list of expanded resources
     :rtype: list(AnnotationResource)
     """
         # default AnnotationResource type
@@ -57,7 +59,7 @@ class Target(object):
     :type urn: URN
     """
 
-    def __init__(self, urn, *args, **kwargs):
+    def __init__(self, urn, **kwargs):
         self.__urn__ = urn
 
     @property

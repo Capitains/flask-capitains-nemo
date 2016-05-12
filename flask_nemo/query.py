@@ -19,10 +19,10 @@ class QueryPrototype(object):
             self.__instance_name__ = type(self).__name__
         self.getreffs = getreffs
 
-    def getAnnotations(self, *urn=None, wildcard=".", *include=None, *exclude=None, limit=None, start=1, expand=False, **kwargs)
+    def getAnnotations(self, *urns, wildcard=".", *include=None, *exclude=None, limit=None, start=1, expand=False, **kwargs)
         """ Retrieve annotations from the query provider
-        :param urn: The CTS URN(s) to query as the target of annotations
-        :type urn: URN
+        :param urns: The CTS URN(s) to query as the target of annotations
+        :type urns: URN
         :param wildcard: Wildcard specifier for how to match the URN 
         :type wildcard: str ('.' to match exact,
                              '.%' to match exact plus lower in the hierarchy
