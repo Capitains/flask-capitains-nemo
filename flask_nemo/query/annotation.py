@@ -39,12 +39,16 @@ class AnnotationResource(object):
         return []
 
     @property
+    def uri(self):
+        return self.__uri__
+
+    @property
     def type_uri(self):
-        return self.__expandable__
+        return self.__type_uri__
 
     @property
     def slug(self):
-      return SLUG
+      return self.SLUG
 
     @property
     def expandable(self):

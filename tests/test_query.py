@@ -1,6 +1,6 @@
 from unittest import TestCase
 from flask_nemo.query.proto import QueryPrototype, RetrieverPrototype
-from flask_nemo.query.annotation import Resolver, Target
+from flask_nemo.query.annotation import Resolver, Target, AnnotationResource
 import MyCapytain.common.reference
 
 
@@ -34,3 +34,27 @@ class TestQuery(TestCase):
     def test_target_urn(self):
         """ Test that a target returns its urn property """
         self.assertEqual(self.fakeurn,self.faketarget.urn)
+
+    def test_annotation_resource_read(self):
+        """ Test that an annotation resource with default resolver raises an exception on read """
+        self.assertRaises(Exception,AnnotationResource("http://example.org/annotation",self.faketarget,"http://data.perseus.org/rdfvocab/fake",self.resolver).read)
+
+    def test_annotation_resource_expand(self):
+        """ Test that an annotation resource expands to empty list """
+        self.assertEqual([],AnnotationResource("http://example.org/annotation",self.faketarget,"http://data.perseus.org/rdfvocab/fake",self.resolver).expand())
+
+    def test_annotation_resource_expandable_property(self):
+        """ Test that an annotation resource is not expandable """
+        self.assertFalse(AnnotationResource("http://example.org/annotation",self.faketarget,"http://data.perseus.org/rdfvocab/fake",self.resolver).expandable)
+
+    def test_annotation_resource_uri_property(self):
+        """ Test that an annotation resource returns its uri """
+        self.assertEqual("http://example.org/annotation",AnnotationResource("http://example.org/annotation",self.faketarget,"http://data.perseus.org/rdfvocab/fake",self.resolver).uri)
+
+    def test_annotation_resource_type_uri_property(self):
+        """ Test that an annotation resource returns its uri type"""
+        self.assertEqual("http://data.perseus.org/rdfvocab/fake",AnnotationResource("http://example.org/annotation",self.faketarget,"http://data.perseus.org/rdfvocab/fake",self.resolver).type_uri)
+
+    def test_annotation_resource_slug_property(self):
+        """ Test that an annotation resource returns its slug"""
+        self.assertEqual("annotation",AnnotationResource("http://example.org/annotation",self.faketarget,"http://data.perseus.org/rdfvocab/fake",self.resolver).slug)
