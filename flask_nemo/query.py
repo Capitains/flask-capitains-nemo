@@ -13,16 +13,13 @@ class QueryPrototype(object):
     MATCH_RANGE = "-"
     MATCH_ALL = "%.%"
 
-    def __init__(self, name=None, getreffs, **kwargs):
-        self.__instance_name__ = name
-        if not name:
-            self.__instance_name__ = type(self).__name__
-        self.getreffs = getreffs
+    def __init__(self, getreffs, **kwargs):
+        self.__getreffs__ = getreffs
 
-    def getAnnotations(self, *urns, wildcard=".", *include=None, *exclude=None, limit=None, start=1, expand=False, **kwargs)
+    def getAnnotations(self, *urns, wildcard=".", include=None, exclude=None, limit=None, start=1, expand=False, **kwargs):
         """ Retrieve annotations from the query provider
         :param urns: The CTS URN(s) to query as the target of annotations
-        :type urns: URN
+        :type urns: MyCapytain.common.reference.URN
         :param wildcard: Wildcard specifier for how to match the URN 
         :type wildcard: str ('.' to match exact,
                              '.%' to match exact plus lower in the hierarchy
@@ -30,9 +27,9 @@ class QueryPrototype(object):
                              '-' to match in the range 
                              '%.%' to match all )
         :param include: URI(s) of Annotation types to include in the results
-        :type include: str
+        :type include: list(str)
         :param exclude: URI(s) of Annotation types to include in the results
-        :type exclude: str
+        :type exclude: list(str)
         :param limit: The max number of results to return (Default is None for no limit)
         :type limit: int
         :param start: the starting record to return (Default is 1)

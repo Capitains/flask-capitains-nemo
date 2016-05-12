@@ -56,7 +56,7 @@ class AnnotationResource(object):
 class Target(object):
     """ AnnotationTarget
     :param urn: URN targeted by an Annotation
-    :type urn: URN
+    :type urn: MyCapytain.common.reference.URN
     """
 
     def __init__(self, urn, **kwargs):
