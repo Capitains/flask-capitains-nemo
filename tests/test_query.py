@@ -1,5 +1,5 @@
 from unittest import TestCase
-from flask_nemo.query import QueryPrototype
+from flask_nemo.query.proto import QueryPrototype
 import MyCapytain.common.reference
 
 
