@@ -22,18 +22,18 @@ class AnnotationResource(object):
 
 
     def read(self):
-    """ Read the contents of the Annotation Resource
-    :return: the contents of the resource
-    :rtype: str
-    """
+        """ Read the contents of the Annotation Resource
+        :return: the contents of the resource
+        :rtype: str
+        """
         return self.__resolver__.resolve(uri)
  
     def expand(self): 
-    """ Expand the contents of the Annotation if it is expandable 
-      (i.e. if it references  multiple resources)
-    :return: the list of expanded resources
-    :rtype: list(AnnotationResource)
-    """
+        """ Expand the contents of the Annotation if it is expandable 
+          (i.e. if it references  multiple resources)
+        :return: the list of expanded resources
+        :rtype: list(AnnotationResource)
+        """
         # default AnnotationResource type
         # doesn't expand
         return []
@@ -52,7 +52,6 @@ class AnnotationResource(object):
         return False
 
 
-
 class Target(object):
     """ AnnotationTarget
     :param urn: URN targeted by an Annotation
@@ -63,7 +62,7 @@ class Target(object):
         self.__urn__ = urn
 
     @property
-    def urn(self)
+    def urn(self):
         return self.__urn__
      
 class Resolver(object):
@@ -86,6 +85,6 @@ class Resolver(object):
         :rtype: str
         """
         for r in self.__retrievers__:
-            if r.canRetrieve(uri):
+            if r.match(uri):
                 return r.read(uri)
         raise Exception             
