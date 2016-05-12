@@ -43,7 +43,8 @@ Inserting a plugin in a Nemo instance
 
 .. code-block:: python
     :linenos:
-    :title: app.py
+    :caption: You app.py
+    :name: app.py
 
     # We import Flask and Nemo
     from flask import Flask
@@ -65,7 +66,18 @@ Inserting a plugin in a Nemo instance
 Writing a plugin
 ################
 
-The major properties of plugins are - and should be - class variables and copied during initiation to ensure a strong structure. There is list of core class variables which are the following
+The major properties of plugins are - and should be - class variables and copied during initiation to ensure a strong structure. There is list of core class constants which are defined below. It is recommanded to use PluginPrototype class as your parent object :
+
+
+.. code-block: python
+    :linenos:
+    :caption: my_plugin.py
+    :name: my_plugin.py
+
+    from flask_nemo.plugin import PluginPrototype
+
+    class MyPlugin(PluginPrototype):
+        # Add new things and configure things with Plugin core constants
 
 Assets providing
 ****************
@@ -77,6 +89,8 @@ There is three class variables (JS, STATICS and CSS) related to register new UI 
 
 .. code-block: python
     :linenos:
+    :caption: flask_nemo/plugin.py
+    :name: flask_nemo/plugin.py
 
     class PluginPrototype(object):
         CSS = []
@@ -86,7 +100,7 @@ There is three class variables (JS, STATICS and CSS) related to register new UI 
 Adding routes, adding/overwriting templates and filters
 *******************************************************
 
-The ``ROUTES```and ``TEMPLATES`` class variables work the same way as the Nemo one : they will be registered on to the Nemo instance on top of the existing routes. 
+The ``ROUTES`` and ``TEMPLATES`` class variables work the same way as the Nemo one : they will be registered on to the Nemo instance on top of the existing routes. 
 
 - Routes of plugins stack up and overwrite themselves if they are not namespaced (See ``namespacing`` argument in :ref:`pluginInit`). 
 - Templates can provide new templates for the ``main::`` namespace as well as new templates for any other namespace (cf. :ref:`templateOrder`)
@@ -95,6 +109,9 @@ The ``ROUTES```and ``TEMPLATES`` class variables work the same way as the Nemo o
 
 .. code-block: python
     :linenos:
+    :caption: flask_nemo/plugin.py
+    :name: flask_nemo/plugin.py
+
     class PluginPrototype(object):
         ROUTES = []
         TEMPLATES = {}
@@ -110,6 +127,9 @@ Various other core parameters : render, clear assets and static folder
 
 .. code-block: python
     :linenos:
+    :caption: flask_nemo/plugin.py
+    :name: flask_nemo/plugin.py
+
     class PluginPrototype(object):
         HAS_AUGMENT_RENDER = False
         CLEAR_ASSETS = False
