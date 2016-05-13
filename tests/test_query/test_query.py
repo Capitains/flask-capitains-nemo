@@ -22,7 +22,7 @@ class TestQuery(TestCase):
 
     def test_query_prototype_get_resource(self):
         """ Test that the query prototype returns nothing """
-        self.assertEqual({}, QueryPrototype(self.fakegetreffs).getResource("any"))
+        self.assertEqual(None, QueryPrototype(self.fakegetreffs).getResource("any"))
 
     def test_retriever_prototype_read(self):
         """ Test that the retriever prototype reads nothing """

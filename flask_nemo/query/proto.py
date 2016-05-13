@@ -58,4 +58,4 @@ class QueryPrototype(object):
         :return: the requested annotation resource
         :rtype: AnnotationResource
         """
-        return {}
+        return None
