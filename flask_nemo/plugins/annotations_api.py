@@ -62,7 +62,7 @@ class AnnotationsApiPlugin(PluginPrototype):
         """
         annotation = self.__queryinterface__.getResource(uri)
         if not annotation:
-            return "invalid resource uri", 400
+            return "invalid resource uri", 404
         # TODO this should inspect the annotation content
         # set appropriate Content-Type headers
         # and return the actual content
