@@ -1,5 +1,6 @@
 from requests import request
 import re
+from os import path as op
 
 
 class UnresolvableURIError(Exception):
@@ -25,7 +26,7 @@ class Resolver(object):
         :rtype: str
         """
         for r in self.__retrievers__:
-            if type(r).match(uri):
+            if r.match(uri):
                 return r
         raise UnresolvableURIError()
 
@@ -35,8 +36,7 @@ class RetrieverPrototype(object):
     """ Prototype for a Retriever
     """
 
-    @staticmethod
-    def match(uri):
+    def match(self, uri):
         """ Check to see if this URI is retrievable by this Retriever implementation
         :param uri: the URI of the resource to be retrieved
         :type uri: str
@@ -61,8 +61,7 @@ class HTTPRetriever(RetrieverPrototype):
     """
     __reg_exp__ = re.compile("^(https?:)?\/\/")
 
-    @staticmethod
-    def match(uri):
+    def match(self, uri):
         """ Check to see if this URI is retrievable by this Retriever implementation
 
         :param uri: the URI of the resource to be retrieved
@@ -90,11 +89,19 @@ class LocalRetriever(RetrieverPrototype):
     :cvar FORCE_MATCH: Force the local retriever to read a resource even if it does not match with the regular expression
     :type FORCE_MATCH: bool
     """
-    __reg_exp__ = re.compile("^([a-z0-9_ ]+|\.{1,2})?/")
-    FORCE_MATCH = False
 
-    @staticmethod
-    def match(uri):
+    def __init__(self, path="./"):
+        self.__path__ = op.abspath(path)
+
+    def __absolute__(self, uri):
+        """ Get the absolute uri for a file
+
+        :param uri: URI of the resource to be retrieved
+        :return: Absolute Path
+        """
+        return op.abspath(op.join(self.__path__, uri))
+
+    def match(self, uri):
         """ Check to see if this URI is retrievable by this Retriever implementation
 
         :param uri: the URI of the resource to be retrieved
@@ -102,11 +109,9 @@ class LocalRetriever(RetrieverPrototype):
         :return: True if it can be, False if not
         :rtype: bool
         """
-        # prototype implementation can't retrieve anything!
-        if LocalRetriever.FORCE_MATCH:
-            return LocalRetriever.__reg_exp__.match(uri) is not None
-        else:
-            return True
+        absolute_uri = self.__absolute__(uri)
+
+        return absolute_uri.startswith(self.__path__) and op.exists(absolute_uri)
 
     def read(self, uri):
         """ Retrieve the contents of the resource
@@ -116,8 +121,7 @@ class LocalRetriever(RetrieverPrototype):
         :return: the contents of the resource
         :rtype: str
         """
-        file = None
-        with open(uri, "r") as f:
+        with open(self.__absolute__(uri), "r") as f:
             file = f.read()
         return file
 
