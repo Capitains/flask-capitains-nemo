@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+
+
 class QueryPrototype(object):
     """ Prototype for Nemo Query API Implementations
     :param name: The Name of this Query API
@@ -16,7 +18,12 @@ class QueryPrototype(object):
     def __init__(self, getreffs, **kwargs):
         self.__getreffs__ = getreffs
 
-    def getAnnotations(self, *urns, wildcard=".", include=None, exclude=None, limit=None, start=1, expand=False, **kwargs):
+    def getAnnotations(self,
+            *urns,
+            wildcard=".", include=None, exclude=None,
+            limit=None, start=1,
+            expand=False, **kwargs
+        ):
         """ Retrieve annotations from the query provider
         :param urns: The CTS URN(s) to query as the target of annotations
         :type urns: MyCapytain.common.reference.URN
@@ -42,32 +49,5 @@ class QueryPrototype(object):
                  The second element is the list of Annotations
         :rtype: (int, list(Annotation)
         """
-        return (0,[])
+        return 0, []
 
-class RetrieverPrototype(object):
-
-    """ Prototype for a Retriever
-    """
-    def __init__(self,*args,**kwargs):
-        pass
-
-    @staticmethod
-    def match(uri):
-        """ Check to see if this URI is retrievable by this Retriever implementation
-        :param uri: the URI of the resource to be retrieved
-        :type uri: str
-        :return: True if it can be, False if not
-        :rtype: bool
-        """
-        # prototype implementation can't retrieve anything!
-        return False
-
-    def read(self,uri):
-        """ Retrieve the contents of the resource
-        :param uri: the URI of the resource to be retrieved
-        :type uri: str
-        :return: the contents of the resource
-        :rtype: str
-        """
-        return None
-           

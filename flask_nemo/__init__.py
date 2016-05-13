@@ -37,11 +37,11 @@ class Nemo(object):
     :type api_url: str
     :param retriever: CTS Retriever (Will be defaulted to api_url using cts5 retriever if necessary)
     :type retriever: MyCapytain.retrievers.proto.CTS
-    :param base_url: Base URL to use when registering the endpoint
+    :param base_url: Base URL to use when registering the endpoint (It cannot be "/" only !)
     :type base_url: str
     :param cache: SQLITE cache file name
     :type base_url: str
-    :param expire: TIme before expiration of cache, default 3600
+    :param expire: Time before expiration of cache, default 3600
     :type expire: int
     :param plugins: List of plugins to connect to the Nemo instance
     :type plugins: list(flask_nemo.plugin.PluginPrototype)
