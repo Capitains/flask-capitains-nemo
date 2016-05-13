@@ -1,5 +1,22 @@
 # -*- coding: utf-8 -*-
 from copy import deepcopy
+from MyCapytain.common.reference import URN
+
+
+class Target(object):
+    """ AnnotationTarget
+    :param urn: URN targeted by an Annotation
+    :type urn: MyCapytain.common.reference.URN
+    """
+
+    def __init__(self, urn, **kwargs):
+        if not isinstance(urn, URN):
+            urn = URN(urn)
+        self.__urn__ = urn
+
+    @property
+    def urn(self):
+        return self.__urn__
 
 
 class AnnotationResource(object):
@@ -17,9 +34,9 @@ class AnnotationResource(object):
 
     SLUG = "annotation"
 
-    def __init__(self, uri, target, type_uri, resolver, **kwargs):
+    def __init__(self, uri, target, type_uri, resolver, target_class=Target, **kwargs):
         self.__uri__ = uri
-        self.__target__ = target
+        self.__target__ = Target(target)
         self.__type_uri__ = type_uri
         self.__slug__ = deepcopy(type(self).SLUG)
 
@@ -68,16 +85,3 @@ class AnnotationResource(object):
     @property
     def target(self):
         return self.__target__
-
-class Target(object):
-    """ AnnotationTarget
-    :param urn: URN targeted by an Annotation
-    :type urn: MyCapytain.common.reference.URN
-    """
-
-    def __init__(self, urn, **kwargs):
-        self.__urn__ = urn
-
-    @property
-    def urn(self):
-        return self.__urn__

@@ -14,7 +14,7 @@ class TestQuery(TestCase):
         self.retrieverproto = RetrieverPrototype()
         self.resolver = Resolver(self.retrieverproto)
         self.fakeurn = MyCapytain.common.reference.URN("urn:cts:greekLit:tlg0012.tlg001.perseus-grc1")
-        self.faketarget = Target(self.fakeurn)
+        self.faketarget = self.fakeurn
 
     def test_query_prototype(self):
         """ Test that the query prototype returns nothing """
@@ -39,7 +39,7 @@ class TestQuery(TestCase):
         
     def test_target_urn(self):
         """ Test that a target returns its urn property """
-        self.assertEqual(self.fakeurn, self.faketarget.urn)
+        self.assertEqual(self.fakeurn, Target(self.fakeurn).urn)
 
     def test_annotation_resource_read(self):
         """ Test that an annotation resource with default resolver raises an exception on read """
