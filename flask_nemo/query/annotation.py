@@ -65,6 +65,9 @@ class AnnotationResource(object):
         # default AnnotationResource type is not expandable
         return False
 
+    @property
+    def target(self):
+        return self.__target__
 
 class Target(object):
     """ AnnotationTarget
