@@ -51,3 +51,11 @@ class QueryPrototype(object):
         """
         return 0, []
 
+    def getResource(self,uri):
+        """ Retrieve a single annotation resource by URI
+        :param uri: The URI of the resource
+        :type uri: str
+        :return: the requested annotation resource
+        :rtype: AnnotationResource
+        """
+        return None
