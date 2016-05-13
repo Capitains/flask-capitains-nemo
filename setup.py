@@ -13,7 +13,8 @@ setup(
     install_requires=[
         "MyCapytain>=1.0.1",
         "requests_cache>=0.4.9",
-        "Flask>=0.10.1"
+        "Flask>=0.10.1",
+        "requests>=2.10.0"
     ],
     tests_require=[
         "mock==1.0.1",

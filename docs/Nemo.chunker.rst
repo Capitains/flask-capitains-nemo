@@ -5,6 +5,7 @@ Chunker, Transformers and GetPrevNext are way to customize your users' experienc
 
 Process description
 ###################
+
 .. image:: _static/images/nemo.chunker.diagram.png
     :alt: Nemo Chunker Workflow
 
