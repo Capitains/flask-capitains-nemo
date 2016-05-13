@@ -21,13 +21,3 @@ Nemo Rendering Workflow
     :alt: Nemo Render Inner Workflow
 
 
-
-Nemo Rendering Workflow
-#######################
-
-.. _RenderWorkflow:
-
-.. image:: _static/images/nemo.render.workflow.png
-    :alt: Nemo Render Inner Workflow
-
-
