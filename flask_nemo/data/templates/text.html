@@ -25,21 +25,21 @@
     {% include "main::passage_footer.html" %}
 {% endmacro %}
 
-{% macro show_passage(text, navigation=nav, header=header_passage, footer=default_footer) %}
+{% macro show_passage(text, header, navigation, footer) %}
 <article>
-        {{ header() }}
+        {{ header }}
     <nav>
-        {{ navigation() }}
+        {{ navigation }}
     </nav>
     <section>
         {{ text }}
     </section>
     <footer>
-      {{ footer() }}
+      {{ footer }}
     </footer>
 </article>
 {% endmacro %}
 
 {% block article %}
-    {{ show_passage(text_passage) }}
+    {{ show_passage(text_passage, navigation=nav(), header=header_passage(), footer=default_footer()) }}
 {% endblock %}
