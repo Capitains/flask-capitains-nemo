@@ -233,6 +233,7 @@ class NemoTestRoutes(NemoResource):
                     collections={'latinLit', 'greekLit'},
                     test="123",
                     value="value",
+                    template="main::index.html",
                     lang="eng",
                     assets=self.nemo.assets,
                     url={},
@@ -256,6 +257,7 @@ class NemoTestRoutes(NemoResource):
                     "index.html",
                     collections={'latinLit', 'greekLit'},
                     test="123",
+                    template="index.html",
                     value="value",
                     lang="eng",
                     assets=self.nemo.assets,
@@ -288,6 +290,7 @@ class NemoTestRoutes(NemoResource):
                     })
                 patched.assert_called_once_with(
                     "index.html",
+                    template="index.html",
                     collections={'latinLit', 'greekLit'},
                     test="123",
                     value="value",

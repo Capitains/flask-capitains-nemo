@@ -676,11 +676,12 @@ class Nemo(object):
                 kwargs["texts"] = self.get_texts(kwargs["url"]["collection"], kwargs["url"]["textgroup"])
 
         kwargs["assets"] = self.assets
+        kwargs["template"] = template
 
         for plugin in self.__plugins_render_views__:
             kwargs.update(plugin.render(**kwargs))
 
-        return render_template(template, **kwargs)
+        return render_template(kwargs["template"], **kwargs)
 
     def route(self, fn, **kwargs):
         """ Route helper : apply fn function but keep the calling object, *ie* kwargs, for other functions
