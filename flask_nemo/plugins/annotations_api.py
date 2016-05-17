@@ -22,7 +22,7 @@ class AnnotationsApiPlugin(PluginPrototype):
     #TODO we should have a response at the base of annotations/api that returns link types and link relations
     # showing the next level of options 
     
-    def r_annotations_by_target(self,target_urn):
+    def r_annotations_by_target(self, target_urn):
         """ Route to retrieve annotations by target 
         :param target_urn: The CTS URN for which to retrieve annotations  
         :type target_urn: str
@@ -52,7 +52,7 @@ class AnnotationsApiPlugin(PluginPrototype):
         response['annotations'] = mapped
         return jsonify(response)
 
-    def r_annotation_get(self,uri):
+    def r_annotation_get(self, uri):
         """ Route to retrieve contents of an annotation resource
         :param uri: The uri of the annotation resource
         :type uri: str

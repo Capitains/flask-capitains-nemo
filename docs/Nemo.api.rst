@@ -114,10 +114,10 @@ Plugin
 Default Plugins
 ###############
 
-.. autoclass:: flask.ext.nemo.default.Breadcrumb
+.. autoclass:: flask.ext.nemo.plugins.default.Breadcrumb
 
 .. _pluginRender:
-.. automethod:: flask.ext.nemo.default.Breadcrumb.render
+.. automethod:: flask.ext.nemo.plugins.default.Breadcrumb.render
 
 Common
 ######

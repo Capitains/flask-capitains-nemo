@@ -102,6 +102,19 @@ class TestQuery(TestCase):
             "Annotation type_uri should read correctly"
         )
 
+    def test_annotation_resource_sha_property(self):
+        """ Test that an annotation resource returns its uri type"""
+        annotation = AnnotationResource(
+            "http://example.org/annotation",
+            self.faketarget,
+            "http://data.perseus.org/rdfvocab/fake",
+            self.resolver
+        )
+        self.assertEqual(
+            "fb6737b46ba8b9d8cd7d486c348275c07b017bbb748a63c673a9b685acf0a859", annotation.sha,
+            "Annotation sha should be stable"
+        )
+
     def test_annotation_resource_slug_property(self):
         """ Test that an annotation resource returns its slug"""
         annotation = AnnotationResource(
