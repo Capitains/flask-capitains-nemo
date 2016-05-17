@@ -12,7 +12,6 @@ class AnnotationsApiPluginTest(TestCase):
         self.ann_plugin = AnnotationsApiPlugin(name="testplugin",queryinterface=QueryPrototype(lambda x:x))
         self.client = make_client(self.ann_plugin)
 
-
     def test_route_by_target_valid_urn(self):
         """ Check empty response for valid urn target (given prototype query interface which knows nothing)
         """

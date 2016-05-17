@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_nemo import Nemo
 
+
 def make_client(*args, **kwargs):
     app = Flask("Nemo")
     app.debug = True

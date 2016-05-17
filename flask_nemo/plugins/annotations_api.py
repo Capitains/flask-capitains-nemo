@@ -52,7 +52,6 @@ class AnnotationsApiPlugin(PluginPrototype):
         response['annotations'] = mapped
         return jsonify(response)
 
-
     def r_annotation_get(self,uri):
         """ Route to retrieve contents of an annotation resource
         :param uri: The uri of the annotation resource
@@ -67,4 +66,3 @@ class AnnotationsApiPlugin(PluginPrototype):
         # set appropriate Content-Type headers
         # and return the actual content
         return jsonify(annotation)
-            

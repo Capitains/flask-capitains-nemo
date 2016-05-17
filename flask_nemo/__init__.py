@@ -23,7 +23,7 @@ from collections import Callable, OrderedDict
 import flask_nemo._data
 import flask_nemo.filters
 from flask_nemo.chunker import default_chunker as __default_chunker__
-from flask_nemo.default import Breadcrumb
+from flask_nemo.plugins.default import Breadcrumb
 from flask_nemo.common import resource_qualifier, ASSETS_STRUCTURE
 
 

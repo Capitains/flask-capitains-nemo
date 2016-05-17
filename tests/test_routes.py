@@ -5,7 +5,7 @@
 from .resources import NemoResource
 from .test_controller import NemoTestControllers
 from flask_nemo import Nemo
-from flask_nemo.default import Breadcrumb
+from flask_nemo.plugins.default import Breadcrumb
 from flask import Markup, Flask
 from lxml import etree
 from mock import Mock, patch, call
