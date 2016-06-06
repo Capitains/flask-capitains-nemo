@@ -9,7 +9,7 @@ class AnnotationsApiPluginTest(TestCase):
     """
 
     def setUp(self):
-        self.ann_plugin = AnnotationsApiPlugin(name="testplugin",queryinterface=QueryPrototype(lambda x:x))
+        self.ann_plugin = AnnotationsApiPlugin(name="testplugin", queryinterface=QueryPrototype(lambda x: x))
         self.client = make_client(self.ann_plugin)
 
     def test_route_by_target_valid_urn(self):

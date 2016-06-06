@@ -13,7 +13,7 @@ class AnnotationsApiPlugin(PluginPrototype):
 
     ROUTES =  [
         ("/annotations/api/target/<target_urn>", "r_annotations_by_target", ["GET"]),
-        ("/annotations/api/resources/<uri>", "r_annotation_get", ["GET"])
+        ("/annotations/api/resources/<sha>", "r_annotation_get", ["GET"])
     ]
 
     def __init__(self, queryinterface, *args, **kwargs):
