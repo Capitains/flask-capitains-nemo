@@ -2,13 +2,13 @@ from setuptools import setup, find_packages
 
 setup(
     name='flask_nemo',
-    version="1.0.0a",
+    version="1.0.0b",
     packages=find_packages(exclude=["examples", "tests"]),
     url='https://github.com/capitains/flask-capitains-nemo',
     license='GNU GPL',
     author='Thibault Clerice',
     author_email='leponteineptique@gmail.com',
-    description='Flask Extension to Browse CTS Repository',
+    description='Flask Extension to browse CTS Repository',
     test_suite="tests",
     install_requires=[
         "MyCapytain>=1.0.1",

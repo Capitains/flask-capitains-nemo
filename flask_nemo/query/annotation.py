@@ -3,6 +3,7 @@ from copy import deepcopy
 from MyCapytain.common.reference import URN
 import hashlib
 
+
 class Target(object):
     """ AnnotationTarget
     :param urn: URN targeted by an Annotation
@@ -36,10 +37,12 @@ class AnnotationResource(object):
 
     def __init__(self, uri, target, type_uri, resolver, target_class=Target, **kwargs):
         self.__uri__ = uri
-        self.__target__ = Target(target)
+        self.__target__ = target_class(target)
         self.__type_uri__ = type_uri
         self.__slug__ = deepcopy(type(self).SLUG)
-        self.__sha__ = hashlib.sha256("{uri}::{type_uri}".format(uri=uri, type_uri=type_uri).encode('utf-8')).hexdigest()
+        self.__sha__ = hashlib.sha256(
+            "{uri}::{type_uri}".format(uri=uri, type_uri=type_uri).encode('utf-8')
+        ).hexdigest()
 
         self.__content__ = None
         self.__resolver__ = resolver
