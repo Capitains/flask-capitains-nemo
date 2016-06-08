@@ -578,7 +578,7 @@ class Nemo(object):
         :param asset: Filename of an asset
         :return: Response
         """
-        if type in self.assets and asset in self.assets[filetype] and self.assets[filetype][asset]:
+        if filetype in self.assets and asset in self.assets[filetype] and self.assets[filetype][asset]:
             return send_from_directory(
                 directory=self.assets[filetype][asset],
                 filename=asset

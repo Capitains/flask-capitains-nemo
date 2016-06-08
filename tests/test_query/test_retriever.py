@@ -4,16 +4,27 @@ from unittest import TestCase
 from mock import patch
 
 
-def mocked_response(content):
+def mocked_response(content, mime):
     class MockResponse(object):
-        def __init__(self, data):
+        def __init__(self, data, mime="text"):
             self.data = data
+            self.mime = mime
 
         @property
         def text(self):
             return self.data
 
-    return MockResponse(content)
+        @property
+        def content(self):
+            return self.data
+
+        @property
+        def headers(self):
+            return {
+                "Content-Type": self.mime
+            }
+
+    return MockResponse(content, mime)
 
 
 class TestCTSRetrievers(TestCase):
@@ -46,7 +57,8 @@ class TestCTSRetrievers(TestCase):
         """ Ensure CTSRetriever actually get resource
         """
         ret = CTSRetriever(NautilusDummy)
-        passage = ret.read("urn:cts:latinLit:phi1294.phi002:1.pr.1")
+        passage, mime = ret.read("urn:cts:latinLit:phi1294.phi002:1.pr.1")
+        self.assertEqual(mime, "text/xml", "Mime type of CTS should be text/xml")
         self.assertIn(
             "GetPassage", passage,
             "GetPassage is visible as a tag"
@@ -91,18 +103,19 @@ class TestHTTPRetrievers(TestCase):
         """
         ret = HTTPRetriever()
         uris = [
-            ("http://foo.bar/com", "I am some content")
+            ("http://foo.bar/com", "I am some content", "application/html")
         ]
         i = len(uris)
-        for uri, content in uris:
+        for uri, content, mime in uris:
             i -= 1
-            with patch("flask_nemo.query.resolve.request", return_value=mocked_response(content)) as request:
-                data = ret.read(uri)
+            with patch("flask_nemo.query.resolve.request", return_value=mocked_response(content, mime)) as request:
+                data, mimetype = ret.read(uri)
                 request.assertCalledWith(uri, "The URL should have been called")
                 self.assertEqual(
                     data, content,
                     "Content should be read correctly"
                 )
+                self.assertEqual(mimetype, "application/html", "Mime is correctly read from headers")
 
         self.assertEqual(
             i, 0,
@@ -146,16 +159,27 @@ class TestLocalRetrievers(TestCase):
         """
         ret = LocalRetriever(path="./tests/test_data")
         uris = [
-            ("../test_data/empty.js", "var empty = True;"),
-            ("assets/fake.png", "fake"),
+            ("../test_data/empty.js", "var empty = True;", "application/javascript", False),
+            ("assets/fake.png", "fake", "image/png", True),
         ]
         i = len(uris)
-        for uri, content in uris:
+        for uri, content, mime, sendfile in uris:
             i -= 1
-            data = ret.read(uri)
+            if sendfile:
+                with patch("flask_nemo.query.resolve.send_file", return_value=content) as patched:
+                    data, mimetype = ret.read(uri)
+                    patched.assert_called_with(ret.__absolute__(uri))
+            else:
+                data, mimetype = ret.read(uri)
+
             self.assertIn(
-                content, data,
-                "Content should be read correctly"
+                data, content,
+                "Content of the file should be read"
+            )
+
+            self.assertEqual(
+                mimetype, mime,
+                "Mime should be correctly guessed"
             )
 
         self.assertEqual(

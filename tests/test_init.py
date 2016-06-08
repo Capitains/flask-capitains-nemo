@@ -42,7 +42,7 @@ class TestNemoInit(NemoResource):
 
         rules = [(rule.rule, rule.endpoint) for rule in app.url_map.iter_rules()]
         self.assertIn("/nemo/assets/nemoOo/<path:filename>", [rule[0] for rule in rules])
-        self.assertIn("/nemo/assets/nemoOo.secondary/<type>/<asset>", [rule[0] for rule in rules])
+        self.assertIn("/nemo/assets/nemoOo.secondary/<filetype>/<asset>", [rule[0] for rule in rules])
 
     def test_static_folder(self):
         """ Test the use of static fikder parameter to implement assets customization

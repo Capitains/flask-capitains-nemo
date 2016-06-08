@@ -26,7 +26,10 @@ class TestQuery(TestCase):
 
     def test_retriever_prototype_read(self):
         """ Test that the retriever prototype reads nothing """
-        self.assertEqual(None, self.retrieverproto.read("http://example.org"))
+        self.assertEqual(
+            (None, "text/xml"), self.retrieverproto.read("http://example.org"),
+            "Default response when there is nothing is a None object for prototype"
+        )
 
     def test_retriever_prototype_match(self):
         """ Test that the retriever prototype matches nothing """
