@@ -16,7 +16,7 @@ class PluginAssets(PluginPrototype):
         "http://bar.foo/test.js",
         "https://super.secure/mypasswordin.js"
     ]
-    STATIC = [
+    STATICS = [
         "./tests/test_data/assets/fake.png"
     ]
 
@@ -90,6 +90,9 @@ class TestPluginAssets(TestCase):
 
         query_data = str(client.get("/assets/nemo.secondary/js/empty.js").data)
         self.assertIn("var empty = True;", query_data, "Local JS File should be read")
+
+        query_data = str(client.get("/assets/nemo.secondary/static/fake.png").data)
+        self.assertIn("fake", query_data, "Local Static should be read")
 
     def test_clearing_assets(self):
         client = make_client(PluginClearAssets())

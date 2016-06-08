@@ -52,8 +52,9 @@ class TestFilters(NemoResource):
         """ Test internationalization of collection identifier
         """
         self.assertEqual(f_collection_i18n("latinLit"), "Latin")
-        self.assertEqual(f_collection_i18n("greekLit"), "Ancient Greek")
-        self.assertEqual(f_collection_i18n("freLit"), "freLit")
+        self.assertEqual(f_collection_i18n("greekLit"), "Ancient Greek", "Should use known namespace information")
+        self.assertEqual(f_collection_i18n("afrLit"), "Afrikaans", "Should match regular expression and use data")
+        self.assertEqual(f_collection_i18n("aaaLit"), "aaaLit", "Should keep the string when unknown to parser")
 
     def test_f_formatting_passage_reference(self):
         """ Test split of passage range identifier

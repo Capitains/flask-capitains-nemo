@@ -55,6 +55,9 @@ class TestPluginRoutes(TestCase):
         self.plugin_namespacing = PluginRoute(name="test", namespacing=True)
         self.plugin_autonamespacing = PluginRoute(namespacing=True)
 
+    def test_kwargs(self):
+        self.assertEqual(self.plugin_normal.render(**dict(test=1, two=2)), {'lang': 'fre', "test": 1, "two": 2})
+
     def test_page_works(self):
         """ Test that passage page contains what is relevant : text and next passages"""
         query_data = str(make_client(self.plugin_normal).get("/read/farsiLit/hafez/divan/perseus-eng1/1.1/perseus-ger1").data)

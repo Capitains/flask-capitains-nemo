@@ -44,7 +44,7 @@ def f_collection_i18n(string, lang="eng"):
     if string in flask_nemo._data.COLLECTIONS:
         return flask_nemo._data.COLLECTIONS[string]
     elif regMatch.match(string):
-        lg = string[0:2]
+        lg = string[0:3]
         if lg in flask_nemo._data.ISOCODES and lang in flask_nemo._data.ISOCODES[lg]:
             return flask_nemo._data.ISOCODES[lg][lang]
     return string

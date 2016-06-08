@@ -44,6 +44,16 @@ class TestQuery(TestCase):
         """ Test that a target returns its urn property """
         self.assertEqual(self.fakeurn, Target(self.fakeurn).urn)
 
+    def test_target_json(self):
+        """Default target have a string as json representation"""
+        self.assertEqual(
+            Target(
+                "urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.2.3"
+            ).to_json(),
+            "urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.2.3",
+            "Default target have a string as json representation"
+        )
+
     def test_annotation_resource_read(self):
         """ Test that an annotation resource with default resolver raises an exception on read """
         annotation = AnnotationResource(
