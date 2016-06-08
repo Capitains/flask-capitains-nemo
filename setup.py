@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='flask_nemo',
-    version="1.0.0b",
+    version="1.0.0b0",
     packages=find_packages(exclude=["examples", "tests"]),
     url='https://github.com/capitains/flask-capitains-nemo',
     license='GNU GPL',
