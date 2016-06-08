@@ -123,3 +123,18 @@ Common
 ######
 
 .. autofunction:: flask.ext.nemo.common.resource_qualifier
+
+
+Query Interfaces and Annotations
+################################
+
+Annotations
+***********
+
+.. autoclass:: flask.ext.nemo.query.annotation.AnnotationResource
+.. automethod:: flask.ext.nemo.query.annotation.AnnotationResource.read
+.. automethod:: flask.ext.nemo.query.annotation.AnnotationResource.expand
+
+.. autoclass:: flask.ext.nemo.query.annotation.Target
+.. automethod:: flask.ext.nemo.query.annotation.Target.to_json
+

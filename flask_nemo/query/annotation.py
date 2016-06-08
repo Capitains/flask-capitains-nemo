@@ -5,9 +5,14 @@ import hashlib
 
 
 class Target(object):
-    """ AnnotationTarget
+    """ Object and prototype for representing target of annotation.
+
+    .. note:: Target default object are URN based because that's what Nemo is about.
+
     :param urn: URN targeted by an Annotation
     :type urn: MyCapytain.common.reference.URN
+
+    :ivar urn: Target urn
     """
 
     def __init__(self, urn, **kwargs):
@@ -20,12 +25,16 @@ class Target(object):
         return self.__urn__
 
     def to_json(self):
+        """ Method to call to get a serializable object for json.dump or jsonify based on the target
+
+        :return: str
+        """
         return str(self.__urn__)
 
 
 class AnnotationResource(object):
+    """ Object representing an annotation. It encapsulates both the body (through the .read() function) and the target (through the .target method)
 
-    """ AnnotationResource
     :param uri: URI identifier for the AnnotationResource
     :type uri: str
     :param target: the Target of the Annotation
@@ -34,15 +43,29 @@ class AnnotationResource(object):
     :type type_uri: str
     :param resolver: Resolver providing access to the annotation
     :type resolver: AnnotationResolver
+    :param target_class Alias for the Target class to be used
+    :type target_class: class
+    :param mimetype: MimeType of the Annotation object
+    :type mimetype: str
+    :param slug: Slug type of the object
+    :type slug: str
+
+    :ivar mimetype: IMimetype of the annotation object
+    :ivar sha: SHA identifying the object
+    :ivar uri: Original URI of the object
+    :ivar slug: Slug Type of the Annotation Object
+    :ivar type_uri: URI of the type
+    :ivar expandable: Indication of expandability of the object
+    :ivar target: Target object of the Annotation
     """
 
     SLUG = "annotation"
 
-    def __init__(self, uri, target, type_uri, resolver, target_class=Target, content_type=None, **kwargs):
+    def __init__(self, uri, target, type_uri, resolver, target_class=Target, mimetype=None, slug=None, **kwargs):
         self.__uri__ = uri
         self.__target__ = target_class(target)
         self.__type_uri__ = type_uri
-        self.__slug__ = deepcopy(type(self).SLUG)
+        self.__slug__ = slug or deepcopy(type(self).SLUG)
         self.__sha__ = hashlib.sha256(
             "{uri}::{type_uri}".format(uri=uri, type_uri=type_uri).encode('utf-8')
         ).hexdigest()
@@ -50,35 +73,15 @@ class AnnotationResource(object):
         self.__content__ = None
         self.__resolver__ = resolver
         self.__retriever__ = None
+        self.__mimetype__ = mimetype
 
     @property
-    def content_type(self):
-        return self.__content_type__
+    def mimetype(self):
+        return self.__mimetype__
 
     @property
     def sha(self):
         return self.__sha__
-
-    def read(self):
-        """ Read the contents of the Annotation Resource
-
-        :return: the contents of the resource
-        :rtype: str
-        """
-        if not self.__content__:
-            self.__retriever__ = self.__resolver__.resolve(self.uri)
-            self.__content__, self.__content_type__ = self.__retriever__.read(self.uri)
-        return self.__content__
- 
-    def expand(self): 
-        """ Expand the contents of the Annotation if it is expandable 
-          (i.e. if it references  multiple resources)
-        :return: the list of expanded resources
-        :rtype: list(AnnotationResource)
-        """
-        # default AnnotationResource type
-        # doesn't expand
-        return []
 
     @property
     def uri(self):
@@ -93,10 +96,31 @@ class AnnotationResource(object):
         return self.__slug__
 
     @property
+    def target(self):
+        return self.__target__
+
+    @property
     def expandable(self):
         # default AnnotationResource type is not expandable
         return False
 
-    @property
-    def target(self):
-        return self.__target__
+    def read(self):
+        """ Read the contents of the Annotation Resource
+
+        :return: the contents of the resource
+        :rtype: str or bytes or flask.response
+        """
+        if not self.__content__:
+            self.__retriever__ = self.__resolver__.resolve(self.uri)
+            self.__content__, self.__mimetype__ = self.__retriever__.read(self.uri)
+        return self.__content__
+ 
+    def expand(self): 
+        """ Expand the contents of the Annotation if it is expandable 
+          (i.e. if it references  multiple resources)
+        :return: the list of expanded resources
+        :rtype: list(AnnotationResource)
+        """
+        # default AnnotationResource type
+        # doesn't expand
+        return []
