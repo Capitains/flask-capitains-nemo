@@ -572,15 +572,15 @@ class Nemo(object):
             "next": next
         }
 
-    def r_assets(self, type, asset):
+    def r_assets(self, filetype, asset):
         """ Route for specific assets.
 
         :param asset: Filename of an asset
         :return: Response
         """
-        if type in self.assets and asset in self.assets[type] and self.assets[type][asset]:
+        if type in self.assets and asset in self.assets[filetype] and self.assets[filetype][asset]:
             return send_from_directory(
-                directory=self.assets[type][asset],
+                directory=self.assets[filetype][asset],
                 filename=asset
             )
         abort(404)
@@ -592,7 +592,7 @@ class Nemo(object):
         """
         self.blueprint.add_url_rule(
             # Register another path to ensure assets compatibility
-            "{0}.secondary/<type>/<asset>".format(self.static_url_path),
+            "{0}.secondary/<filetype>/<asset>".format(self.static_url_path),
             view_func=self.r_assets,
             endpoint="secondary_assets",
             methods=["GET"]

@@ -1,6 +1,9 @@
 from requests import request
 import re
 from os import path as op
+from mimetypes import guess_type
+from flask import send_file
+from io import BytesIO, StringIO
 
 
 class UnresolvableURIError(Exception):
@@ -50,10 +53,10 @@ class RetrieverPrototype(object):
         """ Retrieve the contents of the resource
         :param uri: the URI of the resource to be retrieved
         :type uri: str
-        :return: the contents of the resource
-        :rtype: str
+        :return: the contents of the resource and it's mime type in a tuple
+        :rtype: str, str
         """
-        return None
+        return None, "text/xml"
 
 
 class HTTPRetriever(RetrieverPrototype):
@@ -80,7 +83,8 @@ class HTTPRetriever(RetrieverPrototype):
         :return: the contents of the resource
         :rtype: str
         """
-        return request("GET", uri).text
+        req = request("GET", uri)
+        return req.content, req.headers['Content-Type']
 
 
 class LocalRetriever(RetrieverPrototype):
@@ -121,9 +125,14 @@ class LocalRetriever(RetrieverPrototype):
         :return: the contents of the resource
         :rtype: str
         """
-        with open(self.__absolute__(uri), "r") as f:
-            file = f.read()
-        return file
+        uri = self.__absolute__(uri)
+        mime, _ = guess_type(uri)
+        if "image" in mime:
+            return send_file(uri), mime
+        else:
+            with open(uri, "r") as f:
+                file = f.read()
+        return file, mime
 
 
 class CTSRetriever(RetrieverPrototype):
@@ -157,4 +166,4 @@ class CTSRetriever(RetrieverPrototype):
         :return: the contents of the resource
         :rtype: str
         """
-        return self.__retriever__.getPassage(uri)
+        return self.__retriever__.getPassage(uri), "text/xml"

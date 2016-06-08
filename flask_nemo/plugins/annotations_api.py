@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from flask_nemo.plugin import PluginPrototype
-from flask import jsonify, request, url_for
+from flask import jsonify, request, url_for, Response
 import MyCapytain.common.reference
 
 
@@ -50,12 +50,13 @@ class AnnotationsApiPlugin(PluginPrototype):
         response = {'count': count}
         for a in annotations:
             slug = a.slug
-            if not mapped[slug]:
+            if slug not in mapped:
                 mapped[slug] = []
             mapped[slug].append({
                 "uri": a.uri,
-                "url": url_for(".r_annotation_get", uri=a.sha),
-                "type": a.type_uri
+                "url": url_for(".r_annotation_get", sha=a.sha),
+                "type": a.type_uri,
+                "target": a.target.to_json()
             })
         response['annotations'] = mapped
         return jsonify(response)
@@ -73,5 +74,8 @@ class AnnotationsApiPlugin(PluginPrototype):
         # TODO this should inspect the annotation content
         # set appropriate Content-Type headers
         # and return the actual content
-        print("it worked ?")
-        return jsonify(annotation)
+        content = annotation.read()
+        if isinstance(content, Response):
+            return content
+        headers = {"Content-Type": annotation.content_type}
+        return content, headers

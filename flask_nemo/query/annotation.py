@@ -19,6 +19,9 @@ class Target(object):
     def urn(self):
         return self.__urn__
 
+    def to_json(self):
+        return str(self.__urn__)
+
 
 class AnnotationResource(object):
 
@@ -35,7 +38,7 @@ class AnnotationResource(object):
 
     SLUG = "annotation"
 
-    def __init__(self, uri, target, type_uri, resolver, target_class=Target, **kwargs):
+    def __init__(self, uri, target, type_uri, resolver, target_class=Target, content_type=None, **kwargs):
         self.__uri__ = uri
         self.__target__ = target_class(target)
         self.__type_uri__ = type_uri
@@ -49,6 +52,10 @@ class AnnotationResource(object):
         self.__retriever__ = None
 
     @property
+    def content_type(self):
+        return self.__content_type__
+
+    @property
     def sha(self):
         return self.__sha__
 
@@ -60,7 +67,7 @@ class AnnotationResource(object):
         """
         if not self.__content__:
             self.__retriever__ = self.__resolver__.resolve(self.uri)
-            self.__content__ = self.__retriever__.read(self.uri)
+            self.__content__, self.__content_type__ = self.__retriever__.read(self.uri)
         return self.__content__
  
     def expand(self): 
