@@ -1,3 +1,4 @@
+import json
 from .resources import make_client
 from unittest import TestCase
 from flask_nemo.plugins.annotations_api import AnnotationsApiPlugin
@@ -15,21 +16,21 @@ class AnnotationsApiPluginTest(TestCase):
     def test_route_by_target_valid_urn(self):
         """ Check empty response for valid urn target (given prototype query interface which knows nothing)
         """
-        response = self.client.get("/annotations/api/target/urn:cts:greekLit:tlg0012.tlg001.grc1")
-        self.assertEqual("b'{\\n  \"annotations\": {},\\n  \"count\": 0\\n}'", str(response.data))
+        response = self.client.get("/api/annotations/target/urn:cts:greekLit:tlg0012.tlg001.grc1")
+        self.assertEqual({"annotations": [], "count": 0}, json.loads(response.get_data().decode("utf-8")))
         self.assertEqual(200, response.status_code)
 
     def test_route_by_target_invalid_urn(self):
         """ Check error response for improper urn
         """
-        response = self.client.get("/annotations/api/target/foo")
+        response = self.client.get("/api/annotations/target/foo")
         self.assertEqual("b'invalid urn'", str(response.data))
         self.assertEqual(400, response.status_code)
 
     def test_route_get(self):
         """ Check not found response for valid urn target (given prototype query interface which knows nothing)
         """
-        response = self.client.get("/annotations/api/resources/foo")
+        response = self.client.get("/api/annotations/resource/foo")
         self.assertEqual("b'invalid resource uri'", str(response.data))
         self.assertEqual(404, response.status_code)
 

@@ -12,8 +12,8 @@ class AnnotationsApiPlugin(PluginPrototype):
     """
 
     ROUTES =  [
-        ("/annotations/api/target/<target_urn>", "r_annotations_by_target", ["GET"]),
-        ("/annotations/api/resources/<sha>", "r_annotation_get", ["GET"])
+        ("/api/annotations/target/<target_urn>", "r_annotations_by_target", ["GET"]),
+        ("/api/annotations/resource/<sha>", "r_annotation_get", ["GET"])
     ]
 
     def __init__(self, queryinterface, *args, **kwargs):
@@ -46,16 +46,14 @@ class AnnotationsApiPlugin(PluginPrototype):
             target_urn, wildcard=wildcard,
             include=include, exclude=exclude, limit=limit, start=start, expand=expand
         )
-        mapped = {}
+        mapped = []
         response = {'count': count}
         for a in annotations:
-            slug = a.slug
-            if slug not in mapped:
-                mapped[slug] = []
-            mapped[slug].append({
+            mapped.append({
                 "uri": a.uri,
                 "url": url_for(".r_annotation_get", sha=a.sha),
                 "type": a.type_uri,
+                "slug": a.slug,
                 "target": a.target.to_json()
             })
         response['annotations'] = mapped
