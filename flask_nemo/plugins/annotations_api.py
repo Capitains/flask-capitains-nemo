@@ -11,7 +11,7 @@ class AnnotationsApiPlugin(PluginPrototype):
     :type queryinterface: QueryInterface
     """
 
-    ROUTES =  [
+    ROUTES = [
         ("/api/annotations/target/<target_urn>", "r_annotations_by_target", ["GET"]),
         ("/api/annotations/resource/<sha>", "r_annotation_get", ["GET"])
     ]
@@ -75,5 +75,5 @@ class AnnotationsApiPlugin(PluginPrototype):
         content = annotation.read()
         if isinstance(content, Response):
             return content
-        headers = {"Content-Type": annotation.content_type}
-        return content, headers
+        headers = {"Content-Type": annotation.mimetype}
+        return Response(content, headers=headers)
