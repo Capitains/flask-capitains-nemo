@@ -67,6 +67,10 @@ class SimpleQuery(QueryPrototype):
             expand=False, **kwargs
         ):
         annotations = []
+
+        if len(urns) == 1 and not urns[0]:
+            return len(self.annotations), sorted(self.annotations, key=lambda x: x.uri)
+
         for urn in urns:
 
             if not isinstance(urn, URN):

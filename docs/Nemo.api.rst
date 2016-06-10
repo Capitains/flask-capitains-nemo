@@ -145,5 +145,6 @@ AnnotationApi
 *************
 
 .. autoclass:: flask.ext.nemo.plugins.annotations_api.AnnotationApiPlugin
-.. automethod:: flask.ext.nemo.plugins.annotations_api.AnnotationApiPlugin.r_annotations_by_target
-.. automethod:: flask.ext.nemo.plugins.annotations_api.AnnotationApiPlugin.r_annotation_get
+.. automethod:: flask.ext.nemo.plugins.annotations_api.AnnotationApiPlugin.r_annotations
+.. automethod:: flask.ext.nemo.plugins.annotations_api.AnnotationApiPlugin.r_annotation
+.. automethod:: flask.ext.nemo.plugins.annotations_api.AnnotationApiPlugin.r_annotation_body

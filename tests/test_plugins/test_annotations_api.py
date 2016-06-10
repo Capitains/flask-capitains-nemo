@@ -56,21 +56,34 @@ class AnnotationsApiPluginDummyInterfaceTest(TestCase):
     def test_route_by_target(self):
         """ Check error response for improper urn
         """
-        response = self.client.get("/api/annotations/target/urn:cts:latinLit:phi1294.phi002.perseus-lat2:1")
+        response = self.client.get("/api/annotations?target=urn:cts:latinLit:phi1294.phi002.perseus-lat2:1")
         data = json.loads(response.data.decode("utf-8"))
+        self.maxDiff=200000
         self.assertEqual(
             data,
             {
-                "annotations": [
-                    {
-                        'slug': 'treebank',
-                        'target': 'urn:cts:latinLit:phi1294.phi002.perseus-lat2:1',
-                        'type': 'http://foo.bar/treebank',
-                        'uri': 'uri',
-                        'url': '/api/annotations/resource/922fffd1bd6fdaa95b4545df7a78754f6d67c2272b2900aa3ccd5e9da3dbb179'
-                    }
-                ],
-                'count': 1
+              "@context": {
+                "anno": "http://www.w3.org/ns/anno.jsonld",
+                "dc": "http://purl.org/dc/terms/",
+                "owl": "http://www.w3.org/2002/07/owl#"
+              },
+              "anno:id": "/api/annotations?start=1",
+              "anno:startIndex": 1,
+              "anno:total": 1,
+              "anno:type": "AnnotationCollection",
+              "anno:items": [
+                {
+                  "anno:body": "/api/annotations/922fffd1bd6fdaa95b4545df7a78754f6d67c2272b2900aa3ccd5e9da3dbb179/body",
+                  "anno:id": "/api/annotations/922fffd1bd6fdaa95b4545df7a78754f6d67c2272b2900aa3ccd5e9da3dbb179",
+                  "anno:target": "urn:cts:latinLit:phi1294.phi002.perseus-lat2:1",
+                  "anno:type": "Annotation",
+                  "dc:type": "http://foo.bar/treebank",
+                  "nemo:slug": "treebank",
+                  "owl:sameAs": [
+                    "uri"
+                  ]
+                }
+              ]
             },
             "Response of the api should work with default annotation"
         )
@@ -79,7 +92,7 @@ class AnnotationsApiPluginDummyInterfaceTest(TestCase):
     def test_route_get_content_response(self):
         """ Check error response for improper urn
         """
-        response = self.client.get("/api/annotations/resource/abc")
+        response = self.client.get("/api/annotations/abc/body")
         data = response.data.decode("utf-8")
         self.assertEqual(
             data,
@@ -91,7 +104,7 @@ class AnnotationsApiPluginDummyInterfaceTest(TestCase):
     def test_route_get_content_normal(self):
         """ Check error response for improper urn
         """
-        response = self.client.get("/api/annotations/resource/def")
+        response = self.client.get("/api/annotations/def/body")
         self.assertEqual(
             response.data,
             b"123",
@@ -111,21 +124,28 @@ class AnnotationsApiPluginTest(TestCase):
     def test_route_by_target_valid_urn(self):
         """ Check empty response for valid urn target (given prototype query interface which knows nothing)
         """
-        response = self.client.get("/api/annotations/target/urn:cts:greekLit:tlg0012.tlg001.grc1")
+        response = self.client.get("/api/annotations?target=urn:cts:greekLit:tlg0012.tlg001.grc1")
         self.assertEqual({"annotations": [], "count": 0}, json.loads(response.get_data().decode("utf-8")))
         self.assertEqual(200, response.status_code)
 
     def test_route_by_target_invalid_urn(self):
         """ Check error response for improper urn
         """
-        response = self.client.get("/api/annotations/target/foo")
+        response = self.client.get("/api/annotations?target=foo")
         self.assertEqual(b"invalid urn", str(response.data))
         self.assertEqual(400, response.status_code)
 
     def test_route_get(self):
         """ Check not found response for valid urn target (given prototype query interface which knows nothing)
         """
-        response = self.client.get("/api/annotations/resource/foo")
+        response = self.client.get("/api/annotations/foo")
+        self.assertEqual("b'invalid resource uri'", str(response.data))
+        self.assertEqual(404, response.status_code)
+
+    def test_route_get_body(self):
+        """ Check not found response for valid urn target (given prototype query interface which knows nothing)
+        """
+        response = self.client.get("/api/annotations/foo/body")
         self.assertEqual("b'invalid resource uri'", str(response.data))
         self.assertEqual(404, response.status_code)
 
@@ -141,22 +161,43 @@ class AnnotationsApiPluginTest(TestCase):
     def test_route_by_target_valid_urn(self):
         """ Check empty response for valid urn target (given prototype query interface which knows nothing)
         """
-        response = self.client.get("/api/annotations/target/urn:cts:greekLit:tlg0012.tlg001.grc1")
-        self.assertEqual({"annotations": [], "count": 0}, json.loads(response.get_data().decode("utf-8")))
+        response = self.client.get("/api/annotations?target=urn:cts:greekLit:tlg0012.tlg001.grc1")
+        self.maxDiff = 20000
+        self.assertEqual(
+            json.loads(response.get_data().decode("utf-8")),
+            {
+                '@context': {
+                    'anno': 'http://www.w3.org/ns/anno.jsonld',
+                    'dc': 'http://purl.org/dc/terms/',
+                    'owl': 'http://www.w3.org/2002/07/owl#'
+                },
+                'anno:id': '/api/annotations?start=1',
+                'anno:items': [],
+                'anno:startIndex': 1,
+                'anno:total': 0,
+                'anno:type': 'AnnotationCollection'
+             }
+        )
         self.assertEqual(200, response.status_code)
 
     def test_route_by_target_invalid_urn(self):
         """ Check error response for improper urn
         """
-        response = self.client.get("/api/annotations/target/foo")
+        response = self.client.get("/api/annotations?target=foo")
         self.assertEqual("b'invalid urn'", str(response.data))
         self.assertEqual(400, response.status_code)
 
     def test_route_get(self):
         """ Check not found response for valid urn target (given prototype query interface which knows nothing)
         """
-        response = self.client.get("/api/annotations/resource/foo")
+        response = self.client.get("/api/annotations/foo")
         self.assertEqual("b'invalid resource uri'", str(response.data))
         self.assertEqual(404, response.status_code)
 
+    def test_route_get_body(self):
+        """ Check not found response for valid urn target (given prototype query interface which knows nothing)
+        """
+        response = self.client.get("/api/annotations/foo/body")
+        self.assertEqual("b'invalid resource uri'", str(response.data))
+        self.assertEqual(404, response.status_code)
 

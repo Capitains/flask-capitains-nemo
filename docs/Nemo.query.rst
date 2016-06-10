@@ -39,7 +39,7 @@ is an object that given a URN retrieves annotations for it.
      - `expand`
 
 Annotations
-**************
+***********
 
 - Takes a resolver
 - Has a read() method
