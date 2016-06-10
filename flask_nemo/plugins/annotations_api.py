@@ -5,10 +5,15 @@ import MyCapytain.common.reference
 
 
 class AnnotationsApiPlugin(PluginPrototype):
-    """AnnotationsApiPlugin adds routes to Nemo 
-    from which annotations can be retrieved
+    """AnnotationsApiPlugin adds routes to Nemo from which annotations can be retrieved
+
+    This plugins contains two routes only registered at
+    - /api/annotations/target/<URN Target>
+    - /api/annotations/resource/<SHA Identifier of the body of the annotation>
+
     :param queryinterface: QueryInterface to use to retrieve annotations
     :type queryinterface: QueryInterface
+
     """
 
     ROUTES = [

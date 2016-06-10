@@ -24,7 +24,7 @@ What can plugin do
 - It can add new informations to what is passed to the template through their :ref:`pluginRender` function
 
 
-How plugin are registeredd
+How plugin are registered
 *************************
 
 At the creation of the Blueprint in Nemo, Nemo runs a function which does the following in said order:
@@ -119,7 +119,7 @@ The ``ROUTES`` and ``TEMPLATES`` class variables work the same way as the Nemo o
         FILTERS = []
 
 Various other core parameters : render, clear assets and static folder
-*******************************************************************************
+**********************************************************************
 
 - Plugin.render() view brings a new stack of values to the variables that are sent to the template (cf. :ref:`renderWorkflow`). ``HAS_AUGMENT_RENDER`` is the class variable that when set to True will make Nemo aware of the existence of the function.
 - ``CLEAR_ASSETS`` clears registered defaults assets in Nemo assets dictionary.
