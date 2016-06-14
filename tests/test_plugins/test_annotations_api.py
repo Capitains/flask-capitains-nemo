@@ -13,6 +13,11 @@ class MockQueryInterface(QueryPrototype):
         resolver=None,  # Overwriting this one for the purpose of the test
         mimetype="application/xml", slug="treebank"
     )
+    ANNOTATION2 = AnnotationResource(
+        "uri2", "urn:cts:latinLit:phi1294.phi002.perseus-lat2:2", "http://foo.bar/treebank",
+        resolver=None,  # Overwriting this one for the purpose of the test
+        mimetype="application/json", slug="treebank"
+    )
 
     def getAnnotations(self,
             *urns,
@@ -20,9 +25,15 @@ class MockQueryInterface(QueryPrototype):
             limit=None, start=1,
             expand=False, **kwargs
         ):
-        return 1, [
-            type(self).ANNOTATION
-        ]
+        if urns[0] == None:
+            return 2, [
+                type(self).ANNOTATION,
+                type(self).ANNOTATION2
+            ]
+        else:
+            return 1, [
+                type(self).ANNOTATION
+            ]
 
     def getResource(self, sha):
         annotation = type(self).ANNOTATION
@@ -58,7 +69,6 @@ class AnnotationsApiPluginDummyInterfaceTest(TestCase):
         """
         response = self.client.get("/api/annotations?target=urn:cts:latinLit:phi1294.phi002.perseus-lat2:1")
         data = json.loads(response.data.decode("utf-8"))
-        self.maxDiff=200000
         self.assertEqual(
             data,
             {
@@ -89,6 +99,52 @@ class AnnotationsApiPluginDummyInterfaceTest(TestCase):
         )
         self.assertEqual(200, response.status_code, "HTTP Code for valid request is 200")
 
+    def test_all_annotation(self):
+        """ Check error response for improper urn
+        """
+        response = self.client.get("/api/annotations")
+        data = json.loads(response.data.decode("utf-8"))
+        self.assertEqual(
+            data,
+            {
+              "@context": {
+                "anno": "http://www.w3.org/ns/anno.jsonld",
+                "dc": "http://purl.org/dc/terms/",
+                "owl": "http://www.w3.org/2002/07/owl#"
+              },
+              "anno:id": "/api/annotations?start=1",
+              "anno:startIndex": 1,
+              "anno:total": 2,
+              "anno:type": "AnnotationCollection",
+              "anno:items": [
+                {
+                  "anno:body": "/api/annotations/922fffd1bd6fdaa95b4545df7a78754f6d67c2272b2900aa3ccd5e9da3dbb179/body",
+                  "anno:id": "/api/annotations/922fffd1bd6fdaa95b4545df7a78754f6d67c2272b2900aa3ccd5e9da3dbb179",
+                  "anno:target": "urn:cts:latinLit:phi1294.phi002.perseus-lat2:1",
+                  "anno:type": "Annotation",
+                  "dc:type": "http://foo.bar/treebank",
+                  "nemo:slug": "treebank",
+                  "owl:sameAs": [
+                    "uri"
+                  ]
+                },
+                {
+                  "anno:body": "/api/annotations/15c0c44af733054c9df420d046b871ef2263df0f1181b663bd7ba04c05032509/body",
+                  "anno:id": "/api/annotations/15c0c44af733054c9df420d046b871ef2263df0f1181b663bd7ba04c05032509",
+                  "anno:target": "urn:cts:latinLit:phi1294.phi002.perseus-lat2:2",
+                  "anno:type": "Annotation",
+                  "dc:type": "http://foo.bar/treebank",
+                  "nemo:slug": "treebank",
+                  "owl:sameAs": [
+                    "uri2"
+                  ]
+                }
+              ]
+            },
+            "Response of the api should work with default annotation"
+        )
+        self.assertEqual(200, response.status_code, "HTTP Code for valid request is 200")
+
     def test_route_get_content_response(self):
         """ Check error response for improper urn
         """
@@ -100,6 +156,33 @@ class AnnotationsApiPluginDummyInterfaceTest(TestCase):
             "Content of the response should be forwarded"
         )
         self.assertEqual("text/plain", response.headers["Content-Type"], "Response mimetype should be forwarded")
+
+    def test_route_get_content(self):
+        """ Check error response for improper urn
+        """
+        response = self.client.get("/api/annotations/abc")
+        data = response.data.decode("utf-8")
+        self.assertEqual(
+            json.loads(data),
+            {
+                "@context": {
+                    "anno": "http://www.w3.org/ns/anno.jsonld",
+                    "dc": "http://purl.org/dc/terms/",
+                    "owl": "http://www.w3.org/2002/07/owl#"
+                },
+                "anno:body": "/api/annotations/922fffd1bd6fdaa95b4545df7a78754f6d67c2272b2900aa3ccd5e9da3dbb179/body",
+                "anno:id": "/api/annotations/922fffd1bd6fdaa95b4545df7a78754f6d67c2272b2900aa3ccd5e9da3dbb179",
+                "anno:target": "urn:cts:latinLit:phi1294.phi002.perseus-lat2:1",
+                "anno:type": "Annotation",
+                "dc:type": "http://foo.bar/treebank",
+                "nemo:slug": "treebank",
+                "sameAs": [
+                    "uri"
+                ]
+            },
+            "Annotation route should return "
+        )
+        self.assertEqual("application/json", response.headers["Content-Type"], "Response should be json")
 
     def test_route_get_content_normal(self):
         """ Check error response for improper urn
