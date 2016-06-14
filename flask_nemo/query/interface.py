@@ -20,10 +20,14 @@ class SimpleQuery(QueryPrototype):
         self.__nemo__ = None
         self.__resolver__ = resolver
 
-        for target, body, type_uri in annotations:
-            self.__annotations__.append(AnnotationResource(
-                body, target, type_uri, self.__resolver__
-            ))
+        for resource in annotations:
+            if isinstance(resource, tuple):
+                target, body, type_uri = resource
+                self.__annotations__.append(AnnotationResource(
+                    body, target, type_uri, self.__resolver__
+                ))
+            else:
+                self.__annotations__.append(resource)
 
     def process(self, nemo):
         """ Register nemo and parses annotations
@@ -32,10 +36,15 @@ class SimpleQuery(QueryPrototype):
         """
         self.__nemo__ = nemo
         for annotation in self.__annotations__:
-            annotation.target.expanded = frozenset(self.__getinnerreffs__(
-                text=self.__getText__(annotation.target.urn),
-                urn=annotation.target.urn
-            ))
+            text = self.__getText__(annotation.target.urn)
+            if annotation.target.urn.reference.end \
+                or len(annotation.target.urn.reference.list) < len(text.citation):
+                annotation.target.expanded = frozenset(self.__getinnerreffs__(
+                    text=text,
+                    urn=annotation.target.urn
+                ))
+            else:
+                annotation.target.expanded = frozenset([str(annotation.target.urn)])
 
     def __getText__(self, urn):
         """ Return a metadata text object

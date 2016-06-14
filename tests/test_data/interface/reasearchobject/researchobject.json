@@ -8,7 +8,7 @@
 
   "aggregates": [
 
-    { "uri": urn:cts:greekLit:tlg0012.tlg001.perseus-grc2",
+    { "uri": "urn:cts:greekLit:tlg0012.tlg001.perseus-grc2",
       "mediatype": "text/xml"
     },
 
@@ -19,16 +19,16 @@
 
   "annotations": [
     { "about": ["urn:cts:greekLit:tlg0012.tlg002.perseus-grc2:1.1-1.10"],
-      "content": "http://sosol.perseids.org/api/v1/items/1?q=s%251-2
-      dc:format: "http://data.perseus.org/rdfvocab/treebank"
+      "content": "http://sosol.perseids.org/api/v1/items/1?q=s%251-2",
+      "dc:format": "http://data.perseus.org/rdfvocab/treebank"
     },
     { "about": ["urn:cts:greekLit:tlg0012.tlg002.perseus-grc2:1.11-1.20"],
       "content": "http://sosol.perseids.org/api/v1/items/1?q=s%252-3",
-      dc:format: "http://data.perseus.org/rdfvocab/treebank"
+      "dc:format": "http://data.perseus.org/rdfvocab/treebank"
     },
     { "about": ["urn:cts:greekLit:tlg0012.tlg002.perseus-grc2:1.1-1.30"],
       "content": "http://sosol.perseids.org/api/v1/items/3",
-      dc:format: "http://data.perseus.org/rdfvocab/commentary"
+      "dc:format": "http://data.perseus.org/rdfvocab/commentary"
     }
   ]
 }
