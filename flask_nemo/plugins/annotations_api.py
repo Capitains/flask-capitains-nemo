@@ -8,6 +8,7 @@ class AnnotationsApiPlugin(PluginPrototype):
     """AnnotationsApiPlugin adds routes to Nemo from which annotations can be retrieved
 
     This plugins contains two routes only registered at
+
     - /api/annotations/?target=<URN Target> which is the collection in which to search
     - /api/annotations/<SHA Identifier of the annotation> is the annotation object
     - /api/annotations/<SHA Identifier of the annotation>/body is the proxy for the annotation body
@@ -38,7 +39,8 @@ class AnnotationsApiPlugin(PluginPrototype):
     # showing the next level of options 
     
     def r_annotations(self):
-        """ Route to retrieve annotations by target 
+        """ Route to retrieve annotations by target
+
         :param target_urn: The CTS URN for which to retrieve annotations  
         :type target_urn: str
         :return: a JSON string containing count and list of resources
@@ -61,7 +63,7 @@ class AnnotationsApiPlugin(PluginPrototype):
                 return "invalid urn", 400
 
             count, annotations = self.__queryinterface__.getAnnotations(
-                target, wildcard=wildcard,
+                urn, wildcard=wildcard,
                 include=include, exclude=exclude, limit=limit, start=start, expand=expand
             )
         else:
@@ -96,6 +98,7 @@ class AnnotationsApiPlugin(PluginPrototype):
 
     def r_annotation(self, sha):
         """ Route to retrieve contents of an annotation resource
+
         :param uri: The uri of the annotation resource
         :type uri: str
         :return: annotation contents
@@ -118,6 +121,7 @@ class AnnotationsApiPlugin(PluginPrototype):
 
     def r_annotation_body(self, sha):
         """ Route to retrieve contents of an annotation resource
+
         :param uri: The uri of the annotation resource
         :type uri: str
         :return: annotation contents

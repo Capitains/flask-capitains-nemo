@@ -50,7 +50,7 @@ class AnnotationResource(object):
     :param slug: Slug type of the object
     :type slug: str
 
-    :ivar mimetype: IMimetype of the annotation object
+    :ivar mimetype: Mimetype of the annotation object
     :ivar sha: SHA identifying the object
     :ivar uri: Original URI of the object
     :ivar slug: Slug Type of the Annotation Object
@@ -117,6 +117,7 @@ class AnnotationResource(object):
  
     def expand(self): 
         """ Expand the contents of the Annotation if it is expandable  (i.e. if it references  multiple resources)
+
         :return: the list of expanded resources
         :rtype: list(AnnotationResource)
         """
