@@ -8,10 +8,17 @@ from werkzeug.exceptions import NotFound
 class SimpleQuery(QueryPrototype):
     """ Query Interface for hardcoded annotations.
 
-    :param annotations: List of tuple of (CTS URN Targeted, URI of the Annotation, Type of the annotation
-    :type annotations: [(str, str, str)]
+    :param annotations: List of tuple of (CTS URN Targeted, URI of the Annotation, Type of the annotation) or/and AnnotationResources
+    :type annotations: [(str, str, str) or AnnotationResource]
     :param resolver: Resolver
     :type resolver: Resolver
+
+    This interface requires to be connected to Nemo upon instantiation to expand annotations :
+
+    >>> nemo = Nemo("/", endpoint="http://cts.perseids.org")
+    >>> query = SimpleQuery([...])
+    >>> query.process(nemo)
+
     """
 
     def __init__(self, annotations, resolver=None):
@@ -31,6 +38,8 @@ class SimpleQuery(QueryPrototype):
 
     def process(self, nemo):
         """ Register nemo and parses annotations
+
+        .. note:: Process parses the annotation and extends informations about the target URNs by retrieving resource in range
 
         :param nemo: Nemo
         """

@@ -138,13 +138,53 @@ Annotations
 .. autoclass:: flask.ext.nemo.query.annotation.Target
 .. automethod:: flask.ext.nemo.query.annotation.Target.to_json
 
+Query Interfaces
+****************
+
+Prototype
+---------
+
+.. autoclass:: flask.ext.nemo.query.proto.QueryPrototype
+.. automethod:: flask.ext.nemo.query.proto.QueryPrototype.getAnnotations
+.. automethod:: flask.ext.nemo.query.proto.QueryPrototype.getResource
+
+Simple Query
+------------
+
+.. autoclass:: flask.ext.nemo.query.interface.SimpleQuery
+.. automethod:: flask.ext.nemo.query.interface.SimpleQuery.process
+
+Resolver and Retrievers
+***********************
+
+.. autoclass:: flask.ext.nemo.query.resolve.UnresolvableURIError
+
+.. autoclass:: flask.ext.nemo.query.resolve.Resolver
+.. automethod:: flask.ext.nemo.query.resolve.Resolver.resolve
+
+.. autoclass:: flask.ext.nemo.query.resolve.RetrieverPrototype
+.. automethod:: flask.ext.nemo.query.resolve.RetrieverPrototype.match
+.. automethod:: flask.ext.nemo.query.resolve.RetrieverPrototype.read
+
+.. autoclass:: flask.ext.nemo.query.resolve.HTTPRetriever
+.. automethod:: flask.ext.nemo.query.resolve.HTTPRetriever.match
+.. automethod:: flask.ext.nemo.query.resolve.HTTPRetriever.read
+
+.. autoclass:: flask.ext.nemo.query.resolve.LocalRetriever
+.. automethod:: flask.ext.nemo.query.resolve.LocalRetriever.match
+.. automethod:: flask.ext.nemo.query.resolve.LocalRetriever.read
+
+.. autoclass:: flask.ext.nemo.query.resolve.CTSRetriever
+.. automethod:: flask.ext.nemo.query.resolve.CTSRetriever.match
+.. automethod:: flask.ext.nemo.query.resolve.CTSRetriever.read
+
 Plugins
 #######
 
 AnnotationApi
 *************
 
-.. autoclass:: flask.ext.nemo.plugins.annotations_api.AnnotationApiPlugin
-.. automethod:: flask.ext.nemo.plugins.annotations_api.AnnotationApiPlugin.r_annotations
-.. automethod:: flask.ext.nemo.plugins.annotations_api.AnnotationApiPlugin.r_annotation
-.. automethod:: flask.ext.nemo.plugins.annotations_api.AnnotationApiPlugin.r_annotation_body
+.. autoclass:: flask.ext.nemo.plugins.annotations_api.AnnotationsApiPlugin
+.. automethod:: flask.ext.nemo.plugins.annotations_api.AnnotationsApiPlugin.r_annotations
+.. automethod:: flask.ext.nemo.plugins.annotations_api.AnnotationsApiPlugin.r_annotation
+.. automethod:: flask.ext.nemo.plugins.annotations_api.AnnotationsApiPlugin.r_annotation_body

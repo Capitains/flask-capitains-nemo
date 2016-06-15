@@ -3,7 +3,6 @@ import re
 from os import path as op
 from mimetypes import guess_type
 from flask import send_file
-from io import BytesIO, StringIO
 
 
 class UnresolvableURIError(Exception):
@@ -90,6 +89,8 @@ class HTTPRetriever(RetrieverPrototype):
 class LocalRetriever(RetrieverPrototype):
     """ Http retriever retrieves resources being remotely hosted in CTS
 
+    .. note:: Local Retriever needs to be instantiated
+
     :cvar FORCE_MATCH: Force the local retriever to read a resource even if it does not match with the regular expression
     :type FORCE_MATCH: bool
     """
@@ -138,8 +139,10 @@ class LocalRetriever(RetrieverPrototype):
 class CTSRetriever(RetrieverPrototype):
     """ CTS retriever retrieves resources being remotely hosted in CTS
 
+    .. note:: Local Retriever needs to be instantiated
+
     :param retriever: CTS5 Retrieve
-    :type retriever: MyCapytain.retrievers.cts5.
+    :type retriever: MyCapytain.retrievers.cts5.Endpoint
     """
     __reg_exp__ = re.compile("^urn:cts:")
 

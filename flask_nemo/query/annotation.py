@@ -43,7 +43,7 @@ class AnnotationResource(object):
     :type type_uri: str
     :param resolver: Resolver providing access to the annotation
     :type resolver: AnnotationResolver
-    :param target_class Alias for the Target class to be used
+    :param target_class: Alias for the Target class to be used
     :type target_class: class
     :param mimetype: MimeType of the Annotation object
     :type mimetype: str
@@ -116,11 +116,9 @@ class AnnotationResource(object):
         return self.__content__
  
     def expand(self): 
-        """ Expand the contents of the Annotation if it is expandable 
-          (i.e. if it references  multiple resources)
+        """ Expand the contents of the Annotation if it is expandable  (i.e. if it references  multiple resources)
         :return: the list of expanded resources
         :rtype: list(AnnotationResource)
         """
-        # default AnnotationResource type
-        # doesn't expand
+        # default AnnotationResource type doesn't expand
         return []
