@@ -19,7 +19,7 @@ import shlex
 sys.path.insert(0, os.path.abspath('../'))
 
 import flask_nemo
-from setup import version
+import setup
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -65,7 +65,7 @@ author = u'Thibault Clérice'
 # built documents.
 #
 # The short X.Y version.
-version = version
+version = setup.version
 # The full version, including alpha/beta/rc tags.
 release = version
 
