@@ -21,8 +21,7 @@ class QueryPrototype(object):
         self.__getreffs__ = getreffs
 
     def getAnnotations(self,
-            *urns,
-            wildcard=".", include=None, exclude=None,
+            *urns, wildcard=".", include=None, exclude=None,
             limit=None, start=1,
             expand=False, **kwargs
         ):
