@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version = "1.0.0b0"
+version = "1.0.0b1"
 
 setup(
     name='flask_nemo',

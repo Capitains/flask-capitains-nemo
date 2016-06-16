@@ -79,15 +79,19 @@ class SimpleQuery(QueryPrototype):
             raise NotFound
 
     def getAnnotations(self,
-            *urns,
+            urns=None,
             wildcard=".", include=None, exclude=None,
             limit=None, start=1,
-            expand=False, **kwargs
+            expand=False,
+            **kwargs
         ):
         annotations = []
 
-        if len(urns) == 1 and not urns[0]:
+        if not urns:
             return len(self.annotations), sorted(self.annotations, key=lambda x: x.uri)
+
+        if not isinstance(urns, list):
+            urns = [urns]
 
         for urn in urns:
 

@@ -20,12 +20,12 @@ class MockQueryInterface(QueryPrototype):
     )
 
     def getAnnotations(self,
-            *urns,
+            urns,
             wildcard=".", include=None, exclude=None,
             limit=None, start=1,
             expand=False, **kwargs
         ):
-        if urns[0] == None:
+        if urns == None:
             return 2, [
                 type(self).ANNOTATION,
                 type(self).ANNOTATION2

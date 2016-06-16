@@ -20,15 +20,15 @@ class QueryPrototype(object):
     def __init__(self, getreffs, **kwargs):
         self.__getreffs__ = getreffs
 
-    def getAnnotations(self,
-            *urns, wildcard=".", include=None, exclude=None,
+    def getAnnotations(self, urns,
+            wildcard=".", include=None, exclude=None,
             limit=None, start=1,
             expand=False, **kwargs
         ):
         """ Retrieve annotations from the query provider
 
         :param urns: The CTS URN(s) to query as the target of annotations
-        :type urns: MyCapytain.common.reference.URN
+        :type urns: [MyCapytain.common.reference.URN], URN or None
         :param wildcard: Wildcard specifier for how to match the URN
         :type wildcard: str
         :param include: URI(s) of Annotation types to include in the results
