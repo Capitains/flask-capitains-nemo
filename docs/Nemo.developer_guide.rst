@@ -15,7 +15,7 @@ Writing and running tests
 - Add tests which are not taking care of the rendering (Testing the function itself)
 - Add a "navigational test" in `tests/test_with_nautilus`
 
-Ultimately, tests should be part of the right file and take a name starting with "test_" :
+Ultimately, tests should be part of the right file and take a name starting with :code:`test_` :
 
 .. code-block:: python
     :linenos:

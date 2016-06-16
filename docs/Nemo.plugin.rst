@@ -21,7 +21,7 @@ What can plugin do
 - It can add new routes on top of the existing routes
 - It can remove original routes, and bring new one
 - It can bring new `filters <http://exploreflask.readthedocs.io/en/latest/templates.html#custom-filters>`_
-- It can add new informations to what is passed to the template through their :ref:`pluginRender` function
+- It can add new informations to what is passed to the template through their :ref:`pluginRender <pluginRender>` function
 
 
 How plugin are registered
@@ -85,7 +85,7 @@ Assets providing
 There is three class variables (JS, STATICS and CSS) related to register new UI resources on to the Nemo instance. 
 
 - Remote resources (http://, https://, //) will be simply sent to the templates css and js variables so that it can be called from here (such as ``<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"></script>``)
-- Local resources (such as ``/directory/assets/css/stuff.css``) will be made available through Nemo secondary assets route (:ref:`Nemo.r_secondary_assets`) and fed to the templates as local resources.
+- Local resources (such as ``/directory/assets/css/stuff.css``) will be made available through :ref:`Nemo secondary assets route <Nemo.api.r_assets>` and fed to the templates as local resources.
 
 .. code-block: python
     :linenos:
@@ -102,8 +102,8 @@ Adding routes, adding/overwriting templates and filters
 
 The ``ROUTES`` and ``TEMPLATES`` class variables work the same way as the Nemo one : they will be registered on to the Nemo instance on top of the existing routes. 
 
-- Routes of plugins stack up and overwrite themselves if they are not namespaced (See ``namespacing`` argument in :ref:`pluginInit`). 
-- Templates can provide new templates for the ``main::`` namespace as well as new templates for any other namespace (cf. :ref:`templateOrder`)
+- Routes of plugins stack up and overwrite themselves if they are not namespaced (See ``namespacing`` argument in :ref:`pluginInit <pluginInit>`).
+- Templates can provide new templates for the ``main::`` namespace as well as new templates for any other namespace (cf. :ref:`templateOrder <templateOrder>`)
 - The clear route function will erase original provided routes of Nemo if set to True before registering other plugins (See :py:meth:`~flask_nemo.Nemo.register_plugins`)
 - Filters works like Nemo filters. They can be namespaced using the ``namespacing`` argument.
 
@@ -121,7 +121,7 @@ The ``ROUTES`` and ``TEMPLATES`` class variables work the same way as the Nemo o
 Various other core parameters : render, clear assets and static folder
 **********************************************************************
 
-- Plugin.render() view brings a new stack of values to the variables that are sent to the template (cf. :ref:`renderWorkflow`). ``HAS_AUGMENT_RENDER`` is the class variable that when set to True will make Nemo aware of the existence of the function.
+- Plugin.render() view brings a new stack of values to the variables that are sent to the template (cf. :ref:`renderWorkflow <renderWorkflow>`). ``HAS_AUGMENT_RENDER`` is the class variable that when set to True will make Nemo aware of the existence of the function.
 - ``CLEAR_ASSETS`` clears registered defaults assets in Nemo assets dictionary.
 - ``STATIC_FOLDER`` overwrites original Nemo static folder. It is recommended not to make too much use of it except if you do not need any of the original Nemo assets.
 

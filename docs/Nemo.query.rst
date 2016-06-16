@@ -26,17 +26,17 @@ is an object that given a URN retrieves annotations for it.
 
 - Query interface should be fed with a function to retrieve valid references of the text
 - It should have a .getAnnotation method which returns tuple where first element is a list of annotations and the second is the number of found resources
-    - *urn  which takes a URN Object (MyCapytain)
-    - `wildcard` as a boolean
-        - `.` means exact match
-        - `.%` means lower match matches
-        - `%.` means higher match matches
-        - `-` in range of 
-        - `%.%` means not level dependant
-    - `include, exclude` which would restrict the type of resources that can be retrieved using list of types
-     - `limit` as a limit of number, default to None
-     - `start` as the first parameter
-     - `expand`
+    - :code:`*urn`  which takes a URN Object (MyCapytain)
+    - :code:`wildcard` as a boolean
+        - :code:`.` means exact match
+        - :code:`.%` means lower match matches
+        - :code:`%.` means higher match matches
+        - :code:`-` in range of
+        - :code:`%.%` means not level dependant
+    - :code:`include, exclude` which would restrict the type of resources that can be retrieved using list of types
+    - :code:`limit` as a limit of number, default to None
+    - :code:`start` as the first parameter
+    - :code:`expand` should automatically expand annotations matching
 
 Annotations
 ***********

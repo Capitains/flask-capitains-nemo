@@ -18,13 +18,13 @@ Capitains Nemo is an User Interface built around the need to make CTS a easy to 
 Capitains Nemo counts multiple language implementation, including this one in Python for Flask. Presentend as a classic Flask
 Extension, `flask.ext.nemo` intends to be a simple, customizable interface between your enduser and your CTS5 API.
 
-The Flask's extension Nemo can be customized from its stylesheets to its functionalities. Adding routes or removing them is
+The Flask's extension Nemo can be customized from its stylesheets to its functions. Adding routes or removing them is
 as easy as adding a XSL Stylesheet to transform the very own result of a CTS GetPassage results to your own expected output.
 
 Install
 #######
 
-You can now install it with pip : `pip install flask_nemo`
+You can now install it with pip : :code:`pip install flask_nemo`
 
 If you want to install the latest version, please do the following
 
@@ -40,17 +40,19 @@ If you have trouble with dependency conflicts with MyCapitains, try running :cod
 
 
 Running Nemo from the command line
-######################################
+##################################
 
 This small tutorial takes that you have a CTS API endpoint available, here :code:`http://localhost:8000`
 
 
 1. (Advised) Create a virtual environment and source it : :code:`virtualenv -p /usr/bin/python3 env`, :code:`source env/bin/activate`
-2. **With development version:**
+2. **With development version**:
     - Clone the repository : :code:`git clone https://github.com/Capitains/flask-capitains-nemo.git`
     - Go to the directory : :code:`cd Nemo`
     - Install the source with develop option : :code:`python setup.py develop`
-2. **With production version:**
+
+2. **With production version**:
     - Install from pip : :code:`pip install flask_nemo`
+
 3. You will be able now to call capitains nemo help information through :code:`capitains-nemo --help`
 4. Basic setting for testing an api is :code:`capitains-nemo http://localhost:8000`.

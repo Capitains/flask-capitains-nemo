@@ -22,7 +22,7 @@ from pkg_resources import resource_filename
 from collections import Callable, OrderedDict
 import flask_nemo._data
 import flask_nemo.filters
-from flask_nemo.chunker import default_chunker as __default_chunker__
+from flask_nemo.chunker import default_chunker as __default_chunker__, level_grouper as __level_grouper__
 from flask_nemo.plugins.default import Breadcrumb
 from flask_nemo.common import resource_qualifier, ASSETS_STRUCTURE
 
@@ -99,7 +99,8 @@ class Nemo(object):
         "f_hierarchical_passages",
         "f_is_str",
         "f_i18n_citation_type",
-        "f_order_author"
+        "f_order_author",
+        "f_annotation_filter"
     ]
 
     """ Assets dictionary model
@@ -929,7 +930,7 @@ def cmd():
             css=args.css,
             inventory=args.inventory,
             api_url=args.endpoint,
-            chunker={"default": lambda x, y: Nemo.level_grouper(x, y, groupby=args.groupby)}
+            chunker={"default": lambda x, y: __level_grouper__(x, y, groupby=args.groupby)}
         )
 
         # We run the app
