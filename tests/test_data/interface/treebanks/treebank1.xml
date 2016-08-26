@@ -1,0 +1,66 @@
+<treebank xmlns:saxon='http:&#x2F;&#x2F;saxon.sf.net&#x2F;' xml:lang='lat' version='1.5' direction='ltr' format='aldt'>
+  <date>2016-01-28 14:10:16 +0000</date>
+  <annotator>
+    <short/>
+    <name/>
+    <address/>
+    <uri>http:&#x2F;&#x2F;github.com&#x2F;latin-language-toolkit&#x2F;arethusa</uri>
+  </annotator>
+  <annotator>
+    <short/>
+    <name/>
+    <address/>
+    <uri>http:&#x2F;&#x2F;services2.perseids.org&#x2F;llt&#x2F;segtok</uri>
+  </annotator>
+  <annotator>
+    <short/>
+    <name/>
+    <address/>
+    <uri>http:&#x2F;&#x2F;github.com&#x2F;latin-language-toolkit&#x2F;arethusa</uri>
+  </annotator>
+  <annotator>
+    <short>Thibault Clérice</short>
+    <name>Thibault Clérice</name>
+    <address>leponteineptique@gmail.com</address>
+    <uri>http:&#x2F;&#x2F;data.perseus.org&#x2F;sosol&#x2F;users&#x2F;Thibault%20Cl%C3%A9rice</uri>
+  </annotator>
+  <annotator>
+    <short>Tim Buckingham</short>
+    <name>Tim Buckingham</name>
+    <address>tim.d.buckingham@gmail.com</address>
+    <uri>http:&#x2F;&#x2F;data.perseus.org&#x2F;sosol&#x2F;users&#x2F;Tim%20Buckingham</uri>
+  </annotator>
+  <sentence id='1' document_id='' subdoc='' span=''>
+    <word id='1' form='Sextus' lemma='sextus1' postag='a-s---mn-' relation='ATR' head='5'/>
+    <word id='2' form='mittitur' lemma='mitto' postag='v3spip---' relation='PRED' head='0'/>
+    <word id='3' form='hic' lemma='hic' postag='p-s---mn-' relation='AuxX' head='5'/>
+    <word id='4' form='tibi' lemma='' postag='' relation='OBJ' head='2'/>
+    <word id='5' form='libellus' lemma='libellus' postag='n-s---mn-' relation='SBJ' head='2'/>
+    <word id='6' form=',' lemma='punc1' postag='u--------' relation='AuxX' head='0'/>
+    <word id='7' form='In' lemma='in' postag='r--------' relation='AuxP' head='10'/>
+    <word id='8' form='primis' lemma='primus' postag='a-p---nb-' relation='ADV' head='7'/>
+    <word id='9' form='mihi' lemma='ego' postag='p-s---md-' relation='ADV' head='10'/>
+    <word id='10' form='care' lemma='caros' postag='n-s---mv-' relation='ATR' head='11'/>
+    <word id='11' form='Martialis' lemma='Martialis' postag='n-s---mv-' relation='ExD' head='2'/>
+    <word id='12' form=':' lemma='punc1' postag='u--------' relation='AuxK' head='0'/>
+  </sentence>
+  <sentence id='2' document_id='' subdoc='' span=''>
+    <word id='1' form='Quem' lemma='qui2' postag='p-s---ma-' relation='OBJ' head='3'/>
+    <word id='2' form='si' lemma='si' postag='c--------' relation='AuxC' head='7'/>
+    <word id='3' form='terseris' lemma='tergeo' postag='v2srsa---' relation='ADV' head='2'/>
+    <word id='4' form='aure' lemma='auris' postag='n-s---fb-' relation='SBJ' head='3'/>
+    <word id='5' form='diligenti' lemma='diligens' postag='a-s---fb-' relation='ATR' head='4'/>
+    <word id='6' form=',' lemma='punc1' postag='u--------' relation='AuxX' head='0'/>
+    <word id='7' form='Audebit' lemma='audeo' postag='v3sfia---' relation='PRED' head='0'/>
+    <word id='8' form='minus' lemma='parvus' postag='a-s---nnc' relation='ADV' head='11'/>
+    <word id='9' form='anxius' lemma='anxius' postag='a-s---mn-' relation='ATR_CO' head='11'/>
+    <word id='10' form='tremens' lemma='tremo' postag='v-spp-mn-' relation='ATR_CO' head='11'/>
+    <word id='11' form='-que' lemma='' postag='' relation='COORD' head='7'/>
+    <word id='12' form='Magnas' lemma='magnus' postag='a-p---fa-' relation='ATR' head='15'/>
+    <word id='13' form='Caesaris' lemma='' postag='' relation='ATR' head='15'/>
+    <word id='14' form='in' lemma='in' postag='r--------' relation='AuxP' head='16'/>
+    <word id='15' form='manus' lemma='manus1' postag='n-p---fa-' relation='ADV' head='14'/>
+    <word id='16' form='venire' lemma='venio' postag='v--pna---' relation='OBJ' head='7'/>
+    <word id='17' form='.' lemma='punc1' postag='u--------' relation='AuxK' head='0'/>
+  </sentence>
+</treebank>

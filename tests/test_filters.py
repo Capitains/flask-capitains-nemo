@@ -8,7 +8,7 @@ from flask import Flask
 from flask_nemo import Nemo
 from flask_nemo.filters import f_active_link, f_collection_i18n, f_formatting_passage_reference, f_group_texts, \
     f_hierarchical_passages, f_i18n_citation_type, f_i18n_iso, f_is_str, f_order_author,\
-    f_order_text_edition_translation
+    f_order_text_edition_translation, f_annotation_filter
 import MyCapytain
 from .resources import NemoResource
 
@@ -52,8 +52,9 @@ class TestFilters(NemoResource):
         """ Test internationalization of collection identifier
         """
         self.assertEqual(f_collection_i18n("latinLit"), "Latin")
-        self.assertEqual(f_collection_i18n("greekLit"), "Ancient Greek")
-        self.assertEqual(f_collection_i18n("freLit"), "freLit")
+        self.assertEqual(f_collection_i18n("greekLit"), "Ancient Greek", "Should use known namespace information")
+        self.assertEqual(f_collection_i18n("afrLit"), "Afrikaans", "Should match regular expression and use data")
+        self.assertEqual(f_collection_i18n("aaaLit"), "aaaLit", "Should keep the string when unknown to parser")
 
     def test_f_formatting_passage_reference(self):
         """ Test split of passage range identifier
@@ -133,3 +134,28 @@ class TestFilters(NemoResource):
 
     def test_f_i18n_citation_type(self):
         self.assertEqual(f_i18n_citation_type("%book|1%"), "Book 1")
+
+    def test_annotation_filter(self):
+        class Annotation(object):
+            def __init__(self, type_uri):
+                self.type_uri = type_uri
+
+        a = Annotation("1")
+        b = Annotation("2")
+        c = Annotation("3")
+        d = Annotation("2")
+
+        self.assertEqual(
+            f_annotation_filter([a, b, c, d], "1", 1), a,
+            "We should get only one of type 1"
+        )
+
+        self.assertEqual(
+            f_annotation_filter([a, b, c, d], "4", 1), None,
+            "We should get nothing"
+        )
+
+        self.assertEqual(
+            f_annotation_filter([a, b, c, d], "2", 2), d,
+            "We should get the second item"
+        )

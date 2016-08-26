@@ -1,9 +1,11 @@
+.eggs
+*.egg-info
 # Compiled python modules.
 *.pyc
 .idea
 venv
-*.eggs*
-*.egg-info
+venv2
+
 # Setuptools distribution folder.
 /dist/
 /doc/build/

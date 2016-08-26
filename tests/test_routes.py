@@ -5,7 +5,7 @@
 from .resources import NemoResource
 from .test_controller import NemoTestControllers
 from flask_nemo import Nemo
-from flask_nemo.default import Breadcrumb
+from flask_nemo.plugins.default import Breadcrumb
 from flask import Markup, Flask
 from lxml import etree
 from mock import Mock, patch, call
@@ -238,6 +238,7 @@ class NemoTestRoutes(NemoResource):
                     collections={'latinLit', 'greekLit'},
                     test="123",
                     value="value",
+                    template="main::index.html",
                     lang="eng",
                     assets=self.nemo.assets,
                     url={},
@@ -261,6 +262,7 @@ class NemoTestRoutes(NemoResource):
                     "index.html",
                     collections={'latinLit', 'greekLit'},
                     test="123",
+                    template="index.html",
                     value="value",
                     lang="eng",
                     assets=self.nemo.assets,
@@ -293,6 +295,7 @@ class NemoTestRoutes(NemoResource):
                     })
                 patched.assert_called_once_with(
                     "index.html",
+                    template="index.html",
                     collections={'latinLit', 'greekLit'},
                     test="123",
                     value="value",

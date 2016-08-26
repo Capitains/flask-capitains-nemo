@@ -44,7 +44,7 @@ def f_collection_i18n(string, lang="eng"):
     if string in flask_nemo._data.COLLECTIONS:
         return flask_nemo._data.COLLECTIONS[string]
     elif regMatch.match(string):
-        lg = string[0:2]
+        lg = string[0:3]
         if lg in flask_nemo._data.ISOCODES and lang in flask_nemo._data.ISOCODES[lg]:
             return flask_nemo._data.ISOCODES[lg][lang]
     return string
@@ -150,7 +150,31 @@ def f_i18n_citation_type(string, lang="eng"):
     :param lang: Language to translate to
     :return: Human Readable string
 
-    .. todo :: use i18n tools and provide real i18n
+    .. note :: To Do : Use i18n tools and provide real i18n
     """
     s = " ".join(string.strip("%").split("|"))
     return s.capitalize()
+
+
+def f_annotation_filter(annotations, type_uri, number):
+    """ Annotation filtering filter
+
+    :param annotations: List of annotations
+    :type annotations: [AnnotationResource]
+    :param type_uri: URI Type on which to filter
+    :type type_uri: str
+    :param number: Number of the annotation to return
+    :type number: int
+    :return: Annotation(s) matching the request
+    :rtype: [AnnotationResource] or AnnotationResource
+    """
+    filtered = [
+        annotation
+        for annotation in annotations
+        if annotation.type_uri == type_uri
+    ]
+    number = min([len(filtered), number])
+    if number == 0:
+        return None
+    else:
+        return filtered[number-1]

@@ -1,6 +1,6 @@
 from ..resources import NemoResource
 from mock import patch
-from flask_nemo.default import Breadcrumb
+from flask_nemo.plugins.default import Breadcrumb
 
 
 class TestBreadcrumb(NemoResource):

@@ -10,13 +10,13 @@ class PluginPrototype(object):
     :param name: Name of the instance of the plugins. Defaults to the class name (Default : Plugin's class name)
     :param namespacing: Add namespace to route to avoid overwriting (Default : False)
 
-    :cvar ROUTES: Routes represents the routes to be added to the Nemo instance. They take the form of a 3-tuple such as `("/read/<collection>", "r_collection", ["GET"])`
+    :cvar ROUTES: Routes represents the routes to be added to the Nemo instance. They take the form of a 3-tuple such as :code:`("/read/<collection>", "r_collection", ["GET"])`
     :type ROUTES: list
     :cvar TEMPLATES: Dictionaries of template namespaces and directory to retrieve templates in given namespace
     :type TEMPLATES: dict
-    :cvar FILTERS: List of filters to register. Naming convention is f_doSomething
+    :cvar FILTERS: List of filters to register. Naming convention is :code:`f_doSomething`
     :type FILTERS: list
-    :cvar HAS_AUGMENT_RENDER: Enables post-processing in view rendering function Nemo().render(template, **kwargs)
+    :cvar HAS_AUGMENT_RENDER: Enables post-processing in view rendering function :code:`Nemo().render(template, **kwargs)`
     :type HAS_AUGMENT_RENDER: bool
     :cvar CLEAR_ROUTES: Removes original nemo routes
     :type CLEAR_ROUTES: bool
@@ -45,7 +45,8 @@ class PluginPrototype(object):
     :type static_folder: str
     :ivar namespaced: Indicate if the plugin is namespaced or not
     :type namespaced: bool
-    :ivar routes: List of routes where the first member is a flask URL template, the second a method name, and the third a list of accepted Methods
+    :ivar routes: List of routes where the first member is a flask URL template, the second a method name, and the \
+        third a list of accepted Methods
     :type routes: [(str, str, [str])]
     :ivar filters: List of filters method names to be registered in Nemo
     :type filters: [str]
@@ -53,16 +54,17 @@ class PluginPrototype(object):
     :type templates: {str:str}
     :ivar nemo: Nemo instance
     :type nemo: flask_ext.Nemo
+    :ivar name: Name of the plugin instance
+    :type name: str
 
     :Example:
+
     .. code-block:: python
 
         ROUTES = [
             # (Path like flask, Name of the function (convention is r_*), List of Http Methods)
             ("/read/<collection>/<textgroup>/<work>/<version>/<passage_identifier>/<visavis>", "r_double", ["GET"])
         ]
-
-    :ivar name: Name of the plugin instance
 
     """
     ROUTES = []

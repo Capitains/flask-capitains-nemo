@@ -22,7 +22,7 @@ and the name of a CTS inventory (if required). This will run a browsing interfac
 - Once an edition or a translation is clicked, a page showing available references is shown.
 - Once a passage is clicked, the passage is shown with available metadata.
 
-.. _example1.code::
+.. _example1.code:
 
 .. code-block:: python
 
@@ -115,7 +115,7 @@ Own Chunker
 
   CTS is good, but getValidReff can really be a hassle. The default generation of browsing level will always retrieve the deepest level of citations available. For the Iliad of Homer, which is composed of two levels, books and lines, this would translate to a GetValidReff level 2. This would mean that the generic chunker would return on the text page a link to each line of each book (it's a total of 15337 lines, if you did not know).
 
-  Chunker provides a simple, easy to develop interface to deal with such a situation : for example, returning only 50 lines groups of links (1.1-1.50, 1.51-1.100, etc.). The Nemo class accepts a chunker dictionary where **keys** are **urns** and where the key "**default**" is the default chunker to be applied. Given a chunker named *homer_chunker* and one named *default_chunker*,  if the urn of Homer is **urn:cts:greekLit:tlg0012.tlg001.opp-grc1** (See :ref:`Nemo.chunker.skeleton` for function skeleton):
+  Chunker provides a simple, easy to develop interface to deal with such a situation : for example, returning only 50 lines groups of links (1.1-1.50, 1.51-1.100, etc.). The Nemo class accepts a chunker dictionary where **keys** are **urns** and where the key "**default**" is the default chunker to be applied. Given a chunker named *homer_chunker* and one named *default_chunker*,  if the urn of Homer is **urn:cts:greekLit:tlg0012.tlg001.opp-grc1** (See :ref:`function skeleton <Nemo.chunker.skeleton>` for ):
 
 .. code-block:: python
 

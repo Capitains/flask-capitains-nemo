@@ -12,6 +12,7 @@ from flask import Markup, Flask
 
 from .resources import NemoResource
 
+
 class NemoTestControllers(NemoResource):
 
     def test_flask_nemo(self):

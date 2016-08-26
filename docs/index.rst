@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 Welcome to the flask extension Nemo documentation!
-=======================================
+==================================================
 
 .. include:: ../README.rst
 
@@ -13,9 +13,11 @@ Welcome to the flask extension Nemo documentation!
 
    Nemo.examples
    Nemo.workflow
+   Nemo.query
    Nemo.developer_guide
    Nemo.templates
    Nemo.chunker
    Nemo.plugin
+   Nemo.plugins
    LXML
    Nemo.api
