@@ -252,8 +252,10 @@ class Nemo(object):
 
         self.register()
 
-    def transform(self, work, xml):
+    def transform(self, work, xml, urn):
         """ Transform input according to potentiallyregistered XSLT
+
+        .. note:: Since 1.0.0, transform takes a URN parameter which represent the passage which is called
 
         .. note:: Due to XSLT not being able to be used twice, we rexsltise the xml at every call of xslt
         .. warning:: Until a C libxslt error is fixed ( https://bugzilla.gnome.org/show_bug.cgi?id=620102 ), it is not possible to use strip tags in the xslt given to this application
@@ -262,6 +264,8 @@ class Nemo(object):
         :type work: MyCapytains.resources.inventory.Text
         :param xml: XML to transform
         :type xml: etree._Element
+        :param urn: URN of the passage
+        :type urn: str
         :return: String representation of transformed resource
         :rtype: str
         """
@@ -279,7 +283,7 @@ class Nemo(object):
 
         # If we have a function, it means we return the result of the function
         elif isinstance(func, Callable):
-            return func(work, xml)
+            return func(work, xml, urn)
         # If we have None, it meants we just give back the xml
         elif func is None:
             return etree.tostring(xml, encoding=str)
@@ -560,7 +564,7 @@ class Nemo(object):
         edition = self.get_text(collection, textgroup, work, version)
         text = self.get_passage(collection, textgroup, work, version, passage_identifier)
 
-        passage = self.transform(edition, text.xml)
+        passage = self.transform(edition, text.xml, str(text.urn))
         prev, next = self.getprevnext(text, Nemo.prevnext_callback_generator(text))
         urn = self.transform_urn(text.urn)
         return {

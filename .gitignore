@@ -2,7 +2,8 @@
 *.pyc
 .idea
 venv
-
+*.eggs*
+*.egg-info
 # Setuptools distribution folder.
 /dist/
 /doc/build/
