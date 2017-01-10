@@ -8,7 +8,7 @@ configs = {
     # The CIHAM project is made of critical editions. We load for it a specific xslt to render the result of GetPassage
     # And specifics assets
     "ciham": {
-        "api_url": "http://services2.perseids.org/exist/restxq/cts",
+        "api_url": "http://cts.perseids.org/api/cts/",
         "base_url": "",
         "inventory": "nemo",
         "transform": {"default" : "examples/ciham.xslt"},  # Use own xsl
@@ -31,7 +31,7 @@ configs = {
         }
     },
     "translations": {
-        "api_url": "http://services2.perseids.org/exist/restxq/cts",
+        "api_url": "http://cts.perseids.org/api/cts/",
         "base_url": "",
         "inventory": "nemo",
         "urls" : Nemo.ROUTES + [("/read/<collection>/<textgroup>/<work>/<version>/<passage_identifier>/<visavis>", "r_double", ["GET"])],
@@ -64,7 +64,7 @@ configs = {
         ]
     },
     "default": {
-        "api_url": "http://services2.perseids.org/exist/restxq/cts",
+        "api_url": "http://cts.perseids.org/api/cts/",
         "base_url": "",
         "inventory": "nemo",
         "css" : [

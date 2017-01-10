@@ -37,7 +37,7 @@ and the name of a CTS inventory (if required). This will run a browsing interfac
     # We register a Nemo object with the minimal settings
     nemo = Nemo(
         # API URL is the URL of your endpoint.
-        api_url="http://services2.perseids.org/exist/restxq/cts",
+        api_url="http://cts.perseids.org/api/cts/",
         # We set up the base url to be empty. If you want nemo to be on a
         # subpath called "cts", you would have
         # base_url="cts",
@@ -71,7 +71,7 @@ Because Python is not a natural language and because not everybody knows it in a
     # ...
     nemo = Nemo(
         # Required API informations
-        api_url="http://services2.perseids.org/exist/restxq/cts",
+        api_url="http://cts.perseids.org/api/cts/",
         base_url="",
         inventory="ciham",
         # For transform parameters, we provide a path to an xsl which will be used for every
@@ -176,7 +176,7 @@ As you will most likely use a new template, don't forget to register it with the
             return args
 
     nemo = NemoDouble(
-        api_url="http://services2.perseids.org/exist/restxq/cts",
+        api_url="http://cts.perseids.org/api/cts/",
         base_url="",
         inventory="nemo",
         # We reuse Nemo.Routes and add a new one
