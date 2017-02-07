@@ -5,6 +5,7 @@ Chunker, Transformers and GetPrevNext are way to customize your users' experienc
 
 Process description
 ###################
+
 .. image:: _static/images/nemo.chunker.diagram.png
     :alt: Nemo Chunker Workflow
 
@@ -16,7 +17,7 @@ Process description
 
 To propose passages to the user, Capitains Nemo uses a chunker function which will group, if needed, references together. The function is called upon returning the list of references to the view. The function should always return a list of references, and not full urn, with a human readable version of it, which can be the same.
 
-.. _Nemo.chunker::
+.. _Nemo.chunker:
 
 Chunkers
 ########
@@ -36,20 +37,21 @@ This dictionary should at least contain one key named "default". Any other key s
 .. code-block:: python
 
     from flask.ext.nemo import Nemo
-    nemo = Nemo(chunker={
-        "default": Nemo.default_chunker,
-        "urn:cts:latinLit:phi1294.phi002.perseus-lat2": Nemo.scheme_chunker,
+    from flask.ext.nemo.chunker import default_chunker, scheme_chunker, line_chunker
+
+        "default": default_chunker,
+        "urn:cts:latinLit:phi1294.phi002.perseus-lat2": scheme_chunker,
         # This will override the original function and provides a poem based reference for Martial Epigrammata in this version
-        "urn:cts:latinLit:phi1017.phi004.opp-lat4": lambda version, callback: Nemo.line_chunker(version, callback, lines=50)
+        "urn:cts:latinLit:phi1017.phi004.opp-lat4": lambda version, callback: line_chunker(version, callback, lines=50)
         # Use a lambda to override default line numbers returned by Nemo.line_chunker for Seneca's Medea
     })
 
-.. note:: See :ref:`Nemo.api` documentation
+.. note:: See :ref:` API documentation <Nemo.api>`
 
 Building your own : Structure, Parameters, Return Values
 ********************************************************
 
-.. _Nemo.chunker.skeleton::
+.. _Nemo.chunker.skeleton:
 
 
 .. code-block:: python
@@ -89,11 +91,11 @@ The chunker itself should return a list of tuples where the first element is a p
 Available chunkers
 ******************
 
-.. automethod:: flask.ext.nemo.Nemo.default_chunker
-.. automethod:: flask.ext.nemo.Nemo.line_chunker
-.. automethod:: flask.ext.nemo.Nemo.scheme_chunker
-.. automethod:: flask.ext.nemo.Nemo.level_chunker
-.. automethod:: flask.ext.nemo.Nemo.level_grouper
+.. automethod:: flask.ext.nemo.chunker.default_chunker
+.. automethod:: flask.ext.nemo.chunker.line_chunker
+.. automethod:: flask.ext.nemo.chunker.scheme_chunker
+.. automethod:: flask.ext.nemo.chunker.level_chunker
+.. automethod:: flask.ext.nemo.chunker.level_grouper
 
 PrevNext
 ########

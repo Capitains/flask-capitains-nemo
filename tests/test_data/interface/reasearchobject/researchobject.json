@@ -1,0 +1,34 @@
+{ "@context": ["https://w3id.org/bundle/context"],
+  "@id": "urn:uuid:ed789944-164f-11e6-b6ba-3e1d05defe78",
+  "createdOn": "2016-05-09T09:46:00Z",
+  "createdBy": {
+    "name": "Bridget Almsa",
+    "uri": "http://sosol.perseids.org/sosol/users/Bridget%20Almas"
+  },
+
+  "aggregates": [
+
+    { "uri": "urn:cts:greekLit:tlg0012.tlg001.perseus-grc2",
+      "mediatype": "text/xml"
+    },
+
+    { "uri": "urn:cts:greekLit:tlg0012.tlg001.perseus-eng2",
+      "mediatype": "text/xml"
+    }
+  ],
+
+  "annotations": [
+    { "about": ["urn:cts:greekLit:tlg0012.tlg002.perseus-grc2:1.1-1.10"],
+      "content": "http://sosol.perseids.org/api/v1/items/1?q=s%251-2",
+      "dc:format": "http://data.perseus.org/rdfvocab/treebank"
+    },
+    { "about": ["urn:cts:greekLit:tlg0012.tlg002.perseus-grc2:1.11-1.20"],
+      "content": "http://sosol.perseids.org/api/v1/items/1?q=s%252-3",
+      "dc:format": "http://data.perseus.org/rdfvocab/treebank"
+    },
+    { "about": ["urn:cts:greekLit:tlg0012.tlg002.perseus-grc2:1.1-1.30"],
+      "content": "http://sosol.perseids.org/api/v1/items/3",
+      "dc:format": "http://data.perseus.org/rdfvocab/commentary"
+    }
+  ]
+}

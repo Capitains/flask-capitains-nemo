@@ -22,8 +22,8 @@ from pkg_resources import resource_filename
 from collections import Callable, OrderedDict
 import flask_nemo._data
 import flask_nemo.filters
-from flask_nemo.chunker import default_chunker as __default_chunker__
-from flask_nemo.default import Breadcrumb
+from flask_nemo.chunker import default_chunker as __default_chunker__, level_grouper as __level_grouper__
+from flask_nemo.plugins.default import Breadcrumb
 from flask_nemo.common import resource_qualifier, ASSETS_STRUCTURE
 
 
@@ -37,11 +37,11 @@ class Nemo(object):
     :type api_url: str
     :param retriever: CTS Retriever (Will be defaulted to api_url using cts5 retriever if necessary)
     :type retriever: MyCapytain.retrievers.proto.CTS
-    :param base_url: Base URL to use when registering the endpoint
+    :param base_url: Base URL to use when registering the endpoint (It cannot be "/" only !)
     :type base_url: str
     :param cache: SQLITE cache file name
     :type base_url: str
-    :param expire: TIme before expiration of cache, default 3600
+    :param expire: Time before expiration of cache, default 3600
     :type expire: int
     :param plugins: List of plugins to connect to the Nemo instance
     :type plugins: list(flask_nemo.plugin.PluginPrototype)
@@ -99,7 +99,8 @@ class Nemo(object):
         "f_hierarchical_passages",
         "f_is_str",
         "f_i18n_citation_type",
-        "f_order_author"
+        "f_order_author",
+        "f_annotation_filter"
     ]
 
     """ Assets dictionary model
@@ -252,8 +253,10 @@ class Nemo(object):
 
         self.register()
 
-    def transform(self, work, xml):
+    def transform(self, work, xml, urn):
         """ Transform input according to potentiallyregistered XSLT
+
+        .. note:: Since 1.0.0, transform takes a URN parameter which represent the passage which is called
 
         .. note:: Due to XSLT not being able to be used twice, we rexsltise the xml at every call of xslt
         .. warning:: Until a C libxslt error is fixed ( https://bugzilla.gnome.org/show_bug.cgi?id=620102 ), it is not possible to use strip tags in the xslt given to this application
@@ -262,6 +265,8 @@ class Nemo(object):
         :type work: MyCapytains.resources.inventory.Text
         :param xml: XML to transform
         :type xml: etree._Element
+        :param urn: URN of the passage
+        :type urn: str
         :return: String representation of transformed resource
         :rtype: str
         """
@@ -279,7 +284,7 @@ class Nemo(object):
 
         # If we have a function, it means we return the result of the function
         elif isinstance(func, Callable):
-            return func(work, xml)
+            return func(work, xml, urn)
         # If we have None, it meants we just give back the xml
         elif func is None:
             return etree.tostring(xml, encoding=str)
@@ -560,7 +565,7 @@ class Nemo(object):
         edition = self.get_text(collection, textgroup, work, version)
         text = self.get_passage(collection, textgroup, work, version, passage_identifier)
 
-        passage = self.transform(edition, text.xml)
+        passage = self.transform(edition, text.xml, str(text.urn))
         prev, next = self.getprevnext(text, Nemo.prevnext_callback_generator(text))
         urn = self.transform_urn(text.urn)
         return {
@@ -572,15 +577,15 @@ class Nemo(object):
             "next": next
         }
 
-    def r_assets(self, type, asset):
+    def r_assets(self, filetype, asset):
         """ Route for specific assets.
 
         :param asset: Filename of an asset
         :return: Response
         """
-        if type in self.assets and asset in self.assets[type] and self.assets[type][asset]:
+        if filetype in self.assets and asset in self.assets[filetype] and self.assets[filetype][asset]:
             return send_from_directory(
-                directory=self.assets[type][asset],
+                directory=self.assets[filetype][asset],
                 filename=asset
             )
         abort(404)
@@ -592,7 +597,7 @@ class Nemo(object):
         """
         self.blueprint.add_url_rule(
             # Register another path to ensure assets compatibility
-            "{0}.secondary/<type>/<asset>".format(self.static_url_path),
+            "{0}.secondary/<filetype>/<asset>".format(self.static_url_path),
             view_func=self.r_assets,
             endpoint="secondary_assets",
             methods=["GET"]
@@ -676,11 +681,12 @@ class Nemo(object):
                 kwargs["texts"] = self.get_texts(kwargs["url"]["collection"], kwargs["url"]["textgroup"])
 
         kwargs["assets"] = self.assets
+        kwargs["template"] = template
 
         for plugin in self.__plugins_render_views__:
             kwargs.update(plugin.render(**kwargs))
 
-        return render_template(template, **kwargs)
+        return render_template(kwargs["template"], **kwargs)
 
     def route(self, fn, **kwargs):
         """ Route helper : apply fn function but keep the calling object, *ie* kwargs, for other functions
@@ -928,7 +934,7 @@ def cmd():
             css=args.css,
             inventory=args.inventory,
             api_url=args.endpoint,
-            chunker={"default": lambda x, y: Nemo.level_grouper(x, y, groupby=args.groupby)}
+            chunker={"default": lambda x, y: __level_grouper__(x, y, groupby=args.groupby)}
         )
 
         # We run the app

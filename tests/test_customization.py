@@ -129,7 +129,7 @@ class TestCustomizer(NemoResource):
         """ Test that the transform default is called and applied
         """
         def default(text, cb):
-            self.assertEqual(str(text.urn), "urn:cts:phi1294.phi002.perseus-lat2")
+            self.assertEqual(str(text.urn), "urn:cts:latinLit:phi1294.phi002.perseus-lat2")
             self.assertEqual(cb(1), 1)
             return [("1.pr", "I PR")]
 
@@ -138,7 +138,7 @@ class TestCustomizer(NemoResource):
         })
         prevnext = nemo.getprevnext(
             MyCapytain.resources.inventory.Text(
-                urn="urn:cts:phi1294.phi002.perseus-lat2"
+                urn="urn:cts:latinLit:phi1294.phi002.perseus-lat2"
             ),
             lambda x: x
         )
@@ -147,8 +147,11 @@ class TestCustomizer(NemoResource):
     def test_transform_default_function(self):
         """ Test that the transform default is called and applied when it's a function
         """
-        def default(work, xml):
-            self.assertEqual(str(work.urn), "urn:cts:phi1294.phi002.perseus-lat2")
+        urn_given = "urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.pr.1"
+
+        def default(work, xml, urn):
+            self.assertEqual(str(work.urn), "urn:cts:latinLit:phi1294.phi002.perseus-lat2")
+            self.assertEqual(urn, urn_given, "Passage URN should be passed to transform")
             self.assertEqual(xml, "<a></a>")
             return "<b></b>"
 
@@ -157,9 +160,10 @@ class TestCustomizer(NemoResource):
         })
         transformed = nemo.transform(
             MyCapytain.resources.inventory.Text(
-                urn="urn:cts:phi1294.phi002.perseus-lat2"
+                urn="urn:cts:latinLit:phi1294.phi002.perseus-lat2"
             ),
-            "<a></a>"
+            "<a></a>",
+            urn_given
         )
         self.assertEqual(transformed, "<b></b>")
 
@@ -169,9 +173,10 @@ class TestCustomizer(NemoResource):
         nemo = Nemo()
         transformed = nemo.transform(
             MyCapytain.resources.inventory.Text(
-                urn="urn:cts:phi1294.phi002.perseus-lat2"
+                urn="urn:cts:latinLit:phi1294.phi002.perseus-lat2"
             ),
-            etree.fromstring("<a/>")
+            etree.fromstring("<a/>"),
+            "urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.pr.1"
         )
         self.assertEqual(transformed, "<a/>")
 
@@ -184,9 +189,10 @@ class TestCustomizer(NemoResource):
         })
         transformed = nemo.transform(
             MyCapytain.resources.inventory.Text(
-                urn="urn:cts:phi1294.phi002.perseus-lat2"
+                urn="urn:cts:latinLit:phi1294.phi002.perseus-lat2"
             ),
-            etree.fromstring('<tei:body xmlns:tei="http://www.tei-c.org/ns/1.0" />')
+            etree.fromstring('<tei:body xmlns:tei="http://www.tei-c.org/ns/1.0" />'),
+            urn="urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.pr.1"
         )
         self.assertEqual(transformed, '<tei:notbody xmlns:tei="http://www.tei-c.org/ns/1.0"></tei:notbody>',
             "It should autoclose the tag"

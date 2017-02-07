@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
     <link rel="stylesheet" href="{{url_for('.static', filename='css/theme.min.css')}}">
     {% for filename, directory in assets["css"].items() %}
-      {% if directory %}<link rel="stylesheet" href="{{url_for('.secondary_assets', type='css', asset=filename)}}">
+      {% if directory %}<link rel="stylesheet" href="{{url_for('.secondary_assets', filetype='css', asset=filename)}}">
       {% else %}<link rel="stylesheet" href="{{ filename }}">
       {% endif %}
     {% endfor %}
@@ -38,9 +38,12 @@
     <!-- Latest compiled and minified JavaScript -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
     {% for filename, directory in assets["js"].items() %}
-      {% if directory %}<script src="{{url_for('.secondary_assets', type='js', asset=filename)}}"></script>
+      {% if directory %}<script src="{{url_for('.secondary_assets', filetype='js', asset=filename)}}"></script>
       {% else %}<script src="{{ filename }}"></script>
       {% endif %}
     {% endfor %}
+
+  {% block additionalscript %}
+  {% endblock %}
   </body>
 </html>

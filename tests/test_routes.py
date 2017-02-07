@@ -5,7 +5,7 @@
 from .resources import NemoResource
 from .test_controller import NemoTestControllers
 from flask_nemo import Nemo
-from flask_nemo.default import Breadcrumb
+from flask_nemo.plugins.default import Breadcrumb
 from flask import Markup, Flask
 from lxml import etree
 from mock import Mock, patch, call
@@ -122,8 +122,12 @@ class NemoTestRoutes(NemoResource):
     def test_route_passage_with_transform(self):
         """ Try with a non xslt just to be sure
         """
-        urn = "urn:cts:latinLit:phi1294.phi002.perseus-lat2"
-        def transformer(version, text):
+        urn_given = "urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.pr.1"
+        self.urn_sent = False
+
+        def transformer(version, text, urn=None):
+            if urn_given == urn:
+                self.urn_sent = True
             self.assertEqual(str(version.urn), "urn:cts:latinLit:phi1294.phi002.perseus-lat2")
             self.assertIsInstance(text, etree._Element)
             return "<a>Hello</a>"
@@ -135,6 +139,7 @@ class NemoTestRoutes(NemoResource):
         with patch('requests.get', return_value=self.getPassage_Route) as patched:
             view = nemo.r_passage("latinLit", "phi1294", "phi002", "perseus-lat2", "1.pr.1")
             self.assertEqual(view["text_passage"], Markup("<a>Hello</a>"))
+            self.assertTrue(self.urn_sent, "URN should be sent with passage")
 
     def test_route_passage_with_xslt(self):
         nemo = Nemo(
@@ -233,6 +238,7 @@ class NemoTestRoutes(NemoResource):
                     collections={'latinLit', 'greekLit'},
                     test="123",
                     value="value",
+                    template="main::index.html",
                     lang="eng",
                     assets=self.nemo.assets,
                     url={},
@@ -256,6 +262,7 @@ class NemoTestRoutes(NemoResource):
                     "index.html",
                     collections={'latinLit', 'greekLit'},
                     test="123",
+                    template="index.html",
                     value="value",
                     lang="eng",
                     assets=self.nemo.assets,
@@ -288,6 +295,7 @@ class NemoTestRoutes(NemoResource):
                     })
                 patched.assert_called_once_with(
                     "index.html",
+                    template="index.html",
                     collections={'latinLit', 'greekLit'},
                     test="123",
                     value="value",

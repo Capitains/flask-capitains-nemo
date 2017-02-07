@@ -1,7 +1,7 @@
 Templates documentation
 =======================
 
-.. _Templates.documentation::
+.. _Templates.documentation:
 
 Templates
 #########
@@ -78,14 +78,14 @@ main::menu.html
 Only `Variables shared across templates`_
 
 main::breadcrumb.html
-***************
+*********************
 
 Only `Variables shared across templates`_
 
 main::textgroups.html
 *********************
 
-See `r_collection` in :ref:`Nemo.api.r_collection`
+See :ref:`r_collection <Nemo.api.r_collection>`
 
 +-----------------+----------------------------------------------------------+
 | Variable Name   | Details                                                  |
@@ -96,7 +96,7 @@ See `r_collection` in :ref:`Nemo.api.r_collection`
 main::texts.html
 ****************
 
-main::See `r_texts` in :ref:`Nemo.api.r_texts`
+main::See :ref:`r_texts <Nemo.api.r_texts>`
 
 +-----------------+----------------------------------------------------------+
 | Variable Name   | Details                                                  |
@@ -107,7 +107,7 @@ main::See `r_texts` in :ref:`Nemo.api.r_texts`
 main::version.html
 ******************
 
-See `r_version` in :ref:`Nemo.api.r_version`
+See :ref:`r_version <Nemo.api.r_version>`
 
 +-----------------+-----------------------------------------------------------------------------------------+
 | Variable Name   | Details                                                                                 |
@@ -121,7 +121,7 @@ main::text.html
 ***************
 
 
-See `r_passage` in :ref:`Nemo.api.r_passage`
+See :ref:`r_passage <Nemo.api.r_passage>`
 
 +-----------------+----------------------------------------------------------------------------------------+
 | Variable Name   | Details                                                                                |
@@ -130,7 +130,7 @@ See `r_passage` in :ref:`Nemo.api.r_passage`
 +-----------------+----------------------------------------------------------------------------------------+
 | `text_passage`  | Markup object representing the text                                                    |
 +-----------------+----------------------------------------------------------------------------------------+
-| `urn`  | Markup object containing the URN of the passage for display
+| `urn`           | Markup object containing the URN of the passage for display                            |
 +-----------------+----------------------------------------------------------------------------------------+
 | `prev`          | Previous Passage Reference                                                             |
 +-----------------+----------------------------------------------------------------------------------------+
@@ -138,10 +138,10 @@ See `r_passage` in :ref:`Nemo.api.r_passage`
 +-----------------+----------------------------------------------------------------------------------------+
 
 main::passage_footer.html
-***************
+*************************
 
 
-See `r_passage` in :ref:`Nemo.api.r_passage`
+See :ref:`r_passage <Nemo.api.r_passage>`
 
 +-----------------+----------------------------------------------------------------------------------------+
 | Variable Name   | Details                                                                                |
@@ -150,7 +150,7 @@ See `r_passage` in :ref:`Nemo.api.r_passage`
 +-----------------+----------------------------------------------------------------------------------------+
 | `text_passage`  | Markup object representing the text                                                    |
 +-----------------+----------------------------------------------------------------------------------------+
-| `urn`  | Markup object containing the URN of the passage for display
+| `urn`           | Markup object containing the URN of the passage for display                            |
 +-----------------+----------------------------------------------------------------------------------------+
 | `prev`          | Previous Passage Reference                                                             |
 +-----------------+----------------------------------------------------------------------------------------+
