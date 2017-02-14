@@ -76,6 +76,7 @@ class PluginPrototype(object):
     CLEAR_ASSETS = False
     CSS = []
     STATICS = []
+    CACHED = []
     JS = []
     STATIC_FOLDER = None
 
