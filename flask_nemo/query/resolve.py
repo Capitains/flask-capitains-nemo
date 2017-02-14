@@ -3,6 +3,7 @@ import re
 from os import path as op
 from mimetypes import guess_type
 from flask import send_file
+from MyCapytain.common.constants import Mimetypes
 
 
 class UnresolvableURIError(Exception):
@@ -141,13 +142,13 @@ class CTSRetriever(RetrieverPrototype):
 
     .. note:: Local Retriever needs to be instantiated
 
-    :param retriever: CTS5 Retrieve
-    :type retriever: MyCapytain.retrievers.cts5.Endpoint
+    :param resolver: CTS5 Resolver
+    :type resolver: MyCapytain.resolver.cts.*
     """
     __reg_exp__ = re.compile("^urn:cts:")
 
-    def __init__(self, retriever):
-        self.__retriever__ = retriever
+    def __init__(self, resolver):
+        self.__resolver__ = resolver
 
     @staticmethod
     def match(uri):
@@ -169,4 +170,4 @@ class CTSRetriever(RetrieverPrototype):
         :return: the contents of the resource
         :rtype: str
         """
-        return self.__retriever__.getPassage(uri), "text/xml"
+        return self.__resolver__.getTextualNode(uri).export(Mimetypes.XML.TEI), "text/xml"

@@ -2,7 +2,7 @@ from flask import Flask
 from flask_nemo import Nemo
 from flask_nemo.plugin import PluginPrototype
 from flask_nemo.filters import f_formatting_passage_reference
-from tests.resources import NemoResource
+from tests.test_resources import NemoResource
 
 
 class FilterPlugin(PluginPrototype):

@@ -17,7 +17,7 @@ class RetrieverMock(object):
 
 class WTarget(Target):
     def __init__(self, param_dict):
-        super(WTarget, self).__init__(urn=param_dict["urn"])
+        super(WTarget, self).__init__(objectId=param_dict["urn"])
 
 
 class TestTarget(TestCase):
@@ -26,37 +26,47 @@ class TestTarget(TestCase):
 
     def setUp(self):
         self.alias = Target
-        self.target = "urn:cts:latinLit:phi1294.phi002.perseus-lat2"
+        self.target_1 = "urn:cts:latinLit:phi1294.phi002.perseus-lat2"
+        self.target_1_export = {"source":"urn:cts:latinLit:phi1294.phi002.perseus-lat2"}
+        self.target_2 = URN("urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.1.1")
+        self.target_2_export = {
+            "source": "urn:cts:latinLit:phi1294.phi002.perseus-lat2",
+            "selector": {
+                "type": "FragmentSelector",
+                "conformsTo": "http://ontology-dts.org/terms/subreference",
+                "value": "1.1.1"
+            }
+        }
+        self.target_3 = "urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.1.1"
+        self.target_3_export = {
+            "source": "urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.1.1"
+        }
 
     def test_init(self):
         """ Assert initation takes into account params
         """
         self.assertEqual(
-            self.alias("urn:cts:latinLit:phi1294.phi002.perseus-lat2").__urn__,
-            URN("urn:cts:latinLit:phi1294.phi002.perseus-lat2"),
+            self.alias("urn:cts:latinLit:phi1294.phi002.perseus-lat2").objectId,
+            "urn:cts:latinLit:phi1294.phi002.perseus-lat2",
             "String are taken as parameter"
         )
         self.assertEqual(
-            str(self.alias(URN("urn:cts:latinLit:phi1294.phi002.perseus-lat2")).__urn__),
+            self.alias(URN("urn:cts:latinLit:phi1294.phi002.perseus-lat2")).objectId,
             "urn:cts:latinLit:phi1294.phi002.perseus-lat2",
             "URN are taken as parameter"
-        )
-
-    def test_urn(self):
-        """ Assert initation takes into account params
-        """
-        self.assertEqual(
-            self.alias("urn:cts:latinLit:phi1294.phi002.perseus-lat2").urn,
-            URN("urn:cts:latinLit:phi1294.phi002.perseus-lat2"),
-            "URN Method is equal to initiation value"
         )
 
     def test_to_json(self):
         """ Assert json-serializable is produced by the given resource is produced
         """
         self.assertEqual(
-            json.loads(json.dumps(self.alias(self.target).to_json())),
-            self.target,
+            json.loads(json.dumps(self.alias(self.target_1).to_json())),
+            self.target_1_export,
+            "JSON of basic target is a plain string"
+        )
+        self.assertEqual(
+            json.loads(json.dumps(self.alias(self.target_2).to_json())),
+            self.target_2_export,
             "JSON of basic target is a plain string"
         )
 
@@ -78,7 +88,7 @@ class TestAnnotationResource(TestCase):
         ]
         self.params_2 = [
             "http://localhost1",
-            {"urn" : URN("urn:cts:latinLit:phi1294.phi002.perseus-lat2")},
+            {"urn": URN("urn:cts:latinLit:phi1294.phi002.perseus-lat2")},
             "http://foo.bar/treebank1",
             self.resolver,
             WTarget,
@@ -113,7 +123,7 @@ class TestAnnotationResource(TestCase):
             "URI should be set with init params"
         )
         self.assertEqual(
-            str(anno.target.urn), "urn:cts:latinLit:phi1294.phi002.perseus-lat2",
+            str(anno.target.objectId), "urn:cts:latinLit:phi1294.phi002.perseus-lat2",
             "Target should be set with init params"
         )
         self.assertIsInstance(

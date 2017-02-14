@@ -1,0 +1,26 @@
+{% macro single_ref(objectId, subreference, human_reff) -%}
+    <li class="col-md-1">
+        <a href="{{url_for('.r_passage', objectId=objectId, subreference=subreference)}}">{{ human_reff }}</a>
+    </li>
+{%- endmacro %}
+
+{% macro reff_dict(objectId, reffs) -%}
+    {% for human_reff, dict_or_reff in reffs.items() %}
+        {% if dict_or_reff|is_str %}
+            {{ single_ref(objectId, dict_or_reff, human_reff) }}
+        {% else %}
+            <ul class="level row list-unstyled">
+                <li>
+                    <h2>{{human_reff|i18n_citation_type}}</h2>
+                    <ul class="reffs">
+                        {{ reff_dict(objectId, dict_or_reff) }}
+                    </ul>
+                </li>
+            </ul>
+        {% endif %}
+    {% endfor %}
+{%- endmacro %}
+
+{% macro hierarchical_dispatcher(objectId, reffs, citation) -%}
+    {{ reff_dict(objectId, (reffs|hierarchical_passages(citation))) }}
+{%- endmacro %}

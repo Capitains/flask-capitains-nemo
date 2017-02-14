@@ -55,4 +55,4 @@ This small tutorial takes that you have a CTS API endpoint available, here :code
     - Install from pip : :code:`pip install flask_nemo`
 
 3. You will be able now to call capitains nemo help information through :code:`capitains-nemo --help`
-4. Basic setting for testing an api is :code:`capitains-nemo http://localhost:8000`.
+4. Basic setting for testing is :code:`capitains-nemo cts-api https://cts.perseids.org/api/cts`.

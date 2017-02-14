@@ -1,24 +1,12 @@
 """
     Test for simple init parameters override
 """
-from .resources import NemoResource, NautilusDummy
+from tests.test_resources import NemoResource, NautilusDummy
 from flask_nemo import Nemo
 from flask import Flask
 
 
 class TestNemoInit(NemoResource):
-    def test_init_app(self):
-        """ Test that application initiation uses config parameters
-        """
-        app = Flask(__name__)
-        app.config["CTS_API_URL"] = "http://localhost"
-        app.config["CTS_API_INVENTORY"] = "annotsrc"
-        self.nemo.init_app(app)
-
-        self.assertEqual(self.nemo.api_inventory, "annotsrc")
-        self.assertEqual(self.nemo.api_url, "http://localhost")
-        self.assertEqual(self.nemo.app, app)
-
     def test_overwrite_urls(self):
         """ Check that routes can be added or modified
         """
@@ -66,11 +54,5 @@ class TestNemoInit(NemoResource):
 
     def test_other_endpoint(self):
         """ Test when an endpoint is set """
-        nemo = Nemo(retriever=NautilusDummy)
-        self.assertEqual(nemo.retriever, NautilusDummy, "Endpoint should be set through endpoint parameter")
-
-        nemo = Nemo(api_url="http://foo.bar", retriever=NautilusDummy)
-        self.assertEqual(nemo.retriever, NautilusDummy,
-                         "Endpoint should be set through endpoint parameter, regardless of api_url")
-        self.assertEqual(nemo.api_url, "http://foo.bar",
-                         "api_urlshould be set through endpoint parameter, regardless of endpoint")
+        nemo = Nemo(resolver=NautilusDummy)
+        self.assertEqual(nemo.resolver, NautilusDummy, "Endpoint should be set through endpoint parameter")

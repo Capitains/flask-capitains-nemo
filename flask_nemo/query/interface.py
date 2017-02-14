@@ -1,4 +1,3 @@
-from MyCapytain.resources.texts.api import Text
 from MyCapytain.common.reference import URN
 from flask_nemo.query.proto import QueryPrototype
 from flask_nemo.query.annotation import AnnotationResource
@@ -36,6 +35,10 @@ class SimpleQuery(QueryPrototype):
             else:
                 self.__annotations__.append(resource)
 
+    @property
+    def textResolver(self):
+        return self.__nemo__.resolver
+
     def process(self, nemo):
         """ Register nemo and parses annotations
 
@@ -45,28 +48,20 @@ class SimpleQuery(QueryPrototype):
         """
         self.__nemo__ = nemo
         for annotation in self.__annotations__:
-            text = self.__getText__(annotation.target.urn)
-            if annotation.target.urn.reference.end \
-                or len(annotation.target.urn.reference.list) < len(text.citation):
-                annotation.target.expanded = frozenset(self.__getinnerreffs__(
-                    text=text,
-                    urn=annotation.target.urn
-                ))
-            else:
-                annotation.target.expanded = frozenset([str(annotation.target.urn)])
+            annotation.target.expanded = frozenset(
+                self.__getinnerreffs__(
+                    objectId=annotation.target.objectId,
+                    subreference=annotation.target.subreference
+                )
+            )
 
-    def __getText__(self, urn):
+    def __get_resource_metadata__(self, objectId):
         """ Return a metadata text object
 
-        :param urn: URN object of the passage
+        :param objectId: objectId of the text
         :return: Text
         """
-        return self.__nemo__.get_text(
-            urn.namespace,
-            urn.textgroup,
-            urn.work,
-            urn.version
-        )
+        return self.textResolver.getMetadata(objectId)
 
     @property
     def annotations(self):
@@ -78,57 +73,63 @@ class SimpleQuery(QueryPrototype):
         except IndexError:
             raise NotFound
 
-    def getAnnotations(self,
-            urns=None,
-            wildcard=".", include=None, exclude=None,
-            limit=None, start=1,
-            expand=False,
-            **kwargs
-        ):
+    def getAnnotations(self, targets, wildcard=".", include=None, exclude=None, limit=None, start=1, expand=False,
+                       **kwargs):
         annotations = []
 
-        if not urns:
+        if not targets:
             return len(self.annotations), sorted(self.annotations, key=lambda x: x.uri)
 
-        if not isinstance(urns, list):
-            urns = [urns]
+        if not isinstance(targets, list):
+            targets = [targets]
 
-        for urn in urns:
-
-            if not isinstance(urn, URN):
-                _urn = URN(urn)
+        for target in targets:
+            if isinstance(target, tuple):
+                objectId, subreference = target
+            elif isinstance(target, URN):
+                objectId, subreference = target.upTo(URN.NO_PASSAGE), str(target.reference)
             else:
-                _urn = urn
+                objectId, subreference = target, None
 
-            if _urn.reference and _urn.reference.end:
-                urns_in_range = self.__getinnerreffs__(
-                    text=self.__getText__(_urn),
-                    urn=_urn
-                )
-            else:
-                urns_in_range = [str(urn)]
-            urns_in_range = frozenset(urns_in_range)
+            ref_in_range = list(self.__getinnerreffs__(
+                objectId=objectId,
+                subreference=subreference
+            ))
+            ref_in_range = frozenset(ref_in_range)
             annotations.extend([
                 annotation
                 for annotation in self.annotations
-                if str(_urn) == str(annotation.target.urn) or  # Exact Match
-                bool(urns_in_range.intersection(annotation.target.expanded))  # Deeper than
+                # Exact match
+                if (str(objectId), subreference) == (annotation.target.objectId, annotation.target.subreference) or
+                # Deeper match
+                len(ref_in_range.intersection(annotation.target.expanded)) > 0
             ])
 
         annotations = list(set(annotations))
 
         return len(annotations), sorted(annotations, key=lambda x: x.uri)
 
-    def __getinnerreffs__(self, text, urn):
+    def __getinnerreffs__(self, objectId, subreference):
         """ Resolve the list of urns between in a range
 
-        :param urn: Urn of the passage
-        :type urn: URN
-        :return:
+        :param text_metadata: Resource Metadata
+        :param objectId: ID of the Text
+        :type objectId: str
+        :param subreference: ID of the Text
+        :type subreference: str
+        :return: References in the span
         """
-        text = Text(
-            str(text.urn),
-            self.__nemo__.retriever,
-            citation=text.citation
-        )
-        return text.getValidReff(reference=urn.reference, level=len(text.citation))
+        level = 0
+        yield subreference
+        while level > -1:
+            reffs = self.__nemo__.resolver.getReffs(
+                objectId,
+                subreference=subreference,
+                level=level
+            )
+            if len(reffs) == 0:
+                break
+            else:
+                for r in reffs:
+                    yield r
+                level += 1

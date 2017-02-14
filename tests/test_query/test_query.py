@@ -42,15 +42,22 @@ class TestQuery(TestCase):
         
     def test_target_urn(self):
         """ Test that a target returns its urn property """
-        self.assertEqual(self.fakeurn, Target(self.fakeurn).urn)
+        self.assertEqual(str(self.fakeurn), Target(self.fakeurn).objectId)
 
     def test_target_json(self):
         """Default target have a string as json representation"""
         self.assertEqual(
             Target(
-                "urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.2.3"
+                "urn:cts:latinLit:phi1294.phi002.perseus-lat2", "1.2.3"
             ).to_json(),
-            "urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.2.3",
+            {
+                "source": "urn:cts:latinLit:phi1294.phi002.perseus-lat2",
+                "selector": {
+                    "type": "FragmentSelector",
+                    "conformsTo": "http://ontology-dts.org/terms/subreference",
+                    "value": "1.2.3"
+                }
+            },
             "Default target have a string as json representation"
         )
 

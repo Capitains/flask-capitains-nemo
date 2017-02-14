@@ -1,53 +1,17 @@
 import flask_nemo._data
-from flask_nemo.common import regMatch, getFromDict
-from collections import defaultdict, OrderedDict
+from flask_nemo.common import getFromDict
+from collections import OrderedDict
+from slugify import slugify
+from operator import itemgetter
 
 
-def f_order_author(textgroups, lang="eng"):
-    """ Order a list of textgroups
+def f_slugify(string):
+    """ Slugify a string
 
-    :param textgroups: list of textgroups to be sorted
-    :param lang: Language to display
-    :return: Sorted list
+    :param string: String to slugify
+    :return: Slugified string
     """
-    __textgroups__ = {
-        tg.metadata["groupname"][lang] or str(tg.urn): tg
-        for tg in textgroups
-    }
-
-    return [
-       __textgroups__[key]
-       for key in sorted(list(__textgroups__.keys()))
-   ]
-
-
-def f_active_link(string, url):
-    """ Check if current string is in the list of names
-
-    :param string: String to check for in url
-    :return: CSS class "active" if valid
-    :rtype: str
-    """
-    if string in url.values():
-        return "active"
-    return ""
-
-
-def f_collection_i18n(string, lang="eng"):
-    """ Return a i18n human readable version of a CTS domain such as latinLit
-
-    :param string: CTS Domain identifier
-    :type string: str
-    :return: Human i18n readable version of the CTS Domain
-    :rtype: str
-    """
-    if string in flask_nemo._data.COLLECTIONS:
-        return flask_nemo._data.COLLECTIONS[string]
-    elif regMatch.match(string):
-        lg = string[0:3]
-        if lg in flask_nemo._data.ISOCODES and lang in flask_nemo._data.ISOCODES[lg]:
-            return flask_nemo._data.ISOCODES[lg][lang]
-    return string
+    return slugify(string)
 
 
 def f_formatting_passage_reference(string):
@@ -77,27 +41,7 @@ def f_i18n_iso(isocode, lang="eng"):
         return "Unknown"
 
 
-def f_group_texts(versions_list):
-    """ Takes a list of versions and regroup them by work identifier
-
-    :param versions_list: List of text versions
-    :type versions_list: [Text]
-    :return: List of texts grouped by work
-    :rtype: [(Work, [Text])]
-    """
-    works = {}
-    texts = defaultdict(list)
-    for version in versions_list:
-        if version.urn.work not in works:
-            works[version.urn.work] = version.parents[0]
-        texts[version.urn.work].append(version)
-    return [
-        (works[index], texts[index])
-        for index in works
-    ]
-
-
-def f_order_text_edition_translation(versions_list):
+def f_order_resource_by_lang(versions_list):
     """ Takes a list of versions and put translations after editions
 
     :param versions_list: List of text versions
@@ -105,28 +49,21 @@ def f_order_text_edition_translation(versions_list):
     :return: List where first members will be editions
     :rtype: [Text]
     """
-    translations = []
-    editions = []
-    for version in versions_list:
-        if version.subtype == "Translation":
-            translations.append(version)
-        else:
-            editions.append(version)
-    return editions + translations
+    return sorted(versions_list, key=itemgetter("lang"))
 
 
-def f_hierarchical_passages(reffs, version):
+def f_hierarchical_passages(reffs, citation):
     """ A function to construct a hierarchical dictionary representing the different citation layers of a text
 
     :param reffs: passage references with human-readable equivalent
     :type reffs: [(str, str)]
-    :param version: text from which the reference comes
-    :type version: MyCapytain.resources.inventory.Text
+    :param citation: Main Citation
+    :type citation: Citation
     :return: nested dictionary representing where keys represent the names of the levels and the final values represent the passage reference
     :rtype: OrderedDict
     """
     d = OrderedDict()
-    levels = [x for x in version.citation]
+    levels = [x for x in citation]
     for cit, name in reffs:
         ref = cit.split('-')[0]
         levs = ['%{}|{}%'.format(levels[i].name, v) for i, v in enumerate(ref.split('.'))]

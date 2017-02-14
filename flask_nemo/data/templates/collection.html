@@ -1,0 +1,65 @@
+{% extends "main::container.html" %}
+
+{% block article %}
+<article>
+    <header>
+        <h1>
+        {% if collections.current %}
+        {{collections.current.label}}
+        {% else %}
+        Text Collections
+        {% endif %}
+        </h1>
+    </header>
+    <section class="card-columns">
+        <ul>
+        {% for coll in collections.members %}
+            {% if coll.model == 'http://w3id.org/dts-ontology/resource' %}
+            <li class="card">
+                [{{coll.lang}}] {{ coll.label }}<br />
+                <a class="card-link" href="{{url_for('.r_references_semantic', objectId=coll.id, semantic=coll.semantic)}}">Browse</a>
+                <a class="card-link" href="{{url_for('.r_first_passage', objectId=coll.id)}}">Read</a>
+            </li>
+            {% else %}
+            <li class="card">
+                {{ coll.label }}<br />
+                <a class="card-link" href="{{url_for('.r_collection_semantic', objectId=coll.id, semantic=coll.semantic)}}">Browse ({{coll.size}})</a>
+            </li>
+            {% endif %}
+        {% endfor %}
+        </ul>
+    </section>
+</article>
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+FUCKING IMPLEMENT CORRECT NEXT PREV !
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

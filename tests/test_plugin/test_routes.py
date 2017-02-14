@@ -1,13 +1,13 @@
 from unittest import TestCase
 from flask_nemo.plugin import PluginPrototype
-from .resources import make_client
+from tests.test_plugin.test_resources import make_client
 import werkzeug.routing
 from copy import deepcopy as copy
 
 
 class PluginRoute(PluginPrototype):
     ROUTES = [
-        ("/read/<collection>/<textgroup>/<work>/<version>/<passage_identifier>/<visavis>", "r_double", ["GET"])
+        ("/doubletext/<object1>/<object2>/<subreference>", "r_double", ["GET"])
     ]
 
     TEMPLATES = {
@@ -18,12 +18,12 @@ class PluginRoute(PluginPrototype):
     }
     HAS_AUGMENT_RENDER = True
 
-    def r_double(self, collection, textgroup, work, version, passage_identifier, visavis):
-        args = self.nemo.r_passage(collection, textgroup, work, version, passage_identifier)
+    def r_double(self, object1, object2, subreference):
+        args = self.nemo.r_passage(objectId=object1, subreference=subreference)
         # Call with other identifiers and add "visavis_" front of the argument
         args.update({
             "visavis_{0}".format(key): value for key, value in self.nemo.r_passage(
-                collection, textgroup, work, visavis, passage_identifier
+                object2, subreference
             ).items()
         })
         args["template"] = type(self).ROUTE_TEMPLATES["r_double"]
@@ -31,6 +31,8 @@ class PluginRoute(PluginPrototype):
 
     def render(self, **kwargs):
         kwargs["lang"] = "fre"
+        if "collections" in kwargs:
+            kwargs["collections"]["current"]["label"] = "Other label"
         return kwargs
 
 
@@ -63,7 +65,9 @@ class TestPluginRoutes(TestCase):
 
     def test_page_works(self):
         """ Test that passage page contains what is relevant : text and next passages"""
-        query_data = str(make_client(self.plugin_normal).get("/read/farsiLit/hafez/divan/perseus-eng1/1.1/perseus-ger1").data)
+        query_data = make_client(self.plugin_normal)\
+            .get("/doubletext/urn:cts:farsiLit:hafez.divan.perseus-eng1/urn:cts:farsiLit:hafez.divan.perseus-ger1/1.1")\
+            .data.decode()
         self.assertIn(
             'Ho ! Saki, pass around and offer the bowl (of love for God)', query_data,
             "English text should be displayed"
@@ -76,9 +80,11 @@ class TestPluginRoutes(TestCase):
     def test_plugin_change_render(self):
         """ Check that the augmenting render function works and is correctly plugged
         """
-        query_data = str(make_client(self.plugin_normal).get("/read/farsiLit/hafez").data)
+        query_data = make_client(self.plugin_normal)\
+            .get("/text/urn:cts:farsiLit:hafez.divan.perseus-eng1/passage/1.1")\
+            .data.decode()
         self.assertIn(
-            'Perse', query_data,
+            'Other label', query_data,
             "French Translation should be displayed"
         )
 
@@ -87,12 +93,14 @@ class TestPluginRoutes(TestCase):
         plugin = PluginClearRoute(name="normal")
         client = make_client(plugin)
 
-        req = client.get("/read/farsiLit/hafez/divan/perseus-eng1/1.1")
+        req = client.get("/text/urn:cts:farsiLit:hafez.divan.perseus-eng1/passage/1.1")
         self.assertEqual(
             404, req.status_code,
             "Original routes should not exist anymore"
         )
-        query_data = str(client.get("/read/farsiLit/hafez/divan/perseus-eng1/1.1/perseus-ger1").data)
+        query_data = make_client(self.plugin_normal)\
+            .get("/doubletext/urn:cts:farsiLit:hafez.divan.perseus-eng1/urn:cts:farsiLit:hafez.divan.perseus-ger1/1.1")\
+            .data.decode()
         self.assertIn(
             'Ho ! Saki, pass around and offer the bowl (of love for God)', query_data,
             "English text should be displayed"
@@ -118,7 +126,7 @@ class TestPluginRoutes(TestCase):
                 werkzeug.routing.BuildError,
                 msg="Call to other routes in templates should fail to build"
         ):
-            client.get("/read/farsiLit/hafez/divan/perseus-eng1/1.1/perseus-ger1")
+            client.get("/doubletext/urn:cts:farsiLit:hafez.divan.perseus-eng1/urn:cts:farsiLit:hafez.divan.perseus-ger1/1.1")
 
     def test_template_overwrite(self):
         """ Checks that overwriting original templates works
@@ -128,12 +136,12 @@ class TestPluginRoutes(TestCase):
                 "main": "tests/test_data/plugin_templates_main/main"
             }
         client = make_client(PluginTemplate())
-        query_data = str(client.get("/read/farsiLit/hafez/divan/perseus-eng1/1.1").data)
+        query_data = client.get("/text/urn:cts:farsiLit:hafez.divan.perseus-eng1/passage/1.1").data.decode()
         self.assertIn(
             'I am A CONTAINER !', query_data,
             "Container should have been overwritten"
         )
-        query_data = str(client.get("/read/farsiLit/hafez").data)
+        query_data = client.get("/collections/urn:cts:farsiLit:hafez").data.decode()
         self.assertIn(
             'I am A CONTAINER !', query_data,
             "Container should have been overwritten on a second page as well"

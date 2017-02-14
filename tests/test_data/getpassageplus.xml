@@ -22,6 +22,7 @@
             </CTS:label>
         </CTS:label>
         <CTS:passage>
+            <tei:TEI>
             <tei:body>
                 <tei:div type="edition" n="urn:cts:latinLit:phi1294.phi002.perseus-lat2">
                     <tei:div type="textpart" subtype="book" n="1">
@@ -38,6 +39,7 @@
                     </tei:div>
                 </tei:div>
             </tei:body>
+            </tei:TEI>
         </CTS:passage>
         <CTS:prevnext>
             <CTS:prev>

@@ -6,6 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
     <title>Capitains Nemo</title>
+    {% block metadata %}
+      {% include "main::metadata.html" %}
+    {% endblock %}
 
     <!-- Bootstrap --><!-- Latest compiled and minified CSS -->
     <!--<link rel="stylesheet" href="{{url_for('.static', filename='css/teibp.min.css')}}">-->
@@ -24,14 +27,27 @@
     <![endif]-->
   </head>
   <body>
-    <nav class="col-md-2" id="menu-container">
-      {% include "main::menu.html" %}
-    </nav>
-    <div class="col-md-10" id="reading-container">
-          {% include "main::breadcrumb.html" %}
-          {% block article %}
-          {% endblock %}
-    </div>
+      <div class="container-fluid">
+      <div class="row">
+        <nav class="col-sm-2 menus">
+          {% include "main::logo.html" %}
+        </nav>
+        <div class="col-sm-10 right-columns">
+              {% include "main::breadcrumb.html" %}
+        </div>
+      </div>
+      <div class="row">
+        <nav class="col-sm-2 menus" id="menu-container">
+          {% include "main::menu.html" %}
+        </nav>
+        <div class="col-sm-10 hfeed right-columns" id="reading-container">
+          <div class="">
+              {% block article %}
+              {% endblock %}
+          </div>
+        </div>
+      </div>
+      </div>
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
@@ -44,6 +60,9 @@
     {% endfor %}
 
   {% block additionalscript %}
+  {% endblock %}
+  {% block footer %}
+          {% include "main::footer.html" %}
   {% endblock %}
   </body>
 </html>

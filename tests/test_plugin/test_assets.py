@@ -1,6 +1,6 @@
 from unittest import TestCase
 from flask_nemo.plugin import PluginPrototype
-from .resources import make_client
+from tests.test_plugin.test_resources import make_client
 
 
 class PluginAssets(PluginPrototype):

@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version = "1.0.0b3"
+version = "1.0.0b4"
 
 setup(
     name='flask_nemo',
@@ -13,17 +13,18 @@ setup(
     description='Flask Extension to browse CTS Repository',
     test_suite="tests",
     install_requires=[
-        "MyCapytain>=1.0.3",
+        "MyCapytain>=2.0.0b5",
         "requests_cache>=0.4.9",
-        "Flask>=0.10.1",
-        "requests>=2.10.0"
+        "Flask>=0.12",
+        "requests>=2.10.0",
+        "python-slugify==1.2.1",
+        "Flask-Caching>=1.2.0"
     ],
     tests_require=[
-        "mock==1.0.1",
-        "capitains_nautilus>=0.0.5"
+        "mock>=2.0.0",
     ],
     entry_points={
-        'console_scripts': ['capitains-nemo=flask_nemo:cmd'],
+        'console_scripts': ['capitains-nemo=flask_nemo.cmd:server'],
     },
     include_package_data=True,
     zip_safe=False

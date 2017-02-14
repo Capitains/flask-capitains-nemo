@@ -1,5 +1,5 @@
 import json
-from .resources import make_client
+from tests.test_plugin.test_resources import make_client
 from unittest import TestCase
 from flask_nemo.plugins.annotations_api import AnnotationsApiPlugin
 from flask_nemo.query.proto import QueryPrototype
@@ -9,23 +9,19 @@ from flask import Response
 
 class MockQueryInterface(QueryPrototype):
     ANNOTATION = AnnotationResource(
-        "uri", "urn:cts:latinLit:phi1294.phi002.perseus-lat2:1", "http://foo.bar/treebank",
+        "uri", ("urn:cts:latinLit:phi1294.phi002.perseus-lat2", "1"), "http://foo.bar/treebank",
         resolver=None,  # Overwriting this one for the purpose of the test
         mimetype="application/xml", slug="treebank"
     )
     ANNOTATION2 = AnnotationResource(
-        "uri2", "urn:cts:latinLit:phi1294.phi002.perseus-lat2:2", "http://foo.bar/treebank",
+        "uri2", ("urn:cts:latinLit:phi1294.phi002.perseus-lat2", "2"), "http://foo.bar/treebank",
         resolver=None,  # Overwriting this one for the purpose of the test
         mimetype="application/json", slug="treebank"
     )
 
-    def getAnnotations(self,
-            urns,
-            wildcard=".", include=None, exclude=None,
-            limit=None, start=1,
-            expand=False, **kwargs
-        ):
-        if urns == None:
+    def getAnnotations(self, targets, wildcard=".", include=None, exclude=None, limit=None, start=1, expand=False,
+                       **kwargs):
+        if targets == None:
             return 2, [
                 type(self).ANNOTATION,
                 type(self).ANNOTATION2
@@ -63,6 +59,7 @@ class AnnotationsApiPluginDummyInterfaceTest(TestCase):
     def setUp(self):
         self.ann_plugin = AnnotationsApiPlugin(name="testplugin", queryinterface=MockQueryInterface(lambda x: x))
         self.client = make_client(self.ann_plugin)
+        self.maxDiff = 50000
 
     def test_route_by_target(self):
         """ Check error response for improper urn
@@ -73,20 +70,28 @@ class AnnotationsApiPluginDummyInterfaceTest(TestCase):
             data,
             {
               "@context": {
-                "anno": "http://www.w3.org/ns/anno.jsonld",
+                "": "http://www.w3.org/ns/anno.jsonld",
                 "dc": "http://purl.org/dc/terms/",
-                "owl": "http://www.w3.org/2002/07/owl#"
+                "owl": "http://www.w3.org/2002/07/owl#",
+                'nemo': 'https://capitains.github.io/flask-capitains-nemo/ontology/#'
               },
-              "anno:id": "/api/annotations?start=1",
-              "anno:startIndex": 1,
-              "anno:total": 1,
-              "anno:type": "AnnotationCollection",
-              "anno:items": [
+              "id": "/api/annotations?start=1",
+              "startIndex": 1,
+              "total": 1,
+              "type": "AnnotationCollection",
+              "items": [
                 {
-                  "anno:body": "/api/annotations/922fffd1bd6fdaa95b4545df7a78754f6d67c2272b2900aa3ccd5e9da3dbb179/body",
-                  "anno:id": "/api/annotations/922fffd1bd6fdaa95b4545df7a78754f6d67c2272b2900aa3ccd5e9da3dbb179",
-                  "anno:target": "urn:cts:latinLit:phi1294.phi002.perseus-lat2:1",
-                  "anno:type": "Annotation",
+                  "body": "/api/annotations/922fffd1bd6fdaa95b4545df7a78754f6d67c2272b2900aa3ccd5e9da3dbb179/body",
+                  "id": "/api/annotations/922fffd1bd6fdaa95b4545df7a78754f6d67c2272b2900aa3ccd5e9da3dbb179",
+                  "target": {
+                    "source": "urn:cts:latinLit:phi1294.phi002.perseus-lat2",
+                    "selector": {
+                        "type": "FragmentSelector",
+                        "conformsTo": "http://ontology-dts.org/terms/subreference",
+                        "value": "1"
+                    }
+                  },
+                  "type": "Annotation",
                   "dc:type": "http://foo.bar/treebank",
                   "nemo:slug": "treebank",
                   "owl:sameAs": [
@@ -108,20 +113,28 @@ class AnnotationsApiPluginDummyInterfaceTest(TestCase):
             data,
             {
               "@context": {
-                "anno": "http://www.w3.org/ns/anno.jsonld",
+                "": "http://www.w3.org/ns/anno.jsonld",
                 "dc": "http://purl.org/dc/terms/",
-                "owl": "http://www.w3.org/2002/07/owl#"
+                "owl": "http://www.w3.org/2002/07/owl#",
+                'nemo': 'https://capitains.github.io/flask-capitains-nemo/ontology/#'
               },
-              "anno:id": "/api/annotations?start=1",
-              "anno:startIndex": 1,
-              "anno:total": 2,
-              "anno:type": "AnnotationCollection",
-              "anno:items": [
+              "id": "/api/annotations?start=1",
+              "startIndex": 1,
+              "total": 2,
+              "type": "AnnotationCollection",
+              "items": [
                 {
-                  "anno:body": "/api/annotations/922fffd1bd6fdaa95b4545df7a78754f6d67c2272b2900aa3ccd5e9da3dbb179/body",
-                  "anno:id": "/api/annotations/922fffd1bd6fdaa95b4545df7a78754f6d67c2272b2900aa3ccd5e9da3dbb179",
-                  "anno:target": "urn:cts:latinLit:phi1294.phi002.perseus-lat2:1",
-                  "anno:type": "Annotation",
+                  "body": "/api/annotations/922fffd1bd6fdaa95b4545df7a78754f6d67c2272b2900aa3ccd5e9da3dbb179/body",
+                  "id": "/api/annotations/922fffd1bd6fdaa95b4545df7a78754f6d67c2272b2900aa3ccd5e9da3dbb179",
+                  "target": {
+                    "source": "urn:cts:latinLit:phi1294.phi002.perseus-lat2",
+                    "selector": {
+                        "type": "FragmentSelector",
+                        "conformsTo": "http://ontology-dts.org/terms/subreference",
+                        "value": "1"
+                    }
+                  },
+                  "type": "Annotation",
                   "dc:type": "http://foo.bar/treebank",
                   "nemo:slug": "treebank",
                   "owl:sameAs": [
@@ -129,10 +142,17 @@ class AnnotationsApiPluginDummyInterfaceTest(TestCase):
                   ]
                 },
                 {
-                  "anno:body": "/api/annotations/15c0c44af733054c9df420d046b871ef2263df0f1181b663bd7ba04c05032509/body",
-                  "anno:id": "/api/annotations/15c0c44af733054c9df420d046b871ef2263df0f1181b663bd7ba04c05032509",
-                  "anno:target": "urn:cts:latinLit:phi1294.phi002.perseus-lat2:2",
-                  "anno:type": "Annotation",
+                  "body": "/api/annotations/15c0c44af733054c9df420d046b871ef2263df0f1181b663bd7ba04c05032509/body",
+                  "id": "/api/annotations/15c0c44af733054c9df420d046b871ef2263df0f1181b663bd7ba04c05032509",
+                  "target": {
+                    "source": "urn:cts:latinLit:phi1294.phi002.perseus-lat2",
+                    "selector": {
+                        "type": "FragmentSelector",
+                        "conformsTo": "http://ontology-dts.org/terms/subreference",
+                        "value": "2"
+                    }
+                  },
+                  "type": "Annotation",
                   "dc:type": "http://foo.bar/treebank",
                   "nemo:slug": "treebank",
                   "owl:sameAs": [
@@ -166,17 +186,25 @@ class AnnotationsApiPluginDummyInterfaceTest(TestCase):
             json.loads(data),
             {
                 "@context": {
-                    "anno": "http://www.w3.org/ns/anno.jsonld",
+                    "": "http://www.w3.org/ns/anno.jsonld",
                     "dc": "http://purl.org/dc/terms/",
-                    "owl": "http://www.w3.org/2002/07/owl#"
+                    "owl": "http://www.w3.org/2002/07/owl#",
+                    'nemo': 'https://capitains.github.io/flask-capitains-nemo/ontology/#'
                 },
-                "anno:body": "/api/annotations/922fffd1bd6fdaa95b4545df7a78754f6d67c2272b2900aa3ccd5e9da3dbb179/body",
-                "anno:id": "/api/annotations/922fffd1bd6fdaa95b4545df7a78754f6d67c2272b2900aa3ccd5e9da3dbb179",
-                "anno:target": "urn:cts:latinLit:phi1294.phi002.perseus-lat2:1",
-                "anno:type": "Annotation",
+                "body": "/api/annotations/922fffd1bd6fdaa95b4545df7a78754f6d67c2272b2900aa3ccd5e9da3dbb179/body",
+                "id": "/api/annotations/922fffd1bd6fdaa95b4545df7a78754f6d67c2272b2900aa3ccd5e9da3dbb179",
+                "target": {
+                    "source": "urn:cts:latinLit:phi1294.phi002.perseus-lat2",
+                    "selector": {
+                        "type": "FragmentSelector",
+                        "conformsTo": "http://ontology-dts.org/terms/subreference",
+                        "value": "1"
+                    }
+                },
+                "type": "Annotation",
                 "dc:type": "http://foo.bar/treebank",
                 "nemo:slug": "treebank",
-                "sameAs": [
+                "owl:sameAs": [
                     "uri"
                 ]
             },
@@ -250,15 +278,16 @@ class AnnotationsApiPluginTest(TestCase):
             json.loads(response.get_data().decode("utf-8")),
             {
                 '@context': {
-                    'anno': 'http://www.w3.org/ns/anno.jsonld',
+                    '': 'http://www.w3.org/ns/anno.jsonld',
                     'dc': 'http://purl.org/dc/terms/',
-                    'owl': 'http://www.w3.org/2002/07/owl#'
+                    'owl': 'http://www.w3.org/2002/07/owl#',
+                    'nemo': 'https://capitains.github.io/flask-capitains-nemo/ontology/#'
                 },
-                'anno:id': '/api/annotations?start=1',
-                'anno:items': [],
-                'anno:startIndex': 1,
-                'anno:total': 0,
-                'anno:type': 'AnnotationCollection'
+                'id': '/api/annotations?start=1',
+                'items': [],
+                'startIndex': 1,
+                'total': 0,
+                'type': 'AnnotationCollection'
              }
         )
         self.assertEqual(200, response.status_code)

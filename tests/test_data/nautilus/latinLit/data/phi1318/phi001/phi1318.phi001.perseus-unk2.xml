@@ -1,0 +1,99 @@
+<?xml-model href="http://www.stoa.org/epidoc/schema/8.19/tei-epidoc.rng"
+  schematypens="http://relaxng.org/ns/structure/1.0"?><?xml-model href="http://www.stoa.org/epidoc/schema/8.19/tei-epidoc.rng"
+  schematypens="http://purl.oclc.org/dsdl/schematron"?>
+<TEI xmlns="http://www.tei-c.org/ns/1.0">
+    <teiHeader type="text">
+        <fileDesc>
+            <titleStmt>
+                <title>Epigrammata</title>
+                <author>Martial</author>
+                <sponsor>Perseus Project, Tufts University</sponsor>
+                <principal>Gregory Crane</principal>
+            </titleStmt>
+            <publicationStmt>
+                <publisher>Trustees of Tufts University</publisher>
+                <pubPlace>Medford, MA</pubPlace>
+                <authority>Perseus Project</authority>
+            </publicationStmt>
+            <sourceDesc default="false">
+                <bibl default="false">
+                    <title>M. Valerii Martialis Epigrammaton libri / recognovit W. Heraeus</title>
+                    <author>Martial</author>
+                    <editor role="editor">Wilhelm Heraeus<!--, 1862-1938 (main editor)--></editor>
+                    <editor role="editor">Jacobus Borovskij<!-- (added corrections in 1976, more than 30 years before 2011)--></editor>
+                    <pubPlace>Leipzig</pubPlace>
+                    <date>1925/1976</date>
+                </bibl>
+            </sourceDesc>
+        </fileDesc>
+        <encodingDesc>
+         <refsDecl n="CTS">
+            <cRefPattern n="line"
+                         matchPattern="(\w+).(\w+).(\w+)"
+                         replacementPattern="#xpath(/tei:TEI/tei:text/tei:body/tei:div/tei:div[@n='$1']/tei:div[@n='$2']/tei:l[@n='$3'])">
+                <p>This pointer pattern extracts book and poem and line</p>
+            </cRefPattern>
+            <cRefPattern n="poem"
+                         matchPattern="(\w+).(\w+)"
+                         replacementPattern="#xpath(/tei:TEI/tei:text/tei:body/tei:div/tei:div[@n='$1']/tei:div[@n='$2'])">
+                <p>This pointer pattern extracts book and poem</p>
+            </cRefPattern>
+            <cRefPattern n="book"
+                         matchPattern="(\w+)"
+                         replacementPattern="#xpath(/tei:TEI/tei:text/tei:body/tei:div/tei:div[@n='$1'])">
+                <p>This pointer pattern extracts book</p>
+            </cRefPattern>
+        </refsDecl>
+            <refsDecl>
+                <refState unit="book"/>
+                <refState unit="poem"/>
+                <refState unit="line"/>
+            </refsDecl>
+        </encodingDesc>
+        <profileDesc>
+            <langUsage default="false">
+                <language ident="en">English</language>
+                <language ident="grc">Latin</language>
+            </langUsage>
+        </profileDesc>
+        <revisionDesc>
+	    <change when="2015-11-04" who="Zach Himes">Removed @rend from hi tag</change>
+            <change when="2008-01-01" who="Gregory Crane">Initial Markup</change>
+            <change when="2015-03-06" who="Thibault Clérice">converted to EpiDoc/CTS</change>
+        </revisionDesc>
+    </teiHeader>
+    <text n="urn:cts:latinLit:phi1294.phi002.perseus-unk2"
+         
+         xml:id="stoa0045.stoa0">
+        <body>
+            <div type="translation" n="urn:cts:latinLit:phi1318.phi001.perseus-unk2" xml:lang="unk">
+                <div type="textpart" subtype="book" n="8">
+                    <div type="textpart" subtype="poem" n="pr">
+                        <l n="1">Spero me secutum in libellis meis tale temperamen-</l>
+                        <l n="2">tum, ut de illis queri non possit quisquis de se bene </l>
+                        <l n="3">senserit, cum salva infimarum quoque personarum re-</l>
+                        <l n="4">verentia ludant; quae adeo antiquis auctoribus defuit, ut </l>
+                        <l n="5">nominibus non tantum veris abusi sint, sed et magnis. </l>
+                        <l n="6">Mihi fama vilius constet et probetur in me novissimum </l>
+                        <l n="7">ingenium. Absit a iocorum nostrorum simplicitate ma-</l>
+                        <l n="8">lignus interpres nec epigrammata mea scribat: inprobe </l>
+                        <l n="9">facit qui in alieno libro ingeniosus est. Lascivam ver-</l>
+                        <l n="10">borum veritatem, id est epigrammaton linguam, excu-</l>
+                        <l n="11">sarem, si meum esset exemplum: sic scribit Catullus, sic </l>
+                        <l n="12">Marsus, sic Pedo, sic Gaetulicus, sic quicumque perlegi-</l>
+                        <l n="13">tur. Si quis tamen tam ambitiose tristis est, ut apud </l>
+                        <l n="14">illum in nulla pagina latine loqui fas sit, potest epistula </l>
+                        <l n="15">vel potius titulo contentus esse. Epigrammata illis scri-</l>
+                        <l n="16">buntur, qui solent spectare Florales. Non intret Cato </l>
+                        <l n="17">theatrum meum, aut si intraverit, spectet. Videor mihi </l>
+                        <l n="18">meo iure facturus, si epistulam versibus clusero: </l>
+                        <l n="19">Nosses iocosae dulce cum sacrum Florae </l>
+                        <l n="20">Festosque lusus et licentiam volgi, </l>
+                        <l n="21">Cur in theatrum, Cato severe, venisti? </l>
+                        <l n="22">An ideo tantum veneras, ut exires? </l>
+                    </div>
+                </div>
+            </div>
+        </body>
+    </text>
+</TEI>

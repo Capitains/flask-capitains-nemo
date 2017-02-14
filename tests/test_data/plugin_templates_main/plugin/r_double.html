@@ -1,36 +1,41 @@
 {% extends "main::container.html" %}
 
 {% block article %}
-<div class="row">
-    <article class="col-md-6" style="min-height:100%;">
-        <header>
-            <h1>{{version.parents[0].metadata["title"][lang]}}</h1>
-            <h2>{{version.parents[1].metadata["groupname"][lang]}}</h2>
-            <p><small><i>{{version.metadata["description"][lang]}}</i></small></p>
-        </header>
-        <nav>
-            {% if prev %}
-            <a class="btn btn-xs btn-primary" href="{{url_for('.r_double', collection=url['collection'], textgroup=url['textgroup'], work=url['work'], version=url['version'], passage_identifier=prev, visavis=url['visavis']) }}">
-                <span class="glyphicon glyphicon-chevron-left"></span>
-            </a>
-            {% endif %}
-            {% if next %}
-            <a class="btn btn-xs btn-primary" href="{{url_for('.r_double', collection=url['collection'], textgroup=url['textgroup'], work=url['work'], version=url['version'], passage_identifier=next, visavis=url['visavis']) }}">
-                <span class="glyphicon glyphicon-chevron-right"></span>
-            </a>
-            {% endif %}
-        </nav>
-        <section>
+<article class="hentry entry white">
+    <header>
+        <h1 class="entry-title">{{collections.current.title}}</h1>
+        <h2 class="author vcard"><span class="fn">{{collections.current.author}}</span></h2>
+        <p class="entry-summary"><small>{{collections.current.label}}, <i>{{collections.current.description}}</i></small></p>
+        <span class='Z3988' title='{{collections.current.coins}}'></span>
+        <i>{{lang}}</i>ZAVAATA
+    </header>
+    <nav>
+        {% if prev %}
+        <a class="btn btn-xs btn-primary" href="{{url_for('.r_passage', objectId=objectId, subreference=prev) }}">
+            <span class="glyphicon glyphicon-chevron-left"></span>
+        </a>
+        {% endif %}
+        {% if next %}
+        <a class="btn btn-xs btn-primary" href="{{url_for('.r_passage', objectId=objectId, subreference=next) }}">
+            <span class="glyphicon glyphicon-chevron-right"></span>
+        </a>
+        {% endif %}
+    </nav>
+    <div class="row">
+        <section class="col-md-6" style="min-height:100%;">
             {{ text_passage }}
         </section>
-    </article>
-    <article class="col-md-6" style="min-height:100%;">
-        <header>
-            <p><small><i>{{visavis_version.metadata["description"][lang]}}</i></small></p>
-        </header>
-        <section>
-            {{ visavis_text_passage }}
+        <section class="col-md-6" style="min-height:100%;">
+            <header>
+                <p><small><i>{{visavis_collections.current.description}}</i></small></p>
+            </header>
+            <section>
+                {{ visavis_text_passage }}
+            </section>
         </section>
-    </article>
-</div>
+    </div>
+    <footer>
+      {% include "main::passage_footer.html" %}
+    </footer>
+</article>
 {% endblock %}

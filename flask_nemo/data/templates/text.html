@@ -2,20 +2,21 @@
 
 {% macro header_passage() %}
 <header>
-    <h1>{{version.parents[0].metadata["title"][lang]}}</h1>
-    <h2>{{version.parents[1].metadata["groupname"][lang]}}</h2>
-    <p><small><i>{{version.metadata["description"][lang]}}</i></small></p>
+    <h1 class="entry-title">{{collections.current.title}}</h1>
+    <h2 class="author vcard"><span class="fn">{{collections.current.author}}</span></h2>
+    <p class="entry-summary"><small>{{collections.current.label}}, <i>{{collections.current.description}}</i></small></p>
+    <span class='Z3988' title='{{collections.current.coins}}'></span>
 </header>
 {% endmacro %}
 
 {% macro nav() %}
     {% if prev %}
-    <a class="btn btn-xs btn-primary" href="{{url_for('.r_passage', collection=url['collection'], textgroup=url['textgroup'], work=url['work'], version=url['version'], passage_identifier=prev) }}">
+    <a class="btn btn-xs btn-primary" href="{{url_for('.r_passage', objectId=objectId, subreference=prev) }}">
         <span class="glyphicon glyphicon-chevron-left"></span>
     </a>
     {% endif %}
     {% if next %}
-    <a class="btn btn-xs btn-primary" href="{{url_for('.r_passage', collection=url['collection'], textgroup=url['textgroup'], work=url['work'], version=url['version'], passage_identifier=next) }}">
+    <a class="btn btn-xs btn-primary" href="{{url_for('.r_passage', objectId=objectId, subreference=next) }}">
         <span class="glyphicon glyphicon-chevron-right"></span>
     </a>
     {% endif %}
@@ -26,13 +27,17 @@
 {% endmacro %}
 
 {% macro show_passage(text, header, navigation, footer) %}
-<article>
+<article class="hentry entry white">
         {{ header }}
     <nav>
         {{ navigation }}
     </nav>
-    <section>
-        {{ text }}
+    <section class="entry-content">
+        {% if cache_active %}
+            {% cache cache_time, cache_key %}{{ text_passage }} {% endcache %}
+        {% else %}
+            {{ text_passage }}
+        {% endif %}
     </section>
     <footer>
       {{ footer }}
@@ -42,4 +47,7 @@
 
 {% block article %}
     {{ show_passage(text_passage, navigation=nav(), header=header_passage(), footer=default_footer()) }}
+{% endblock %}
+
+{% block metadata %}
 {% endblock %}

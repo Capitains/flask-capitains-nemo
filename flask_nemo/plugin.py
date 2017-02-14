@@ -30,6 +30,7 @@ class PluginPrototype(object):
     :type JS: [str]
     :cvar STATIC: List of static resources (images for example) to give access to
     :type STATIC: [str]
+    :cvar CACHED: List of functions to cache
 
     :ivar assets: Dictionary of assets, with each key (css, js and static) being list of resources
     :type assets: dict(str:[str])

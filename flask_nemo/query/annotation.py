@@ -15,21 +15,43 @@ class Target(object):
     :ivar urn: Target urn
     """
 
-    def __init__(self, urn, **kwargs):
-        if not isinstance(urn, URN):
-            urn = URN(urn)
-        self.__urn__ = urn
+    def __init__(self, objectId, subreference=None, **kwargs):
+        if isinstance(objectId, URN):
+            if objectId.reference is not None:
+                subreference = str(objectId.reference)
+                objectId = str(objectId.upTo(URN.VERSION))
+            else:
+                objectId = str(objectId)
+                subreference = None
+        elif isinstance(objectId, tuple):
+            objectId, subreference = objectId
+        self.__objectId__ = objectId
+        self.__subreference__ = subreference
 
     @property
-    def urn(self):
-        return self.__urn__
+    def objectId(self):
+        return self.__objectId__
+
+    @property
+    def subreference(self):
+        return self.__subreference__
 
     def to_json(self):
         """ Method to call to get a serializable object for json.dump or jsonify based on the target
 
-        :return: str
+        :return: dict
         """
-        return str(self.__urn__)
+        if self.subreference is not None:
+            return {
+                "source": self.objectId,
+                "selector": {
+                    "type": "FragmentSelector",
+                    "conformsTo": "http://ontology-dts.org/terms/subreference",
+                    "value": self.subreference
+                }
+            }
+        else:
+            return {"source": self.objectId}
 
 
 class AnnotationResource(object):
@@ -38,7 +60,7 @@ class AnnotationResource(object):
     :param uri: URI identifier for the AnnotationResource
     :type uri: str
     :param target: the Target of the Annotation
-    :type target: Target
+    :type target: Target or str or URN or tuple
     :param type_uri: the URI identifying the underlying datatype of the Annotation
     :type type_uri: str
     :param resolver: Resolver providing access to the annotation
@@ -63,7 +85,10 @@ class AnnotationResource(object):
 
     def __init__(self, uri, target, type_uri, resolver, target_class=Target, mimetype=None, slug=None, **kwargs):
         self.__uri__ = uri
-        self.__target__ = target_class(target)
+        if not isinstance(target, Target):
+            self.__target__ = target_class(target)
+        else:
+            self.__target__ = target
         self.__type_uri__ = type_uri
         self.__slug__ = slug or deepcopy(type(self).SLUG)
         self.__sha__ = hashlib.sha256(

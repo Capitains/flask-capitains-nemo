@@ -1,0 +1,16 @@
+{% extends "main::container.html" %}
+
+{% import "main::macros.html" as macros %}
+
+{% block article %}
+<article class="nav reffs">
+    <header>{{current_label}}</header>
+    <section class="row">
+        {% if cache_active %}
+            {% cache cache_time, cache_key %}{{ macros.hierarchical_dispatcher(objectId, reffs, citation) }} {% endcache %}
+        {% else %}
+            {{ macros.hierarchical_dispatcher(objectId, reffs, citation) }}
+        {% endif %}
+    </section>
+</article>
+{% endblock %}

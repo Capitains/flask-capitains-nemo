@@ -8,8 +8,8 @@ Test file for chunkers and groupers.
 """
 
 from mock import patch, call, Mock
-import MyCapytain
-from .resources import NemoResource
+from MyCapytain.resources.collections.cts import TextInventory
+from tests.test_resources import NemoResource
 from flask_nemo.chunker import default_chunker, line_chunker, scheme_chunker, level_chunker, level_grouper
 
 
@@ -17,7 +17,7 @@ class TestChunkers(NemoResource):
 
     def setUp(self):
         super(TestChunkers, self).setUp()
-        self.inventory = MyCapytain.resources.inventory.TextInventory(resource=self.getCapabilities.text)
+        self.inventory = TextInventory.parse(resource=self.getCapabilities.text)
 
     def make_get_reff(self, asserted_level):
         def GetReff(level=1):

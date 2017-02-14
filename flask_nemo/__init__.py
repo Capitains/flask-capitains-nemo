@@ -6,25 +6,25 @@
     Extensions for Flask to propose a Nemo extensions
 """
 
-
+from urllib.parse import quote
 import os.path as op
+from operator import itemgetter
 import jinja2
-from flask import render_template, Blueprint, abort, Markup, send_from_directory, Flask
-import MyCapytain.retrievers.cts5
-from MyCapytain.retrievers.proto import CTS as CtsProtoRetriever
-import MyCapytain.resources.texts.tei
-import MyCapytain.resources.texts.api
-import MyCapytain.resources.inventory
-from MyCapytain.common.reference import URN
+from flask import render_template, Blueprint, abort, Markup, send_from_directory, Flask, url_for, redirect, request
 from lxml import etree
 from copy import deepcopy as copy
 from pkg_resources import resource_filename
 from collections import Callable, OrderedDict
+from MyCapytain.common.constants import Mimetypes
+from MyCapytain.resources.prototypes.metadata import ResourceCollection
+import inspect
+
 import flask_nemo._data
 import flask_nemo.filters
-from flask_nemo.chunker import default_chunker as __default_chunker__, level_grouper as __level_grouper__
+from flask_nemo.chunker import level_grouper as __level_grouper__
 from flask_nemo.plugins.default import Breadcrumb
 from flask_nemo.common import resource_qualifier, ASSETS_STRUCTURE
+from flask_nemo.jinjaext import FakeCacheExtension
 
 
 class Nemo(object):
@@ -33,16 +33,12 @@ class Nemo(object):
 
     :param app: Flask application
     :type app: Flask
-    :param api_url: URL of the API Endpoint
-    :type api_url: str
-    :param retriever: CTS Retriever (Will be defaulted to api_url using cts5 retriever if necessary)
-    :type retriever: MyCapytain.retrievers.proto.CTS
-    :param base_url: Base URL to use when registering the endpoint (It cannot be "/" only !)
+    :param resolver: MyCapytain resolver
+    :type resolver: MyCapytain.resolvers.prototypes.Resolver
+    :param base_url: Base URL to use when registering the endpoint
     :type base_url: str
-    :param cache: SQLITE cache file name
-    :type base_url: str
-    :param expire: Time before expiration of cache, default 3600
-    :type expire: int
+    :param cache: Flask-Caching instance or any object having a memoize decorator
+    :type cache: flask_caching.Cache
     :param plugins: List of plugins to connect to the Nemo instance
     :type plugins: list(flask_nemo.plugin.PluginPrototype)
     :param template_folder: Folder in which the full set of main namespace templates can be found
@@ -53,16 +49,10 @@ class Nemo(object):
     :type static_url_path: str
     :param urls: Function and routes to register (See Nemo.ROUTES)
     :type urls: [(str, str, [str])]
-    :param inventory: Default inventory to use
-    :type inventory: str
     :param transform: Dictionary of XSL filepath or transform function where default key is the default applied function
     :type transform: bool|dict
-    :param urntransform: Dictionary of urn transform functions where default key is the default applied function
-    :type urntransform: bool|dict
     :param chunker: Dictionary of function to group responses of GetValidReff
     :type chunker: {str: function(str, function(int))}
-    :param prevnext: Dictionary of function to execute GetPrevNext
-    :type prevnext: {str: function(str, function())}
     :param css: Path to additional stylesheets to load
     :type css: [str]
     :param js: Path to additional javascripts to load
@@ -75,68 +65,83 @@ class Nemo(object):
     :type prevent_plugin_clearing_assets: bool
     :param original_breadcrumb: Use the default Breadcrumb plugin packaged with Nemo (Default: True)
     :type original_breadcrumb: bool
+    :param default_lang: Default lang to fall back to
+    :type default_lang: str
 
     :ivar assets: Dictionary of assets loaded individually
     :ivar plugins: List of loaded plugins
+    :ivar resolver: Resolver
+    :ivar cached: List of cached functions
+    :ivar cache: Cache Instance
 
-    .. warning:: Until a C libxslt error is fixed ( https://bugzilla.gnome.org/show_bug.cgi?id=620102 ), it is not possible to use strip spaces in the xslt given to this application. See :ref:`lxml.strip-spaces`
+    .. warning:: Until a C libxslt error is fixed ( https://bugzilla.gnome.org/show_bug.cgi?id=620102 ), \
+    it is not possible to use strip spaces in the xslt given to this application. See :ref:`lxml.strip-spaces`
     """
 
     ROUTES = [
         ("/", "r_index", ["GET"]),
-        ("/read/<collection>", "r_collection", ["GET"]),
-        ("/read/<collection>/<textgroup>", "r_texts", ["GET"]),
-        ("/read/<collection>/<textgroup>/<work>/<version>", "r_version", ["GET"]),
-        ("/read/<collection>/<textgroup>/<work>/<version>/<passage_identifier>", "r_passage", ["GET"])
+        ("/collections", "r_collections", ["GET"]),
+        ("/collections/<objectId>", "r_collection", ["GET"]),
+        ("/text/<objectId>/references", "r_references", ["GET"]),
+        ("/text/<objectId>/passage/<subreference>", "r_passage", ["GET"]),
+        ("/text/<objectId>/passage", "r_first_passage", ["GET"])
+    ]
+    SEMANTIC_ROUTES = [
+        "r_collection", "r_references", "r_passage"
     ]
     FILTERS = [
-        "f_active_link",
-        "f_collection_i18n",
         "f_formatting_passage_reference",
         "f_i18n_iso",
-        "f_group_texts",
-        "f_order_text_edition_translation",
+        "f_order_resource_by_lang",
         "f_hierarchical_passages",
         "f_is_str",
         "f_i18n_citation_type",
-        "f_order_author",
-        "f_annotation_filter"
+        "f_slugify"
+    ]
+
+    CACHED = [
+        # Routes
+        "r_index", "r_collection", "r_collections", "r_references", "r_passage", "r_first_passage", "r_assets",
+        # Controllers
+        "get_inventory", "get_collection", "get_reffs", "get_passage", "get_siblings",
+        # Translater
+        "semantic", "make_coins", "expose_ancestors_or_children", "make_members", "transform",
+        # Business logic
+        # "view_maker", "route", #"render",
     ]
 
     """ Assets dictionary model
     """
     ASSETS = copy(ASSETS_STRUCTURE)
-    default_chunker = __default_chunker__
+    default_chunker = __level_grouper__
 
-    def __init__(self, name=None, app=None, api_url="/", retriever=None, base_url="/nemo", cache=None, expire=3600,
+    def __init__(self,
+                 name=None, app=None, base_url="/nemo",
+                 cache=None, resolver=None,
                  plugins=None,
                  template_folder=None, static_folder=None, static_url_path=None,
-                 urls=None, inventory=None, transform=None, urntransform=None, chunker=None, prevnext=None,
+                 urls=None, transform=None, chunker=None, prevnext=None,
                  css=None, js=None, templates=None, statics=None,
                  prevent_plugin_clearing_assets=False,
-                 original_breadcrumb=True):
+                 original_breadcrumb=True, default_lang="eng"):
 
         self.name = __name__
         if name:
             self.name = name
         self.prefix = base_url
-        self.api_url = api_url
 
-        if isinstance(retriever, CtsProtoRetriever):
-            self.retriever = retriever
-        else:
-            self.retriever = MyCapytain.retrievers.cts5.CTS(self.api_url)
+        self.resolver = resolver
 
         if app is not None:
             self.app = app
         else:
             self.app = None
 
-        self.api_inventory = inventory
-        if self.api_inventory:
-            self.retriever.inventory = self.api_inventory
+        self.cache = cache
+        self.cached = list()
+        for func in self.CACHED:
+            self.cached.append((getattr(self, func), self))
 
-        self.cache = None
         self.prevent_plugin_clearing_assets = prevent_plugin_clearing_assets
 
         if template_folder:
@@ -162,6 +167,12 @@ class Nemo(object):
 
         # Adding instance information
         self._urls = [tuple(list(url) + [None]) for url in self._urls]
+        # Adding semantic ones
+        self._semantic_url = [
+            (uri+"/<semantic>", endpoint, method, instance)
+            for uri, endpoint, method, instance in self._urls
+            if endpoint in self.SEMANTIC_ROUTES
+        ]
 
         self._filters = copy(Nemo.FILTERS)
         self._filters = [tuple([filt] + [None]) for filt in self._filters]
@@ -179,18 +190,11 @@ class Nemo(object):
         if isinstance(transform, dict):
             self.__transform.update(transform)
 
-        if isinstance(urntransform, dict):
-            self.__urntransform.update(urntransform)
-
-        self.chunker = dict()
-        self.chunker["default"] = type(self).default_chunker
+        self.chunker = {
+            "default": type(self).default_chunker
+        }
         if isinstance(chunker, dict):
             self.chunker.update(chunker)
-
-        self.prevnext = dict()
-        self.prevnext["default"] = type(self).default_prevnext
-        if isinstance(prevnext, dict):
-            self.prevnext.update(prevnext)
 
         # Setting up assets
         self.__assets__ = copy(type(self).ASSETS)
@@ -225,17 +229,34 @@ class Nemo(object):
                 [(namespace, folder) for namespace, folder in templates.items()]
             )
         self.__template_loader__ = dict()
+        self.__default_lang__ = default_lang
 
         if app:
             self.init_app(self.app)
 
     @property
     def plugins(self):
+        """ Dictionary of registered plugins
+
+        :rtype: dict
+        """
         return self.__plugins__
 
     @property
     def assets(self):
+        """ Dictionary of assets (First level : type, second level resource)
+
+        :rtype: dict
+        """
         return self.__assets__
+
+    @property
+    def inventory(self):
+        """ Root collection of the application
+
+        :rtype: Collection
+        """
+        return self.get_inventory()
 
     def init_app(self, app=None):
         """ Initiate the application
@@ -244,35 +265,59 @@ class Nemo(object):
         :type app: flask.Flask
         """
         # Legacy code
-        if "CTS_API_URL" in app.config:
-            self.api_url = app.config['CTS_API_URL']
-        if "CTS_API_INVENTORY" in app.config:
-            self.api_inventory = app.config['CTS_API_INVENTORY']
         if app:
             self.app = app
 
         self.register()
 
-    def transform(self, work, xml, urn):
-        """ Transform input according to potentiallyregistered XSLT
+    def get_locale(self):
+        """ Retrieve the best matching locale using request headers
 
-        .. note:: Since 1.0.0, transform takes a URN parameter which represent the passage which is called
+        .. note:: Probably one of the thing to enhance quickly.
+
+        :rtype: str
+        """
+        best_match = request.accept_languages.best_match(['de', 'fr', 'en', 'la'])
+        if best_match is None:
+            if len(request.accept_languages) > 0:
+                best_match = request.accept_languages[0][0][:2]
+            else:
+                return self.__default_lang__
+        lang = self.__default_lang__
+        if best_match == "de":
+            lang = "ger"
+        elif best_match == "fr":
+            lang = "fre"
+        elif best_match == "en":
+            lang = "eng"
+        elif best_match == "la":
+            lang = "lat"
+        return lang
+
+    def transform(self, work, xml, objectId, subreference=None):
+        """ Transform input according to potentially registered XSLT
+
+        .. note:: Since 1.0.0, transform takes an objectId parameter which represent the passage which is called
 
         .. note:: Due to XSLT not being able to be used twice, we rexsltise the xml at every call of xslt
-        .. warning:: Until a C libxslt error is fixed ( https://bugzilla.gnome.org/show_bug.cgi?id=620102 ), it is not possible to use strip tags in the xslt given to this application
+
+        .. warning:: Until a C libxslt error is fixed ( https://bugzilla.gnome.org/show_bug.cgi?id=620102 ), \
+        it is not possible to use strip tags in the xslt given to this application
 
         :param work: Work object containing metadata about the xml
         :type work: MyCapytains.resources.inventory.Text
         :param xml: XML to transform
         :type xml: etree._Element
-        :param urn: URN of the passage
-        :type urn: str
+        :param objectId: Object Identifier
+        :type objectId: str
+        :param subreference: Subreference
+        :type subreference: str
         :return: String representation of transformed resource
         :rtype: str
         """
         # We check first that we don't have
-        if str(work.urn) in self.__transform:
-            func = self.__transform[str(work.urn)]
+        if str(objectId) in self.__transform:
+            func = self.__transform[str(objectId)]
         else:
             func = self.__transform["default"]
 
@@ -280,209 +325,208 @@ class Nemo(object):
         if isinstance(func, str):
             with open(func) as f:
                 xslt = etree.XSLT(etree.parse(f))
-            return etree.tostring(xslt(xml), encoding=str, method="html", xml_declaration=None, pretty_print=False, with_tail=True, standalone=None)
+            return etree.tostring(
+                xslt(xml),
+                encoding=str, method="html",
+                xml_declaration=None, pretty_print=False, with_tail=True, standalone=None
+            )
 
         # If we have a function, it means we return the result of the function
         elif isinstance(func, Callable):
-            return func(work, xml, urn)
-        # If we have None, it meants we just give back the xml
+            return func(work, xml, objectId, subreference)
+        # If we have None, it means we just give back the xml
         elif func is None:
             return etree.tostring(xml, encoding=str)
-
-    def transform_urn(self, urn):
-        """ Transform urn according to configurable function
-
-        :param urn: URN to transform
-        :type urn: URN
-        :return: the URN (transformed or not)
-        :rtype: URN
-        """
-        # We check first that we don't have an override function
-        # N.B. overrides will be on the text level, not the passage
-        if urn.upTo(URN.NO_PASSAGE) in self.__urntransform:
-            func = self.__urntransform[urn.upTo(URN.NO_PASSAGE)]
-        else:
-            func = self.__urntransform["default"]
-
-        # If we have a function, it means we return the result of the function
-        if isinstance(func, Callable):
-            return func(urn)
-        # If we have None, it means we just give back the urn as string
-        return urn
 
     def get_inventory(self):
         """ Request the api endpoint to retrieve information about the inventory
 
-        :return: The text inventory
-        :rtype: MyCapytain.resources.inventory.TextInventory
+        :return: Main Collection
+        :rtype: Collection
         """
-        if self._inventory:
+        if self._inventory is not None:
             return self._inventory
 
-        reply = self.retriever.getCapabilities(inventory=self.api_inventory)
-        inventory = MyCapytain.resources.inventory.TextInventory(resource=reply)
-        self._inventory = inventory
+        self._inventory = self.resolver.getMetadata()
         return self._inventory
 
-    def get_collections(self):
-        """ Filter inventory and make a list of available collections
+    def get_collection(self, objectId):
+        """ Retrieve a collection in the inventory
 
-        :return: A set of CTS Namespaces
-        :rtype: set(str)
+        :param objectId: Collection Identifier
+        :type objectId: str
+        :return: Requested collection
+        :rtype: Collection
         """
-        inventory = self.get_inventory()
-        urns = set(
-            [inventory.textgroups[textgroup].urn.namespace for textgroup in inventory.textgroups]
-        )
-        return urns
+        return self.inventory[objectId]
 
-    def get_textgroups(self, collection_urn=None):
-        """ Retrieve textgroups
+    def get_reffs(self, objectId, subreference=None, collection=None, export_collection=False):
+        """ Retrieve and transform a list of references.
 
-        :param collection_urn: Collection to use for filtering the textgroups
-        :type collection_urn: str
-        :return: List of textgroup filtered by collection
-        :rtype: [MyCapytain.resources.inventory.Textgroup]
-        """
-        inventory = self.get_inventory()
-        if collection_urn is not None:
-            return Nemo.map_urns(inventory, collection_urn, 2, "textgroups")
-        return list(inventory.textgroups.values())
-
-    def get_works(self, collection_urn=None, textgroup_urn=None):
-        """ Retrieve works
-
-        :param collection_urn: Collection to use for filtering the textgroups
-        :type collection_urn: str
-        :param textgroup_urn: Textgroup to use for filtering the works
-        :type textgroup_urn: str
-        :return: List of work filtered by collection/Textgroup
-        :rtype: [MyCapytain.resources.inventory.Work]
-        """
-        if collection_urn is not None and textgroup_urn is not None:
-            textgroup = list(
-                filter(lambda x: Nemo.filter_urn(x, 3, textgroup_urn), self.get_textgroups(collection_urn))
-            )
-            if len(textgroup) == 1:
-                return textgroup[0].works.values()
-            else:
-                return []
-        elif collection_urn is None and textgroup_urn is None:
-            return [work for textgroup in self.get_inventory().textgroups.values() for work in textgroup.works.values()]
-        else:
-            raise ValueError("Get_Work takes either two None value or two set up value")
-
-    def get_texts(self, collection_urn=None, textgroup_urn=None, work_urn=None):
-        """ Retrieve texts
-
-        :param collection_urn: Collection to use for filtering the textgroups
-        :type collection_urn: str
-        :param textgroup_urn: Textgroup to use for filtering the works
-        :type textgroup_urn: str
-        :param work_urn: Work to use for filtering the texts
-        :type work_urn: str
-        :return: List of texts filtered by parameters
-        :rtype: [MyCapytain.resources.inventory.Text]
-        """
-        if collection_urn is not None and textgroup_urn is not None and work_urn is not None:
-            work = list(
-                filter(lambda x: Nemo.filter_urn(x, 4, work_urn), self.get_works(collection_urn, textgroup_urn))
-            )
-            if len(work) == 1:
-                return work[0].texts.values()
-            else:
-                return []
-        elif collection_urn is not None and textgroup_urn is not None and work_urn is None:
-            return [
-                text
-                for work in self.get_works(collection_urn, textgroup_urn)
-                for text in work.texts.values()
-            ]
-        elif collection_urn is None and textgroup_urn is None and work_urn is None:
-            return [
-                text
-                for textgroup in self.get_inventory().textgroups.values()
-                for work in textgroup.works.values()
-                for text in work.texts.values()
-            ]
-        else:
-            raise ValueError("Get_Work takes either two None value or two set up value")
-
-    def get_text(self, collection_urn, textgroup_urn, work_urn, version_urn):
-        """ Retrieve one version of a Text
-
-        :param collection_urn: Collection to use for filtering the textgroups
-        :type collection_urn: str
-        :param textgroup_urn: Textgroup to use for filtering the works
-        :type textgroup_urn: str
-        :param work_urn: Work identifier to use for filtering texts
-        :type work_urn: str
-        :param version_urn: Version identifier
-        :type version_urn: str
-        :return: A Text represented by the various parameters
-        :rtype: MyCapytain.resources.inventory.Text
-        """
-        work = list(
-            filter(lambda x: Nemo.filter_urn(x, 4, work_urn), self.get_works(collection_urn, textgroup_urn))
-        )
-        if len(work) == 1:
-            texts = work[0].texts.values()
-        else:
-            texts = []
-
-        texts = [text for text in texts if text.urn.version == version_urn]
-        if len(texts) == 1:
-            return texts[0]
-        abort(404)
-
-    def get_reffs(self, collection, textgroup, work, version):
-        """ Get the setup for valid reffs.
-
-        Returns the inventory text object with its metadata and a callback function taking a level parameter
+        Returns the inventory collection object with its metadata and a callback function taking a level parameter \
         and returning a list of strings.
 
-        :param collection: Collection identifier
-        :type collection: str
-        :param textgroup: Textgroup identifier
-        :type textgroup: str
-        :param work: Work identifier
-        :type work: str
-        :param version: Version identifier
-        :type version: str
-        :return: Text with its metadata, callback function to retrieve validreffs
-        :rtype: (MyCapytains.resources.texts.api.Text, lambda: [str])
+        :param objectId: Collection Identifier
+        :type objectId: str
+        :param subreference: Subreference from which to retrieve children
+        :type subreference: str
+        :param collection: Collection object bearing metadata
+        :type collection: Collection
+        :param export_collection: Return collection metadata
+        :type export_collection: bool
+        :return: Returns either the list of references, or the text collection object with its references as tuple
+        :rtype: (Collection, [str]) or [str]
         """
-        text = self.get_text(collection, textgroup, work, version)
-        reffs = MyCapytain.resources.texts.api.Text(
-            "urn:cts:{0}:{1}.{2}.{3}".format(collection, textgroup, work, version),
-            self.retriever,
-            citation=text.citation
+        if collection is not None:
+            text = collection
+        else:
+            text = self.get_collection(objectId)
+        reffs = self.chunk(
+            text,
+            lambda level: self.resolver.getReffs(objectId, level=level, subreference=subreference)
         )
-        return text, lambda level: reffs.getValidReff(level=level)
+        if export_collection is True:
+            return text, reffs
+        return reffs
 
-    def get_passage(self, collection, textgroup, work, version, passage_identifier):
+    def get_passage(self, objectId, subreference):
         """ Retrieve the passage identified by the parameters
 
-
-        :param collection: Collection identifier
-        :type collection: str
-        :param textgroup: Textgroup identifier
-        :type textgroup: str
-        :param work: Work identifier
-        :type work: str
-        :param version: Version identifier
-        :type version: str
-        :param passage_identifier: Reference Identifier
-        :type passage_identifier: str
-        :return: A Passage object containing informations about the passage
-        :rtype: MyCapytain.resources.texts.api.Passage
+        :param objectId: Collection Identifier
+        :type objectId: str
+        :param subreference: Subreference of the passage
+        :type subreference: str
+        :return: An object bearing metadata and its text
+        :rtype: InteractiveTextualNode
         """
-        text = MyCapytain.resources.texts.api.Text(
-            "urn:cts:{0}:{1}.{2}.{3}".format(collection, textgroup, work, version),
-            self.retriever
+        passage = self.resolver.getTextualNode(
+            textId=objectId,
+            subreference=subreference,
+            metadata=True
         )
-        passage = text.getPassage(passage_identifier)
         return passage
+
+    def get_siblings(self, objectId, subreference, passage):
+        """ Get siblings of a browsed subreference
+
+        .. note:: Since 1.0.0c, there is no more prevnext dict. Nemo uses the list of original\
+        chunked references to retrieve next and previous, or simply relies on the resolver to get siblings\
+        when the subreference is not found in given original chunks.
+
+        :param objectId: Id of the object
+        :param subreference: Subreference of the object
+        :param passage: Current Passage
+        :return: Previous and next references
+        :rtype: (str, str)
+        """
+        reffs = [reff for reff, _ in self.get_reffs(objectId)]
+        if subreference in reffs:
+            index = reffs.index(subreference)
+            # Not the first item and not the last one
+            if 0 < index < len(reffs) - 1:
+                return reffs[index-1], reffs[index+1]
+            elif index == 0 and index < len(reffs) - 1:
+                return None, reffs[1]
+            elif index > 0 and index == len(reffs) - 1:
+                return reffs[index-1], None
+        else:
+            return passage.siblingsId
+
+    def semantic(self, collection, parent=None):
+        """ Generates a SEO friendly string for given collection
+
+        :param collection: Collection object to generate string for
+        :param parent: Current collection parent
+        :return: SEO/URL Friendly string
+        """
+        if parent is not None:
+            collections = parent.parents[::-1] + [parent, collection]
+        else:
+            collections = collection.parents[::-1] + [collection]
+
+        return filters.slugify("--".join([item.get_label() for item in collections if item.get_label()]))
+
+    def make_coins(self, collection, text, subreference="", lang=None):
+        """ Creates a CoINS Title string from information
+
+        :param collection: Collection to create coins from
+        :param text: Text/Passage object
+        :param subreference: Subreference
+        :param lang: Locale information
+        :return: Coins HTML title value
+        """
+        if lang is None:
+            lang = self.__default_lang__
+        return "url_ver=Z39.88-2004"\
+                 "&ctx_ver=Z39.88-2004"\
+                 "&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook"\
+                 "&rft_id={cid}"\
+                 "&rft.genre=bookitem"\
+                 "&rft.btitle={title}"\
+                 "&rft.edition={edition}"\
+                 "&rft.au={author}"\
+                 "&rft.atitle={pages}"\
+                 "&rft.language={language}"\
+                 "&rft.pages={pages}".format(
+                    title=quote(str(text.get_title(lang))), author=quote(str(text.get_creator(lang))),
+                    cid=url_for(".r_collection", objectId=collection.id, _external=True),
+                    language=collection.lang, pages=quote(subreference), edition=quote(str(text.get_description(lang)))
+                 )
+
+    def expose_ancestors_or_children(self, member, collection, lang=None):
+        """ Build an ancestor or descendant dict view based on selected information
+
+        :param member: Current Member to build for
+        :param collection: Collection from which we retrieved it
+        :param lang: Language to express data in
+        :return:
+        """
+        x = {
+            "id": member.id,
+            "label": str(member.get_label(lang)),
+            "model": str(member.model),
+            "type": str(member.type),
+            "size": member.size,
+            "semantic": self.semantic(member, parent=collection)
+        }
+        if isinstance(member, ResourceCollection):
+            x["lang"] = str(member.lang)
+        return x
+
+    def make_members(self, collection, lang=None):
+        """ Build member list for given collection
+
+        :param collection: Collection to build dict view of for its members
+        :param lang: Language to express data in
+        :return: List of basic objects
+        """
+        objects = sorted([
+                self.expose_ancestors_or_children(member, collection, lang=lang)
+                for member in collection.members
+                if member.get_label()
+            ],
+            key=itemgetter("label")
+        )
+        return objects
+
+    def make_parents(self, collection, lang=None):
+        """ Build parents list for given collection
+
+        :param collection: Collection to build dict view of for its members
+        :param lang: Language to express data in
+        :return: List of basic objects
+        """
+        return [
+            {
+                "id": member.id,
+                "label": str(member.get_label(lang)),
+                "model": str(member.model),
+                "type": str(member.type),
+                "size": member.size
+            }
+            for member in collection.parents
+            if member.get_label()
+        ]
 
     def r_index(self):
         """ Homepage route function
@@ -492,87 +536,122 @@ class Nemo(object):
         """
         return {"template": "main::index.html"}
 
-    def r_collection(self, collection):
+    def r_collections(self, lang=None):
+        """ Retrieve the top collections of the inventory
+
+        :param lang: Lang in which to express main data
+        :type lang: str
+        :return: Collections information and template
+        :rtype: {str: Any}
+        """
+        collection = self.resolver.getMetadata()
+        return {
+            "template": "main::collection.html",
+            "current_label": collection.get_label(lang),
+            "collections": {
+                "members": self.make_members(collection, lang=lang)
+            }
+        }
+
+    def r_collection(self, objectId, lang=None):
         """ Collection content browsing route function
 
-        :param collection: Collection identifier
-        :type collection: str
-        :return: Template and textgroups contained in given collections
+        :param objectId: Collection identifier
+        :type objectId: str
+        :param lang: Lang in which to express main data
+        :type lang: str
+        :return: Template and collections contained in given collection
         :rtype: {str: Any}
         """
+        collection = self.resolver.getMetadata(objectId)
         return {
-            "template": "main::textgroups.html",
-            "textgroups": self.get_textgroups(collection)
+            "template": "main::collection.html",
+            "collections": {
+                "current": {
+                    "label": str(collection.get_label(lang)),
+                    "id": collection.id,
+                    "model": str(collection.model),
+                    "type": str(collection.type),
+                },
+                "members": self.make_members(collection, lang=lang),
+                "parents": self.make_parents(collection, lang=lang)
+            },
         }
 
-    def r_texts(self, collection, textgroup):
-        """ Textgroup content browsing route function
-
-        :param collection: Collection identifier
-        :type collection: str
-        :param textgroup: Textgroup Identifier
-        :type textgroup: str
-        :return: Template and texts contained in given textgroup
-        :rtype: {str: Any}
-        """
-        return {
-            "template": "main::texts.html",
-            "texts": self.get_texts(collection, textgroup)
-        }
-
-    def r_version(self, collection, textgroup, work, version):
+    def r_references(self, objectId, lang=None):
         """ Text exemplar references browsing route function
 
-        :param collection: Collection identifier
-        :type collection: str
-        :param textgroup: Textgroup Identifier
-        :type textgroup: str
-        :param work: Work identifier
-        :type work: str
-        :param version: Version identifier
-        :type version: str
-        :return: Template, version inventory object and references urn parts
-        :rtype: {
-            "template" : str,
-            "version": MyCapytains.resources.inventory.Text,
-            "reffs": [str]
-            }
+        :param objectId: Collection identifier
+        :type objectId: str
+        :param lang: Lang in which to express main data
+        :type lang: str
+        :return: Template and required information about text with its references
         """
-        version, reffs = self.get_reffs(collection, textgroup, work, version)
-        reffs = self.chunk(version, reffs)
+        collection, reffs = self.get_reffs(objectId=objectId, export_collection=True)
         return {
-            "template": "main::version.html",
-            "version": version,
+            "template": "main::references.html",
+            "objectId": objectId,
+            "citation": collection.citation,
+            "collections": {
+                "current": {
+                    "label": collection.get_label(lang),
+                    "id": collection.id,
+                    "model": str(collection.model),
+                    "type": str(collection.type),
+                },
+                "parents": self.make_parents(collection, lang=lang)
+            },
             "reffs": reffs
         }
 
-    def r_passage(self, collection, textgroup, work, version, passage_identifier):
+    def r_first_passage(self, objectId):
+        """ Provides a redirect to the first passage of given objectId
+
+        :param objectId: Collection identifier
+        :type objectId: str
+        :return: Redirection to the first passage of given text
+        """
+        collection, reffs = self.get_reffs(objectId=objectId, export_collection=True)
+        first, _ = reffs[0]
+        return redirect(
+            url_for(".r_passage_semantic", objectId=objectId, subreference=first, semantic=self.semantic(collection))
+        )
+
+    def r_passage(self, objectId, subreference, lang=None):
         """ Retrieve the text of the passage
 
-        :param collection: Collection identifier
-        :type collection: str
-        :param textgroup: Textgroup Identifier
-        :type textgroup: str
-        :param work: Work identifier
-        :type work: str
-        :param version: Version identifier
-        :type version: str
-        :param passage_identifier: Reference identifier
-        :type passage_identifier: str
-        :return: Template, version inventory object and Markup object representing the text
+        :param objectId: Collection identifier
+        :type objectId: str
+        :param lang: Lang in which to express main data
+        :type lang: str
+        :param subreference: Reference identifier
+        :type subreference: str
+        :return: Template, collections metadata and Markup object representing the text
         :rtype: {str: Any}
         """
-        edition = self.get_text(collection, textgroup, work, version)
-        text = self.get_passage(collection, textgroup, work, version, passage_identifier)
-
-        passage = self.transform(edition, text.xml, str(text.urn))
-        prev, next = self.getprevnext(text, Nemo.prevnext_callback_generator(text))
-        urn = self.transform_urn(text.urn)
+        text = self.get_passage(objectId=objectId, subreference=subreference)
+        collection = self.get_collection(objectId)
+        passage = self.transform(text, text.export(Mimetypes.PYTHON.ETREE), objectId)
+        prev, next = self.get_siblings(objectId, subreference, text)
         return {
             "template": "main::text.html",
-            "version": edition,
+            "objectId": objectId,
+            "subreference": subreference,
+            "collections": {
+                "current": {
+                    "label": collection.get_label(lang),
+                    "id": collection.id,
+                    "model": str(collection.model),
+                    "type": str(collection.type),
+                    "author": text.get_creator(lang),
+                    "title": text.get_title(lang),
+                    "description": text.get_description(lang),
+                    "citation": collection.citation,
+                    "coins": self.make_coins(collection, text, subreference, lang=lang)
+                },
+                "parents": self.make_parents(collection, lang=lang)
+            },
             "text_passage": Markup(passage),
-            "urn": urn,
             "prev": prev,
             "next": next
         }
@@ -580,6 +659,7 @@ class Nemo(object):
     def r_assets(self, filetype, asset):
         """ Route for specific assets.
 
+        :param filetype: Asset Type
         :param asset: Filename of an asset
         :return: Response
         """
@@ -628,6 +708,14 @@ class Nemo(object):
                 methods=methods
             )
 
+        for url, name, methods, instance in self._semantic_url:
+            self.blueprint.add_url_rule(
+                url,
+                view_func=self.view_maker(name, instance),
+                endpoint=_plugin_endpoint_rename(name, instance)+"_semantic",
+                methods=methods
+            )
+
         self.register_assets()
         self.register_filters()
 
@@ -645,6 +733,10 @@ class Nemo(object):
             "::"
         )
 
+        if self.cache is not None:
+            for func, instance in self.cached:
+                setattr(instance, func.__name__, self.cache.memoize()(func))
+
         return self.blueprint
 
     def view_maker(self, name, instance=None):
@@ -655,10 +747,53 @@ class Nemo(object):
         :return: Route function which makes use of Nemo context (such as menu informations)
         :rtype: function
         """
-        if instance:
-            return lambda **kwargs: self.route(getattr(instance, name), **kwargs)
+        if instance is None:
+            instance = self
+        sig = "lang" in [
+            parameter.name
+            for parameter in inspect.signature(getattr(instance, name)).parameters.values()
+        ]
+
+        def route(**kwargs):
+            if sig and "lang" not in kwargs:
+                kwargs["lang"] = self.get_locale()
+            if "semantic" in kwargs:
+                del kwargs["semantic"]
+            return self.route(getattr(instance, name), **kwargs)
+        return route
+
+    def main_collections(self, lang=None):
+        """ Retrieve main parent collections of a repository
+
+        :param lang: Language to retrieve information in
+        :return: Sorted collections representations
+        """
+        return sorted([
+            {
+                "id": member.id,
+                "label": str(member.get_label(lang=lang)),
+                "model": str(member.model),
+                "type": str(member.type),
+                "size": member.size
+            }
+            for member in self.resolver.getMetadata().members
+        ], key=itemgetter("label"))
+
+    def make_cache_keys(self, endpoint, kwargs):
+        """ This function is built to provide cache keys for templates
+
+        :param endpoint: Current endpoint
+        :param kwargs: Keyword Arguments
+        :return: tuple of i18n dependant cache key and i18n ignoring cache key
+        :rtype: tuple(str)
+        """
+        keys = sorted(kwargs.keys())
+        i18n_cache_key = endpoint+"|"+"|".join([kwargs[k] for k in keys])
+        if "lang" in keys:
+            cache_key = endpoint+"|" + "|".join([kwargs[k] for k in keys if k != "lang"])
         else:
-            return lambda **kwargs: self.route(getattr(self, name), **kwargs)
+            cache_key = i18n_cache_key
+        return i18n_cache_key, cache_key
 
     def render(self, template, **kwargs):
         """ Render a route template and adds information to this route.
@@ -671,16 +806,13 @@ class Nemo(object):
         :rtype: flask.Response
         """
 
-        kwargs["collections"] = self.get_collections()
-        kwargs["lang"] = "eng"
-
-        if Nemo.in_and_not_in("textgroup", "textgroups", kwargs):
-            kwargs["textgroups"] = self.get_textgroups(kwargs["url"]["collection"])
-
-            if Nemo.in_and_not_in("text", "texts", kwargs):
-                kwargs["texts"] = self.get_texts(kwargs["url"]["collection"], kwargs["url"]["textgroup"])
-
+        kwargs["cache_key"] = "%s" % kwargs["url"].values()
+        kwargs["lang"] = self.get_locale()
         kwargs["assets"] = self.assets
+        kwargs["main_collections"] = self.main_collections(kwargs["lang"])
+        kwargs["cache_active"] = self.cache is not None
+        kwargs["cache_time"] = 0
+        kwargs["cache_key"], kwargs["cache_key_i18n"] = self.make_cache_keys(request.endpoint, kwargs["url"])
         kwargs["template"] = template
 
         for plugin in self.__plugins_render_views__:
@@ -717,6 +849,10 @@ class Nemo(object):
             if not self.blueprint:
                 self.blueprint = self.create_blueprint()
             self.app.register_blueprint(self.blueprint)
+            if self.cache is None:
+                # We register a fake cache extension.
+                setattr(self.app.jinja_env, "_fake_cache_extension", self)
+                self.app.jinja_env.add_extension(FakeCacheExtension)
             return self.blueprint
         return None
 
@@ -749,6 +885,7 @@ class Nemo(object):
         """
         if len([plugin for plugin in self.__plugins__.values() if plugin.clear_routes]) > 0:  # Clear current routes
             self._urls = list()
+            self.cached = list()
 
         clear_assets = [plugin for plugin in self.__plugins__.values() if plugin.clear_assets]
         if len(clear_assets) > 0 and not self.prevent_plugin_clearing_assets:  # Clear current Assets
@@ -768,6 +905,10 @@ class Nemo(object):
                     self.__assets__[asset_type][key] = value
             if plugin.augment:
                 self.__plugins_render_views__.append(plugin)
+
+            if hasattr(plugin, "CACHED"):
+                for func in plugin.CACHED:
+                    self.cached.append((getattr(plugin, func), plugin))
             plugin.register_nemo(self)
 
     def chunk(self, text, reffs):
@@ -775,119 +916,14 @@ class Nemo(object):
 
         :param text: Text object from which comes the references
         :type text: MyCapytains.resources.texts.api.Text
-        :param reffs: Callback function to retrieve a list of string with a level parameter
-        :type reffs: callback(level)
+        :param reffs: List of references to transform
+        :type reffs: References
         :return: Transformed list of references
         :rtype: [str]
         """
-        if str(text.urn) in self.chunker:
-            return self.chunker[str(text.urn)](text, reffs)
+        if str(text.id) in self.chunker:
+            return self.chunker[str(text.id)](text, reffs)
         return self.chunker["default"](text, reffs)
-
-    def getprevnext(self, passage, callback):
-        """ Retrieve previous and next passage using
-
-        :param text: Text object from which comes the references
-        :type text: MyCapytains.resources.texts.api.Passage
-        :param reffs: Callback function to retrieve a tuple where first element is the previous passage, and second the next
-        :type reffs: callback()
-        :return: Reference of previous passage, reference of next passage
-        :rtype: (str, str)
-        """
-        if str(passage.urn) in self.prevnext:
-            return self.prevnext[str(passage.urn)](passage, callback)
-        return self.prevnext["default"](passage, callback)
-
-    @staticmethod
-    def in_and_not_in(identifier, collection, kwargs):
-        """ Check if an element identified by identifier is in kwargs but not the collection containing it
-
-        :param identifier: URL Identifier of one kind of element (Textgroup, work, etc.)
-        :type identifier: str
-        :param collection: Resource identifier of one kind of element (Textgroup, work, etc.)
-        :type collection: str
-        :param kwargs: Arguments passed to a template
-        :type kwargs: {str: Any}
-        :return: Indicator of presence of required informations
-        :rtype: bool
-        """
-        return identifier in kwargs["url"] and collection not in kwargs
-
-    @staticmethod
-    def default_prevnext(passage, callback):
-        """ Default deliver of prevnext informations
-
-        :param passage: Passage for which to get previous and following reference
-        :type passage: MyCapytains.resources.texts.api.Passage
-        :param callback: Function to retrieve those information
-        :type callback: function
-
-        :return: Tuple representing previous and following reference
-        :rtype: (str, str)
-        """
-        previous, following = passage.prev, passage.next
-
-        if previous is None and following is None:
-            previous, following = callback()
-
-        if previous is not None:
-            previous = str(previous.reference)
-        if following is not None:
-            following = str(following.reference)
-        return previous, following
-
-    @staticmethod
-    def prevnext_callback_generator(passage):
-        """ Default callback generator to retrieve prev and next value of a passage
-
-        :param passage: Passage for which to get previous and following reference
-        :type passage: MyCapytains.resources.texts.api.Passage
-        :return: Function to retrieve those information
-        :rtype: function
-        """
-        def callback():
-            return MyCapytain.resources.texts.api.Passage.prevnext(
-                passage.parent.resource.getPrevNextUrn(urn=str(passage.urn))
-            )
-        return callback
-
-    @staticmethod
-    def map_urns(items, query, part_of_urn=1, attr="textgroups"):
-        """ Small function to map urns to filter out a list of items or on a parent item
-
-        :param items: Inventory object
-        :type items: MyCapytains.resources.inventory.Resource
-        :param query: Part of urn to check against
-        :type query: str
-        :param part_of_urn: Identifier of the part of the urn
-        :type part_of_urn: int
-        :return: Items corresponding to the object children filtered by the query
-        :rtype: list(items.children)
-        """
-
-        if attr is not None:
-            return [
-                item
-                for item in getattr(items, attr).values()
-                if Nemo.filter_urn(item, part_of_urn, query)
-            ]
-
-    @staticmethod
-    def filter_urn(item, part_of_urn, query):
-        """ Small function to map urns to filter out a list of items or on a parent item
-
-        :param item: Inventory object
-        :param query: Part of urn to check against
-        :type query: str
-        :param part_of_urn: Identifier of the part of the urn
-        :type part_of_urn: int
-        :return: Items corresponding to the object children filtered by the query
-        :rtype: list(items.children)
-        """
-
-        return str(item.urn.__getattribute__([
-            "", "urn_namespace", "namespace", "textgroup", "work", "version", "reference"
-        ][part_of_urn]).lower()) == query.lower().strip()
 
 
 def _plugin_endpoint_rename(fn_name, instance):
@@ -901,45 +937,3 @@ def _plugin_endpoint_rename(fn_name, instance):
     if instance and instance.namespaced:
         fn_name = "r_{0}_{1}".format(instance.name, fn_name[2:])
     return fn_name
-
-
-def cmd():
-    import argparse
-    parser = argparse.ArgumentParser(description='Capitains Nemo CTS UI')
-    parser.add_argument('endpoint', metavar='endpoint', type=str,
-                       help='CTS API Endpoint')
-    parser.add_argument('--port', type=int, default=8000,
-                       help='Port to use for the HTTP Server')
-    parser.add_argument('--host', type=str, default="127.0.0.1",
-                       help='Host to use for the HTTP Server')
-    parser.add_argument('--inventory', type=str, default=None,
-                       help='Inventory to request from the endpoint')
-    parser.add_argument('--css', type=str, default=None, nargs='*',
-                       help='Full path to secondary css file')
-    parser.add_argument('--groupby', type=int, default=25,
-                       help='Number of passage to group in the deepest level of the hierarchy')
-    parser.add_argument('--debug', action="store_true", default=False, help="Set-up the application for debugging")
-
-    args = parser.parse_args()
-
-    if args.endpoint:
-        app = Flask(
-            __name__
-        )
-        # We set up Nemo
-        nemo = Nemo(
-            app=app,
-            name="nemo",
-            base_url="",
-            css=args.css,
-            inventory=args.inventory,
-            api_url=args.endpoint,
-            chunker={"default": lambda x, y: __level_grouper__(x, y, groupby=args.groupby)}
-        )
-
-        # We run the app
-        app.debug = args.debug
-        app.run(port=args.port, host=args.host)
-
-if __name__ == "__main__":
-    cmd()

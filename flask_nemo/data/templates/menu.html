@@ -1,21 +1,18 @@
-<div class="logo-container">
-    <a href="{{ url_for('.r_index') }}"><img class="logo" src="{{url_for('.static', filename='images/nemo.png')}} " alt="Capitains Nemo" /></a>
-</div>
 <header>
-    <span class="content">Collection</span>
+    <span class="content">Text Collections</span>
 </header>
 <ul class="menu">
-    {% for collection in collections %}
-        <li><a class="{{collection|active_link(url)}}" href="{{url_for('.r_collection', collection=collection)}}">{{collection|collection_i18n(lang)}}</a></li>
+    {% for c in main_collections %}
+        <li><a href="{{url_for('.r_collection_semantic', objectId=c.id, semantic=c.label|slugify)}}">{{c.label}}</a></li>
     {% endfor %}
 </ul>
-{% if textgroups %}
+{% if collections and collections.parents %}
 <header>
-    <span class="content">Authors</span>
+    <span class="content">Parents</span>
 </header>
 <ul class="menu">
-    {% for textgroup in textgroups %}
-        <li><a class="{{textgroup.urn.textgroup|active_link(url)}}" href="{{url_for('.r_texts', collection=textgroup.urn.namespace, textgroup=textgroup.urn.textgroup)}}">{{textgroup.metadata['groupname'][lang]}}</a></li>
+    {% for parent in collections.parents %}
+        <li><a href="{{url_for('.r_collection_semantic', objectId=parent.id, semantic=parent.label|slugify)}}">{{parent.label}}</a></li>
     {% endfor %}
 </ul>
 {% endif %}

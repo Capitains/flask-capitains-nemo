@@ -21,9 +21,10 @@ class AnnotationsApiPlugin(PluginPrototype):
     """
 
     JSONLD_CONTEXT = {
-        "anno": "http://www.w3.org/ns/anno.jsonld",
+        "": "http://www.w3.org/ns/anno.jsonld",
         "dc": "http://purl.org/dc/terms/",
-        "owl": "http://www.w3.org/2002/07/owl#"
+        "owl": "http://www.w3.org/2002/07/owl#",
+        "nemo": "https://capitains.github.io/flask-capitains-nemo/ontology/#"
     }
     ROUTES = [
         ("/api/annotations", "r_annotations", ["GET"]),
@@ -32,7 +33,7 @@ class AnnotationsApiPlugin(PluginPrototype):
     ]
 
     def __init__(self, queryinterface, *args, **kwargs):
-        super(AnnotationsApiPlugin, self).__init__(*args,**kwargs)
+        super(AnnotationsApiPlugin, self).__init__(*args, **kwargs)
         self.__queryinterface__ = queryinterface
 
     # TODO we should have a response at the base of annotations/api that returns link types and link relations
@@ -62,37 +63,34 @@ class AnnotationsApiPlugin(PluginPrototype):
             except ValueError:
                 return "invalid urn", 400
 
-            count, annotations = self.__queryinterface__.getAnnotations(
-                urn, wildcard=wildcard,
-                include=include, exclude=exclude, limit=limit, start=start, expand=expand
-            )
+            count, annotations = self.__queryinterface__.getAnnotations(urn, wildcard=wildcard, include=include,
+                                                                        exclude=exclude, limit=limit, start=start,
+                                                                        expand=expand)
         else:
             #  Note that this implementation is not done for too much annotations
             #  because we do not implement pagination here
-            count, annotations = self.__queryinterface__.getAnnotations(
-                None, limit=limit, start=start, expand=expand
-            )
+            count, annotations = self.__queryinterface__.getAnnotations(None, limit=limit, start=start, expand=expand)
         mapped = []
         response = {
             "@context": type(self).JSONLD_CONTEXT,
-            "anno:id": url_for(".r_annotations", start=start, limit=limit),
-            "anno:type": "AnnotationCollection",
-            "anno:startIndex": start,
-            "anno:items": [
+            "id": url_for(".r_annotations", start=start, limit=limit),
+            "type": "AnnotationCollection",
+            "startIndex": start,
+            "items": [
             ],
-            "anno:total": count
+            "total": count
         }
         for a in annotations:
             mapped.append({
-                "anno:id": url_for(".r_annotation", sha=a.sha),
-                "anno:body": url_for(".r_annotation_body", sha=a.sha),
-                "anno:type": "Annotation",
-                "anno:target": a.target.to_json(),
+                "id": url_for(".r_annotation", sha=a.sha),
+                "body": url_for(".r_annotation_body", sha=a.sha),
+                "type": "Annotation",
+                "target": a.target.to_json(),
                 "dc:type": a.type_uri,
                 "owl:sameAs": [a.uri],
                 "nemo:slug": a.slug
             })
-        response["anno:items"] = mapped
+        response["items"] = mapped
         response = jsonify(response)
         return response
 
@@ -109,11 +107,11 @@ class AnnotationsApiPlugin(PluginPrototype):
             return "invalid resource uri", 404
         response = {
             "@context": type(self).JSONLD_CONTEXT,
-            "anno:id": url_for(".r_annotation", sha=annotation.sha),
-            "anno:body": url_for(".r_annotation_body", sha=annotation.sha),
-            "anno:type": "Annotation",
-            "anno:target": annotation.target.to_json(),
-            "sameAs": [annotation.uri],
+            "id": url_for(".r_annotation", sha=annotation.sha),
+            "body": url_for(".r_annotation_body", sha=annotation.sha),
+            "type": "Annotation",
+            "target": annotation.target.to_json(),
+            "owl:sameAs": [annotation.uri],
             "dc:type": annotation.type_uri,
             "nemo:slug": annotation.slug
         }

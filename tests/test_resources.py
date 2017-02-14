@@ -1,7 +1,12 @@
 import unittest
-from flask.ext.nemo import Nemo
+from flask_nemo import Nemo
 from flask import Markup, Flask
-from capitains_nautilus.mycapytain import NautilusRetriever
+from MyCapytain.resolvers.cts.local import CTSCapitainsLocalResolver
+from MyCapytain.resolvers.cts.api import HttpCTSResolver
+from MyCapytain.retrievers.cts5 import CTS
+from MyCapytain.resources.collections.cts import TextInventory
+from MyCapytain.resources.prototypes.cts.inventory import TextInventoryCollection
+from MyCapytain.resolvers.utils import CollectionDispatcher
 import logging
 
 
@@ -39,7 +44,7 @@ class RequestPatchChained(object):
 class NemoResource(unittest.TestCase):
     """ Test Suite for Nemo
     """
-    endpoint = "http://website.com/cts/api"
+    endpoint = HttpCTSResolver(CTS("http://website.com/cts/api"))
     body_xsl = "tests/test_data/xsl_test.xml"
 
     def setUp(self):
@@ -54,19 +59,51 @@ class NemoResource(unittest.TestCase):
             self.getPassage = RequestPatch(f)
             self.getPassage_Capabilities = RequestPatchChained([self.getCapabilities, self.getPassage])
 
+        with open("tests/test_data/getpassageplus.xml", "r") as f:
+            self.getPassagePlus = RequestPatch(f)
+
         with open("tests/test_data/getprevnext.xml", "r") as f:
             self.getPrevNext = RequestPatch(f)
             self.getPassage_Route = RequestPatchChained([self.getCapabilities, self.getPassage, self.getPrevNext])
 
         self.nemo = Nemo(
-            api_url=NemoResource.endpoint,
+            resolver=NemoResource.endpoint,
             app=Flask(__name__)
         )
 
-NautilusDummy = NautilusRetriever(
-    folders=[
+tic = TextInventoryCollection()
+latin = TextInventory("urn:perseus:latinLit")
+latin.parent = tic
+latin.set_label("Classical Latin", "eng")
+farsi = TextInventory("urn:perseus:farsiLit")
+farsi.parent = tic
+farsi.set_label("Farsi", "eng")
+gc = TextInventory("urn:perseus:greekLit")
+gc.parent = tic
+gc.set_label("Ancient Greek", "eng")
+gc.set_label("Grec Ancien", "fre")
+
+dispatcher = CollectionDispatcher(tic)
+
+
+@dispatcher.inventory("urn:perseus:latinLit")
+def dispatchLatinLit(collection, path=None, **kwargs):
+    if collection.id.startswith("urn:cts:latinLit:"):
+        return True
+    return False
+
+
+@dispatcher.inventory("urn:perseus:farsiLit")
+def dispatchfFarsiLit(collection, path=None, **kwargs):
+    if collection.id.startswith("urn:cts:farsiLit:"):
+        return True
+    return False
+
+NautilusDummy = CTSCapitainsLocalResolver(
+    resource=[
         "./tests/test_data/nautilus/farsiLit",
         "./tests/test_data/nautilus/latinLit"
-    ]
+    ],
+    dispatcher=dispatcher
 )
 NautilusDummy.logger.setLevel(logging.ERROR)

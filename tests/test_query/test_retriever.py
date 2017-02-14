@@ -1,5 +1,5 @@
 from flask_nemo.query.resolve import Resolver, CTSRetriever, HTTPRetriever, LocalRetriever, UnresolvableURIError
-from ..resources import NautilusDummy
+from tests.test_resources import NautilusDummy
 from unittest import TestCase
 from mock import patch
 
@@ -44,7 +44,7 @@ class TestCTSRetrievers(TestCase):
                 msg = "URI which are not cts urn should not match"
 
             self.assertEqual(
-                CTSRetriever(retriever=NautilusDummy).match(uri), matching,
+                CTSRetriever(NautilusDummy).match(uri), matching,
                 msg
             )
 
@@ -60,8 +60,8 @@ class TestCTSRetrievers(TestCase):
         passage, mime = ret.read("urn:cts:latinLit:phi1294.phi002:1.pr.1")
         self.assertEqual(mime, "text/xml", "Mime type of CTS should be text/xml")
         self.assertIn(
-            "GetPassage", passage,
-            "GetPassage is visible as a tag"
+            '<TEI xmlns="http://www.tei-c.org/ns/1.0">', passage,
+            "TEI is visible as a tag"
         )
         self.assertIn(
             "Spero me secutum in libellis meis tale temperamen", passage,
@@ -110,7 +110,7 @@ class TestHTTPRetrievers(TestCase):
             i -= 1
             with patch("flask_nemo.query.resolve.request", return_value=mocked_response(content, mime)) as request:
                 data, mimetype = ret.read(uri)
-                request.assertCalledWith(uri, "The URL should have been called")
+                request.assert_called_with("GET", uri)
                 self.assertEqual(
                     data, content,
                     "Content should be read correctly"
@@ -193,14 +193,14 @@ class TestResolverWithRetriever(TestCase):
     """
     def setUp(self):
         self.resolver = Resolver(
-            CTSRetriever(retriever=NautilusDummy),
+            CTSRetriever(resolver=NautilusDummy),
             HTTPRetriever(),
             LocalRetriever(path="./tests/test_data")
         )
 
     def test_stack(self):
         uris = [
-            ("urn:cts:latinLit:phi1294:phi002.perseus-lat2", "CTS Retriever should be resolved", CTSRetriever),
+            ("urn:cts:latinLit:phi1294.phi002.perseus-lat2", "CTS Retriever should be resolved", CTSRetriever),
             ("http://foo.com/bar", "HTTP retriever should match the URI", HTTPRetriever),
             ("../test_data/empty.js", "Local Retriever should match complex URIs", LocalRetriever),
             ("assets/fake.png", "Local Retriever should match simple URIs", LocalRetriever)

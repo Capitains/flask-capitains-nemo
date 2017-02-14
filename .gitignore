@@ -23,3 +23,6 @@ lxml-3.4.4-py3.4-linux-x86_64.egg/
 /venv*/
 docs/_build
 build
+*.egg-info
+*.eggs
+data.txtgiot

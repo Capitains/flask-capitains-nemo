@@ -4,10 +4,11 @@
 
 """
 
-from .resources import NemoResource
+from tests.test_resources import NemoResource
 from flask_nemo import Nemo
-import MyCapytain
+from MyCapytain.resources.collections.cts import Text
 from lxml import etree
+from tests.test_resources import NautilusDummy
 
 
 class TestCustomizer(NemoResource):
@@ -25,7 +26,7 @@ class TestCustomizer(NemoResource):
             "default": default
         })
         chunked = nemo.chunk(
-            MyCapytain.resources.inventory.Text(
+            Text(
                 urn="urn:cts:phi1294.phi002.perseus-lat2"
             ),
             ["1.pr"]
@@ -45,113 +46,23 @@ class TestCustomizer(NemoResource):
             "urn:cts:phi1294.phi002.perseus-lat2": urn
         })
         chunked = nemo.chunk(
-            MyCapytain.resources.inventory.Text(
+            Text(
                 urn="urn:cts:phi1294.phi002.perseus-lat2"
             ),
             ["1.pr"]
         )
         self.assertEqual(chunked, [("1.pr", "I PR")])
 
-    def test_prevnext_default(self):
-        """ Test that the chunker default is called and applied
-        """
-        def default(text, cb):
-            self.assertEqual(str(text.urn), "urn:cts:phi1294.phi002.perseus-lat2")
-            self.assertEqual(cb(1), 1)
-            return [("1.pr", "I PR")]
-
-        nemo = Nemo(prevnext={
-            "default": default
-        })
-        prevnext = nemo.getprevnext(
-            MyCapytain.resources.inventory.Text(
-                urn="urn:cts:phi1294.phi002.perseus-lat2"
-            ),
-            lambda x: x
-        )
-        self.assertEqual(prevnext, [("1.pr", "I PR")])
-
-    def test_prevnext_urn(self):
-        """ Test that the prevnext by urn is called and applied
-        """
-        def urn(text, cb):
-            self.assertEqual(str(text.urn), "urn:cts:phi1294.phi002.perseus-lat2")
-            self.assertEqual(cb(1), 1)
-            return [("1.pr", "I PR")]
-
-        nemo = Nemo(prevnext={
-            "default": lambda x, y: y,
-            "urn:cts:phi1294.phi002.perseus-lat2": urn
-        })
-        chunked = nemo.getprevnext(
-            MyCapytain.resources.inventory.Text(
-                urn="urn:cts:phi1294.phi002.perseus-lat2"
-            ),
-            lambda x: x
-        )
-        self.assertEqual(chunked, [("1.pr", "I PR")])
-
-    def test_urntransform_default_function(self):
-        """ Test that the transform default is called and applied
-        """
-        def default(urn):
-          self.assertEqual(str(urn), "urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.pr")
-          return str(urn)
-
-        nemo = Nemo(urntransform={
-            "default": default
-        })
-        transformed = nemo.transform_urn(
-            MyCapytain.resources.inventory.Text(
-                urn="urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.pr"
-            ).urn
-        )
-        self.assertEqual(transformed, "urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.pr")
-
-    def test_urntransform_override_function(self):
-        """ Test that the transform override is called and applied
-        """
-        def override(urn):
-          self.assertEqual(str(urn), "urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.pr")
-          return "override"
-
-        nemo = Nemo(urntransform={
-            "urn:cts:latinLit:phi1294.phi002.perseus-lat2": override
-        })
-        transformed = nemo.transform_urn(
-            MyCapytain.resources.inventory.Text(
-                urn="urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.pr"
-            ).urn
-        )
-        self.assertEqual(transformed, "override")
-
-    def test_transform_default_xslt(self):
-        """ Test that the transform default is called and applied
-        """
-        def default(text, cb):
-            self.assertEqual(str(text.urn), "urn:cts:latinLit:phi1294.phi002.perseus-lat2")
-            self.assertEqual(cb(1), 1)
-            return [("1.pr", "I PR")]
-
-        nemo = Nemo(prevnext={
-            "default": default
-        })
-        prevnext = nemo.getprevnext(
-            MyCapytain.resources.inventory.Text(
-                urn="urn:cts:latinLit:phi1294.phi002.perseus-lat2"
-            ),
-            lambda x: x
-        )
-        self.assertEqual(prevnext, [("1.pr", "I PR")])
-
     def test_transform_default_function(self):
         """ Test that the transform default is called and applied when it's a function
         """
-        urn_given = "urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.pr.1"
+        urn_given = "urn:cts:latinLit:phi1294.phi002.perseus-lat2"
+        ref_given = "1.pr.1"
 
-        def default(work, xml, urn):
+        def default(work, xml, objectId, subreference=None):
             self.assertEqual(str(work.urn), "urn:cts:latinLit:phi1294.phi002.perseus-lat2")
-            self.assertEqual(urn, urn_given, "Passage URN should be passed to transform")
+            self.assertEqual(objectId, urn_given, "Passage URN should be passed to transform")
+            self.assertEqual(subreference, ref_given, "Passage URN should be passed to transform")
             self.assertEqual(xml, "<a></a>")
             return "<b></b>"
 
@@ -159,11 +70,12 @@ class TestCustomizer(NemoResource):
             "default": default
         })
         transformed = nemo.transform(
-            MyCapytain.resources.inventory.Text(
+            Text(
                 urn="urn:cts:latinLit:phi1294.phi002.perseus-lat2"
             ),
             "<a></a>",
-            urn_given
+            urn_given,
+            ref_given
         )
         self.assertEqual(transformed, "<b></b>")
 
@@ -172,8 +84,8 @@ class TestCustomizer(NemoResource):
         """
         nemo = Nemo()
         transformed = nemo.transform(
-            MyCapytain.resources.inventory.Text(
-                urn="urn:cts:latinLit:phi1294.phi002.perseus-lat2"
+            Text(
+                urn="urn:cts:phi1294.phi002.perseus-lat2"
             ),
             etree.fromstring("<a/>"),
             "urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.pr.1"
@@ -188,11 +100,32 @@ class TestCustomizer(NemoResource):
             "default": "tests/test_data/xsl_test.xml"
         })
         transformed = nemo.transform(
-            MyCapytain.resources.inventory.Text(
+            Text(
                 urn="urn:cts:latinLit:phi1294.phi002.perseus-lat2"
             ),
             etree.fromstring('<tei:body xmlns:tei="http://www.tei-c.org/ns/1.0" />'),
-            urn="urn:cts:latinLit:phi1294.phi002.perseus-lat2:1.pr.1"
+            objectId="urn:cts:latinLit:phi1294.phi002.perseus-lat2",
+            subreference="1.pr.1"
+        )
+        self.assertEqual(transformed, '<tei:notbody xmlns:tei="http://www.tei-c.org/ns/1.0"></tei:notbody>',
+            "It should autoclose the tag"
+        )
+
+    def test_transform_match(self):
+        """ Test that the transform default is called and applied
+        """
+
+        nemo = Nemo(transform={
+            "default": lambda x: self.assertEqual(False, True, "This should not be run"),
+            "urn:cts:latinLit:phi1294.phi002.perseus-lat2": "tests/test_data/xsl_test.xml"
+        })
+        transformed = nemo.transform(
+            Text(
+                urn="urn:cts:latinLit:phi1294.phi002.perseus-lat2"
+            ),
+            etree.fromstring('<tei:body xmlns:tei="http://www.tei-c.org/ns/1.0" />'),
+            objectId="urn:cts:latinLit:phi1294.phi002.perseus-lat2",
+            subreference="1.pr.1"
         )
         self.assertEqual(transformed, '<tei:notbody xmlns:tei="http://www.tei-c.org/ns/1.0"></tei:notbody>',
             "It should autoclose the tag"
