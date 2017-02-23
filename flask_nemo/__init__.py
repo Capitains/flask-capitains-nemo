@@ -429,6 +429,8 @@ class Nemo(object):
                 return None, reffs[1]
             elif index > 0 and index == len(reffs) - 1:
                 return reffs[index-1], None
+            else:
+                return None, None
         else:
             return passage.siblingsId
 

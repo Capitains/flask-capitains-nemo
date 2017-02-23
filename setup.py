@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version = "1.0.0b4"
+version = "1.0.0b5"
 
 setup(
     name='flask_nemo',
@@ -13,7 +13,7 @@ setup(
     description='Flask Extension to browse CTS Repository',
     test_suite="tests",
     install_requires=[
-        "MyCapytain>=2.0.0b5",
+        "MyCapytain>=2.0.0b17",
         "requests_cache>=0.4.9",
         "Flask>=0.12",
         "requests>=2.10.0",

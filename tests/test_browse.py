@@ -325,6 +325,14 @@ class NemoTestBrowse(TestCase):
             tests += 1
         self.assertEqual(tests, len(uris), "There should be as much ran tests as there is tests")
 
+    def test_no_siblings_is_ok(self):
+        """ Test that passage page contains what is relevant : text and next passages"""
+        query_data = self.client.get("/text/urn:cts:latinLit:stoa0329c.stoa001.opp-lat1/passage/1-8").data.decode()
+        self.assertIn(
+            'et ibi est lapis ille', query_data,
+            "Text should be visible"
+        )
+
     def test_cache_options(self):
         class ReplaceTemplate(PluginPrototype):
             TEMPLATES = {
