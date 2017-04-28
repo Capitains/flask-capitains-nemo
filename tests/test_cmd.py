@@ -4,8 +4,8 @@ import sys
 from io import StringIO
 from mock import patch
 import flask
-from MyCapytain.resolvers.cts.api import HttpCTSResolver
-from MyCapytain.resolvers.cts.local import CTSCapitainsLocalResolver
+from MyCapytain.resolvers.cts.api import HttpCtsResolver
+from MyCapytain.resolvers.cts.local import CtsCapitainsLocalResolver
 
 
 class TestCommands(TestCase):
@@ -50,7 +50,7 @@ class TestCommands(TestCase):
             args_called += 1
         self.assertEqual(args_called, len(arguments), "There should be as many tests as printed output checked")
 
-        self.assertIsInstance(nemo.resolver, HttpCTSResolver, "We should have a CTS Remote Resolver")
+        self.assertIsInstance(nemo.resolver, HttpCtsResolver, "We should have a CTS Remote Resolver")
         self.assertEqual(
             nemo.resolver.endpoint.endpoint,
             "https://cts.perseids.org/api/cts/",
@@ -76,7 +76,7 @@ class TestCommands(TestCase):
             args_called += 1
         self.assertEqual(args_called, len(arguments), "There should be as many tests as printed output checked")
 
-        self.assertIsInstance(nemo.resolver, CTSCapitainsLocalResolver, "We should have a CTS Remote Resolver")
+        self.assertIsInstance(nemo.resolver, CtsCapitainsLocalResolver, "We should have a CTS Remote Resolver")
 
         test_client = app.test_client()
 
@@ -107,7 +107,7 @@ class TestCommands(TestCase):
             args_called += 1
         self.assertEqual(args_called, len(arguments), "There should be as many tests as printed output checked")
 
-        self.assertIsInstance(nemo.resolver, CTSCapitainsLocalResolver, "We should have a CTS Remote Resolver")
+        self.assertIsInstance(nemo.resolver, CtsCapitainsLocalResolver, "We should have a CTS Remote Resolver")
 
         test_client = app.test_client()
 
@@ -138,4 +138,4 @@ class TestCommands(TestCase):
             args_called += 1
         self.assertEqual(args_called, len(arguments), "There should be as many tests as printed output checked")
 
-        self.assertIsInstance(nemo.resolver, CTSCapitainsLocalResolver, "We should have a CTS Remote Resolver")
+        self.assertIsInstance(nemo.resolver, CtsCapitainsLocalResolver, "We should have a CTS Remote Resolver")

@@ -9,7 +9,7 @@ Application Hierarchy
 This workflow demonstrates how components works together
 
 .. image:: _static/images/nemo.application.hierarchy.png
-    :alt: Nemo Application Hierarchy and Responsabilities
+    :alt: Nemo Application Hierarchy and Responsibilities
 
 
 Nemo Rendering Workflow

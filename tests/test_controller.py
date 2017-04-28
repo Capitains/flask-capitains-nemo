@@ -11,7 +11,7 @@ from flask import Markup, Flask
 
 from MyCapytain.resources.prototypes.text import Passage
 from MyCapytain.common.constants import Mimetypes
-from MyCapytain.resources.prototypes.cts.inventory import PrototypeTextInventory, PrototypeText
+from MyCapytain.resources.prototypes.cts.inventory import CtsTextInventoryMetadata, CtsTextMetadata
 
 from tests.test_resources import NemoResource
 from flask_nemo.chunker import level_grouper
@@ -113,7 +113,7 @@ class NemoTestControllers(NemoResource):
         """
         with patch('requests.get', return_value=self.getCapabilities):
             texts = self.nemo.get_collection("urn:cts:greekLit:tlg0003.tlg001.perseus-grc2")
-            self.assertIsInstance(texts, PrototypeText)
+            self.assertIsInstance(texts, CtsTextMetadata)
             self.assertEqual(str(texts.id), "urn:cts:greekLit:tlg0003.tlg001.perseus-grc2")
 
     def test_get_single_text_empty_because_no_work(self):
@@ -138,7 +138,7 @@ class NemoTestControllers(NemoResource):
                 "urn:cts:latinLit:phi1294.phi002.perseus-lat2",
                 export_collection=True
             )
-            self.assertIsInstance(text, PrototypeText)
+            self.assertIsInstance(text, CtsTextMetadata)
             self.assertIsInstance(reffs, list)
             self.assertEqual(reffs[0], ("1.pr.1-1.pr.20", "1.pr.1-1.pr.20"))
             self.assertEqual(patched.mock_calls, [

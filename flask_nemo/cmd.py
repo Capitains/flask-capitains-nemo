@@ -1,9 +1,9 @@
 from flask_nemo import Nemo
 from flask_nemo.chunker import level_grouper
 from flask import Flask
-from MyCapytain.resolvers.cts.api import HttpCTSResolver
-from MyCapytain.resolvers.cts.local import CTSCapitainsLocalResolver
-from MyCapytain.retrievers.cts5 import CTS
+from MyCapytain.resolvers.cts.api import HttpCtsResolver
+from MyCapytain.resolvers.cts.local import CtsCapitainsLocalResolver
+from MyCapytain.retrievers.cts5 import HttpCtsRetriever
 import argparse
 import sys
 
@@ -16,9 +16,9 @@ class Server:
             __name__
         )
         if method == "cts-api":
-            resolver = HttpCTSResolver(CTS(address))
+            resolver = HttpCtsResolver(HttpCtsRetriever(address))
         elif method == "cts-local":
-            resolver = CTSCapitainsLocalResolver([address])
+            resolver = CtsCapitainsLocalResolver([address])
         if xslt is not None:
             xslt = {"default": xslt}
         # We set up Nemo

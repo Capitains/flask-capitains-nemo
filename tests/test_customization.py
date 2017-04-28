@@ -6,7 +6,7 @@
 
 from tests.test_resources import NemoResource
 from flask_nemo import Nemo
-from MyCapytain.resources.collections.cts import Text
+from MyCapytain.resources.collections.cts import XmlCtsTextMetadata
 from lxml import etree
 from tests.test_resources import NautilusDummy
 
@@ -26,7 +26,7 @@ class TestCustomizer(NemoResource):
             "default": default
         })
         chunked = nemo.chunk(
-            Text(
+            XmlCtsTextMetadata(
                 urn="urn:cts:phi1294.phi002.perseus-lat2"
             ),
             ["1.pr"]
@@ -46,7 +46,7 @@ class TestCustomizer(NemoResource):
             "urn:cts:phi1294.phi002.perseus-lat2": urn
         })
         chunked = nemo.chunk(
-            Text(
+            XmlCtsTextMetadata(
                 urn="urn:cts:phi1294.phi002.perseus-lat2"
             ),
             ["1.pr"]
@@ -70,7 +70,7 @@ class TestCustomizer(NemoResource):
             "default": default
         })
         transformed = nemo.transform(
-            Text(
+            XmlCtsTextMetadata(
                 urn="urn:cts:latinLit:phi1294.phi002.perseus-lat2"
             ),
             "<a></a>",
@@ -84,7 +84,7 @@ class TestCustomizer(NemoResource):
         """
         nemo = Nemo()
         transformed = nemo.transform(
-            Text(
+            XmlCtsTextMetadata(
                 urn="urn:cts:phi1294.phi002.perseus-lat2"
             ),
             etree.fromstring("<a/>"),
@@ -100,7 +100,7 @@ class TestCustomizer(NemoResource):
             "default": "tests/test_data/xsl_test.xml"
         })
         transformed = nemo.transform(
-            Text(
+            XmlCtsTextMetadata(
                 urn="urn:cts:latinLit:phi1294.phi002.perseus-lat2"
             ),
             etree.fromstring('<tei:body xmlns:tei="http://www.tei-c.org/ns/1.0" />'),
@@ -120,7 +120,7 @@ class TestCustomizer(NemoResource):
             "urn:cts:latinLit:phi1294.phi002.perseus-lat2": "tests/test_data/xsl_test.xml"
         })
         transformed = nemo.transform(
-            Text(
+            XmlCtsTextMetadata(
                 urn="urn:cts:latinLit:phi1294.phi002.perseus-lat2"
             ),
             etree.fromstring('<tei:body xmlns:tei="http://www.tei-c.org/ns/1.0" />'),

@@ -13,7 +13,7 @@ setup(
     description='Flask Extension to browse CTS Repository',
     test_suite="tests",
     install_requires=[
-        "MyCapytain>=2.0.0b17",
+        "MyCapytain>=2.0.0rc1",
         "requests_cache>=0.4.9",
         "Flask>=0.12",
         "requests>=2.10.0",

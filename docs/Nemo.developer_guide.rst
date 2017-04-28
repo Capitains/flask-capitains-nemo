@@ -1,12 +1,13 @@
 Nemo Developper Guide
 =====================
 
-How to contribute ? Our github Etiquette
+How to contribute ? Our Github Etiquette
 ########################################
 
 - Open Issues
 - Do Pull Request
-- Ensure Unit Tests
+- Check Unit Tests results and write your own
+- Add documentation !
 - Do not decide yourself on changing the version
 
 Writing and running tests
@@ -26,7 +27,7 @@ Ultimately, tests should be part of the right file and take a name starting with
         """ Description of the general group of test represented by TestUnit """
 
         def test_a_function(self):
-            """ Simple definition of this test prupose """
+            """ Simple definition of this test purpose """
             do = 1
             self.assertEqual(
                 do, 1,

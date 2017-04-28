@@ -5,7 +5,7 @@ from flask_nemo import Nemo
 from unittest import TestCase
 from flask import Flask
 from MyCapytain.common.reference import URN
-from MyCapytain.resolvers.cts.local import CTSCapitainsLocalResolver
+from MyCapytain.resolvers.cts.local import CtsCapitainsLocalResolver
 from werkzeug.exceptions import NotFound
 import logging
 
@@ -54,7 +54,7 @@ class TestSimpleQuery(TestCase):
         self.app = Flask("app")
         logger = logging.getLogger('my-logger')
         logger.propagate = False
-        self.nautilus = CTSCapitainsLocalResolver(["tests/test_data/interface/latinLit"], logger=logger)
+        self.nautilus = CtsCapitainsLocalResolver(["tests/test_data/interface/latinLit"], logger=logger)
         self.nemo = Nemo(app=self.app, resolver=self.nautilus, base_url="/")
         self.query = SimpleQuery(
             [

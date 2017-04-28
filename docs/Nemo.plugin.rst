@@ -51,6 +51,11 @@ Inserting a plugin in a Nemo instance
     from flask_nemo import Nemo
     # For this demo, we use the plugin prototype which does not include anything special
     from flask_nemo.plugin import PluginPrototype
+    from MyCapytain.resolvers.cts.api import HttpCtsResolver
+    from MyCapytain.retrievers.cts5 import HttpCtsRetriever
+
+    # We set up a resolver which communicates with an API available in Leipzig
+    resolver = HttpCtsResolver(HttpCtsRetriever("http://cts.dh.uni-leipzig.de/api/cts/"))
 
     # Initiate the app
     app = Flask(__name__)
@@ -58,7 +63,7 @@ Inserting a plugin in a Nemo instance
     proto_plug = PluginPrototype()
     # We insert the plugin into Nemo while setting up Nemo
     nemo = Nemo(
-        endpoint="http://services.perseids.org/api/cts",
+        resolver=resolver,
         plugins=[proto_plug],
         app=app
     )
@@ -106,6 +111,7 @@ The ``ROUTES`` and ``TEMPLATES`` class variables work the same way as the Nemo o
 - Templates can provide new templates for the ``main::`` namespace as well as new templates for any other namespace (cf. :ref:`templateOrder <templateOrder>`)
 - The clear route function will erase original provided routes of Nemo if set to True before registering other plugins (See :py:meth:`~flask_nemo.Nemo.register_plugins`)
 - Filters works like Nemo filters. They can be namespaced using the ``namespacing`` argument.
+- Routes can be cached by providing their name in ``CACHED``
 
 .. code-block: python
     :linenos:
@@ -117,6 +123,7 @@ The ``ROUTES`` and ``TEMPLATES`` class variables work the same way as the Nemo o
         TEMPLATES = {}
         CLEAR_ROUTES = False
         FILTERS = []
+        CACHED = []
 
 Various other core parameters : render, clear assets and static folder
 **********************************************************************

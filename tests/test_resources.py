@@ -1,11 +1,11 @@
 import unittest
 from flask_nemo import Nemo
 from flask import Markup, Flask
-from MyCapytain.resolvers.cts.local import CTSCapitainsLocalResolver
-from MyCapytain.resolvers.cts.api import HttpCTSResolver
-from MyCapytain.retrievers.cts5 import CTS
-from MyCapytain.resources.collections.cts import TextInventory
-from MyCapytain.resources.prototypes.cts.inventory import TextInventoryCollection
+from MyCapytain.resolvers.cts.local import CtsCapitainsLocalResolver
+from MyCapytain.resolvers.cts.api import HttpCtsResolver
+from MyCapytain.retrievers.cts5 import HttpCtsRetriever
+from MyCapytain.resources.collections.cts import XmlCtsTextInventoryMetadata
+from MyCapytain.resources.prototypes.cts.inventory import CtsTextInventoryCollection
 from MyCapytain.resolvers.utils import CollectionDispatcher
 import logging
 
@@ -44,7 +44,7 @@ class RequestPatchChained(object):
 class NemoResource(unittest.TestCase):
     """ Test Suite for Nemo
     """
-    endpoint = HttpCTSResolver(CTS("http://website.com/cts/api"))
+    endpoint = HttpCtsResolver(HttpCtsRetriever("http://website.com/cts/api"))
     body_xsl = "tests/test_data/xsl_test.xml"
 
     def setUp(self):
@@ -71,14 +71,14 @@ class NemoResource(unittest.TestCase):
             app=Flask(__name__)
         )
 
-tic = TextInventoryCollection()
-latin = TextInventory("urn:perseus:latinLit")
+tic = CtsTextInventoryCollection()
+latin = XmlCtsTextInventoryMetadata("urn:perseus:latinLit")
 latin.parent = tic
 latin.set_label("Classical Latin", "eng")
-farsi = TextInventory("urn:perseus:farsiLit")
+farsi = XmlCtsTextInventoryMetadata("urn:perseus:farsiLit")
 farsi.parent = tic
 farsi.set_label("Farsi", "eng")
-gc = TextInventory("urn:perseus:greekLit")
+gc = XmlCtsTextInventoryMetadata("urn:perseus:greekLit")
 gc.parent = tic
 gc.set_label("Ancient Greek", "eng")
 gc.set_label("Grec Ancien", "fre")
@@ -99,7 +99,7 @@ def dispatchfFarsiLit(collection, path=None, **kwargs):
         return True
     return False
 
-NautilusDummy = CTSCapitainsLocalResolver(
+NautilusDummy = CtsCapitainsLocalResolver(
     resource=[
         "./tests/test_data/nautilus/farsiLit",
         "./tests/test_data/nautilus/latinLit"
