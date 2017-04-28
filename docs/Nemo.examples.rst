@@ -30,27 +30,27 @@ and the name of a CTS inventory (if required). This will run a browsing interfac
     from flask import Flask
     # We import Nemo
     from flask.ext.nemo import Nemo
+    # We import enough resources from MyCapytain to retrieve data
+    from MyCapytain.resolvers.cts.api import HttpCtsResolver
+    from MyCapytain.retrievers.cts5 import HttpCtsRetriever
+
+    # We set up a resolver which communicates with an API available in Leipzig
+    resolver = HttpCtsResolver(HttpCtsRetriever("http://cts.dh.uni-leipzig.de/api/cts/"))
     # We create an application. You can simply use your own
     app = Flask(
         "My Application"
     )
     # We register a Nemo object with the minimal settings
     nemo = Nemo(
-        # API URL is the URL of your endpoint.
-        api_url="http://cts.perseids.org/api/cts/",
+        # We give a resolver
+        resolver=resolver,
         # We set up the base url to be empty. If you want nemo to be on a
         # subpath called "cts", you would have
         # base_url="cts",
         base_url="",
-        # In our case, we have an inventory named "nemo"
-        inventory="nemo",
         # We give thee ap object
         app=app
     )
-    # We register its routes
-    nemo.register_routes()
-    # We register its filters
-    nemo.register_filters()
     # We run the application
     app.run()
 
@@ -70,19 +70,14 @@ Because Python is not a natural language and because not everybody knows it in a
 
     # ...
     nemo = Nemo(
-        # Required API informations
-        api_url="http://cts.perseids.org/api/cts/",
+        # We give a resolver
+        resolver=resolver,
         base_url="",
         inventory="ciham",
         # For transform parameters, we provide a path to an xsl which will be used for every
         transform={"default" : "examples/ciham.xslt"},
-        # For urntransform parameters, we provide a function which will be used to transform the urn for display
-        # this example just adds explanatory text
-        urntransform={"default" : lambda urn: "Stable URI:" + str(urn)},
         # CSS value should be a list of path to CSS own files
-        css=[
-            "examples/ciham.css"
-        ],
+        css=["examples/ciham.css"],
         # JS follows the same scheme
         js=[
             # use own js file to load a script to go from normalized edition to diplomatic one.
@@ -147,7 +142,7 @@ As you will most likely use a new template, don't forget to register it with the
 
     # #We create a class based on Nemo
     class NemoDouble(Nemo):
-        def r_double(self, collection, textgroup, work, version, passage_identifier, visavis):
+        def r_double(self, collection, collection2, work, version, passage_identifier, visavis):
             """ Optional route to add a visavis version
 
             :param collection: Collection identifier
