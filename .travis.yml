@@ -11,3 +11,11 @@ script:
     - coverage run --source=flask_nemo setup.py test
 after_success:
     - coveralls
+
+deploy:
+  provider: pypi
+  user: ponteineptique
+  password: $PYPASS
+  on:
+    tags: true
+    python: "3.5"

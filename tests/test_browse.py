@@ -11,6 +11,7 @@ from flask_nemo.chunker import level_grouper
 from flask import Flask, jsonify
 from flask_caching import Cache
 from random import randint
+from MyCapytain.errors import UnknownCollection
 
 
 class NemoTestBrowse(TestCase):
@@ -332,6 +333,17 @@ class NemoTestBrowse(TestCase):
             'et ibi est lapis ille', query_data,
             "Text should be visible"
         )
+
+    def test_browse_work_identifier_on_passage_route(self):
+        """ Particular case : CTS Identifiers should allow for having a work level identifier and a passage. Nemo should reroute this kind of URI
+        See https://github.com/Capitains/flask-capitains-nemo/issues/106
+        """
+        right_response = self.client.get("/text/urn:cts:latinLit:stoa0329c.stoa001.opp-lat1/passage/1-8").data.decode()
+        rerouted = self.client.get("/text/urn:cts:latinLit:stoa0329c.stoa001/passage/1-8", follow_redirects=True).data.decode()
+        self.assertEqual(right_response, rerouted, "Content of reroute should be the content of right response")
+
+        with self.assertRaises(UnknownCollection):
+            failing = self.client.get("/text/urn:cts:latinLit:stoa0329c.stoa008888/passage/1-8", follow_redirects=True)
 
     def test_cache_options(self):
         class ReplaceTemplate(PluginPrototype):

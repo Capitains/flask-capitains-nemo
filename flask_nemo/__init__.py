@@ -17,6 +17,8 @@ from pkg_resources import resource_filename
 from collections import Callable, OrderedDict
 from MyCapytain.common.constants import Mimetypes
 from MyCapytain.resources.prototypes.metadata import ResourceCollection
+from MyCapytain.resources.prototypes.cts.inventory import CtsWorkMetadata, CtsEditionMetadata
+from MyCapytain.errors import UnknownCollection
 import inspect
 
 import flask_nemo._data
@@ -631,8 +633,13 @@ class Nemo(object):
         :return: Template, collections metadata and Markup object representing the text
         :rtype: {str: Any}
         """
-        text = self.get_passage(objectId=objectId, subreference=subreference)
         collection = self.get_collection(objectId)
+        if isinstance(collection, CtsWorkMetadata):
+            editions = [t for t in collection.children.values() if isinstance(t, CtsEditionMetadata)]
+            if len(editions) == 0:
+                raise UnknownCollection("This work has no default edition")
+            return redirect(url_for(".r_passage", objectId=str(editions[0].id), subreference=subreference))
+        text = self.get_passage(objectId=objectId, subreference=subreference)
         passage = self.transform(text, text.export(Mimetypes.PYTHON.ETREE), objectId)
         prev, next = self.get_siblings(objectId, subreference, text)
         return {
