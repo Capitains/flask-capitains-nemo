@@ -21,11 +21,8 @@ Specific methods
 ****************
 
 .. automethod:: flask_nemo.Nemo.get_inventory
-.. automethod:: flask_nemo.Nemo.get_collections
-.. automethod:: flask_nemo.Nemo.get_textgroups
-.. automethod:: flask_nemo.Nemo.get_works
-.. automethod:: flask_nemo.Nemo.get_texts
-.. automethod:: flask_nemo.Nemo.get_text
+.. automethod:: flask_nemo.Nemo.get_collection
+.. automethod:: flask_nemo.Nemo.get_siblings
 .. automethod:: flask_nemo.Nemo.get_reffs
 .. automethod:: flask_nemo.Nemo.get_passage
 
