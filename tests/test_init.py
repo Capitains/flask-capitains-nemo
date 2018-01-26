@@ -56,3 +56,9 @@ class TestNemoInit(NemoResource):
         """ Test when an endpoint is set """
         nemo = Nemo(resolver=NautilusDummy)
         self.assertEqual(nemo.resolver, NautilusDummy, "Endpoint should be set through endpoint parameter")
+
+    def test_warn_on_empty_value(self):
+        """ Test when an endpoint is set """
+        from flask_nemo.errors import ValueWarning
+        with self.assertWarns(ValueWarning):
+            nemo = Nemo(base_url="/")

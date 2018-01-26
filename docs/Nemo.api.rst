@@ -95,11 +95,6 @@ Chunkers
 .. automethod:: flask_nemo.chunker.level_grouper
 .. automethod:: flask_nemo.chunker.level_chunker
 
-PrevNexter
-**********
-
-.. automethod:: flask_nemo.Nemo.default_prevnext
-
 Plugin
 ######
 

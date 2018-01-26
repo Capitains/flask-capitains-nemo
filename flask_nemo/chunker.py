@@ -61,7 +61,7 @@ def line_chunker(text, getreffs, lines=30):
     return reffs
 
 
-def level_chunker(text, getValidReff, level=1):
+def level_chunker(text, getreffs, level=1):
     """ Chunk a text at the passage level
 
     :param text: Text object
@@ -71,15 +71,15 @@ def level_chunker(text, getValidReff, level=1):
     :return: List of urn references with their human readable version
     :rtype: [(str, str)]
     """
-    references = getValidReff(level=level)
+    references = getreffs(level=level)
     return [(ref.split(":")[-1], ref.split(":")[-1]) for ref in references]
 
 
-def level_grouper(text, getValidReff, level=None, groupby=20):
+def level_grouper(text, getreffs, level=None, groupby=20):
     """ Alternative to level_chunker: groups levels together at the latest level
 
     :param text: Text object
-    :param getValidReff: GetValidReff query callback
+    :param getreffs: GetValidReff query callback
     :param level: Level of citation to retrieve
     :param groupby: Number of level to groupby
     :return: Automatically curated references
@@ -87,7 +87,7 @@ def level_grouper(text, getValidReff, level=None, groupby=20):
     if level is None or level > len(text.citation):
         level = len(text.citation)
 
-    references = [ref.split(":")[-1] for ref in getValidReff(level=level)]
+    references = [ref.split(":")[-1] for ref in getreffs(level=level)]
     _refs = OrderedDict()
 
     for key in references:

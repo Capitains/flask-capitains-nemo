@@ -12,6 +12,7 @@ Welcome to the flask extension Nemo documentation!
    :maxdepth: 2
 
    Nemo.examples
+   Nemo.api
    Nemo.workflow
    Nemo.query
    Nemo.developer_guide
@@ -20,4 +21,3 @@ Welcome to the flask extension Nemo documentation!
    Nemo.plugin
    Nemo.plugins
    LXML
-   Nemo.api

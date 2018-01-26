@@ -7,22 +7,27 @@
 """
 
 from urllib.parse import quote
-import os.path as op
 from operator import itemgetter
-import jinja2
-from flask import render_template, Blueprint, abort, Markup, send_from_directory, Flask, url_for, redirect, request
-from lxml import etree
+from warnings import warn
+from collections import Callable, OrderedDict
 from copy import deepcopy as copy
 from pkg_resources import resource_filename
-from collections import Callable, OrderedDict
+
+from lxml import etree
+from flask import render_template, Blueprint, abort, Markup, send_from_directory, Flask, url_for, redirect, request
+
+import jinja2
+import inspect
+import os.path as op
+
 from MyCapytain.common.constants import Mimetypes
 from MyCapytain.resources.prototypes.metadata import ResourceCollection
 from MyCapytain.resources.prototypes.cts.inventory import CtsWorkMetadata, CtsEditionMetadata
 from MyCapytain.errors import UnknownCollection
-import inspect
 
 import flask_nemo._data
 import flask_nemo.filters
+from flask_nemo.errors import ValueWarning
 from flask_nemo.chunker import level_grouper as __level_grouper__
 from flask_nemo.plugins.default import Breadcrumb
 from flask_nemo.common import resource_qualifier, ASSETS_STRUCTURE
@@ -122,7 +127,7 @@ class Nemo(object):
                  cache=None, resolver=None,
                  plugins=None,
                  template_folder=None, static_folder=None, static_url_path=None,
-                 urls=None, transform=None, chunker=None, prevnext=None,
+                 urls=None, transform=None, chunker=None,
                  css=None, js=None, templates=None, statics=None,
                  prevent_plugin_clearing_assets=False,
                  original_breadcrumb=True, default_lang="eng"):
@@ -130,6 +135,11 @@ class Nemo(object):
         self.name = __name__
         if name:
             self.name = name
+
+        if base_url == "/":
+            warn("Nemo(base_url) cannot be '/'. If you wish to use the root URL, you need to use an empty value ''. "
+                 "This was automatically set to ''", ValueWarning)
+            base_url = ""
         self.prefix = base_url
 
         self.resolver = resolver

@@ -22,15 +22,21 @@ def create_test_app(debug=False, config=None):
 class RequestPatch(object):
     """ Request patch object to deal with patching reply in flask.ext.nemo
     """
+    encoding = "utf-8"
+
     def __init__(self, f):
         self.__text = f.read()
+
+    @staticmethod
+    def raise_for_status():
+        return None
 
     @property
     def text(self):
         return self.__text
 
 
-class RequestPatchChained(object):
+class RequestPatchChained(RequestPatch):
     """ Request patch object to deal with patching reply in flask.ext.nemo
     """
     def __init__(self, requests):
