@@ -1,6 +1,13 @@
 Change logs
 ===
 
+## 1.0.3 - 22/05/2018
+
+By @sonofmun
+
+- Refactored __transform (in flask_nemo.__init__) to _transform. This will make it available to class extensions.
+- Changed a single occurrence of "import flask.ext.nemo" in the tests to "import flask_nemo"
+
 ## 1.0.2 - 26/01/2017
 
 By @ponteineptique
