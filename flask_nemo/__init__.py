@@ -191,7 +191,7 @@ class Nemo(object):
 
         # Reusing self._inventory across requests
         self._inventory = None
-        self.__transform = {
+        self._transform = {
             "default": None
         }
 
@@ -200,7 +200,7 @@ class Nemo(object):
         }
 
         if isinstance(transform, dict):
-            self.__transform.update(transform)
+            self._transform.update(transform)
 
         self.chunker = {
             "default": type(self).default_chunker
@@ -328,10 +328,10 @@ class Nemo(object):
         :rtype: str
         """
         # We check first that we don't have
-        if str(objectId) in self.__transform:
-            func = self.__transform[str(objectId)]
+        if str(objectId) in self._transform:
+            func = self._transform[str(objectId)]
         else:
-            func = self.__transform["default"]
+            func = self._transform["default"]
 
         # If we have a string, it means we get a XSL filepath
         if isinstance(func, str):

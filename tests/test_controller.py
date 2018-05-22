@@ -4,7 +4,7 @@ Test only controllers functions, ie function that should not be accessible direc
 greatly tied to the app/blueprint instance
 
 """
-from flask.ext.nemo import Nemo
+from flask_nemo import Nemo
 from mock import patch, call, Mock
 from lxml import etree
 from flask import Markup, Flask
