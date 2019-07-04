@@ -62,7 +62,7 @@ class RetrieverPrototype(object):
 class HTTPRetriever(RetrieverPrototype):
     """ Http retriever retrieves resources being remotely hosted in CTS
     """
-    __reg_exp__ = re.compile("^(https?:)?\/\/")
+    __reg_exp__ = re.compile("^(https?:)?//")
 
     def match(self, uri):
         """ Check to see if this URI is retrievable by this Retriever implementation
