@@ -258,15 +258,15 @@ class NemoTestBrowse(TestCase):
         """
         query_data = self.client.get("/collections").data.decode()
         self.assertRegex(
-            query_data, "Classical Latin<br />\s*<a class=\"card-link\" href=\"/collections/urn:perseus:latinLit",
+            query_data, r'Classical Latin<br />\s*<a class="card-link" href="/collections/urn:perseus:latinLit',
             "Link to classical latin main collection should be found"
         )
         self.assertRegex(
-            query_data, "Farsi<br />\s*<a class=\"card-link\" href=\"/collections/urn:perseus:farsiLit",
+            query_data, r'Farsi<br />\s*<a class="card-link" href="/collections/urn:perseus:farsiLit',
             "Link to farsi main collection should be found"
         )
         self.assertRegex(
-            query_data, "Ancient Greek<br />\s*<a class=\"card-link\" href=\"/collections/urn:perseus:greekLit",
+            query_data, r'Ancient Greek<br />\s*<a class="card-link" href="/collections/urn:perseus:greekLit',
             "Link to farsi main collection should be found"
         )
 
