@@ -37,7 +37,7 @@ class MockQueryInterface(QueryPrototype):
             annotation.read = lambda: Response("a", headers={"Content-Type": "text/plain"})
             annotation.read = lambda: Response("a", headers={"Content-Type": "text/plain"})
         else:
-            annotation.__mimetype__ = "application/xml"
+            annotation._mimetype = "application/xml"
             annotation.read = lambda: "123"
         return annotation
 
