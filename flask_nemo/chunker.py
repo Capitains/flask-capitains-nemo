@@ -87,7 +87,7 @@ def level_grouper(text, getreffs, level=None, groupby=20):
     if level is None or level > len(text.citation):
         level = len(text.citation)
 
-    references = [ref.split(":")[-1] for ref in getreffs(level=level)]
+    references = [str(ref).split(":")[-1] for ref in getreffs(level=level)]
     _refs = OrderedDict()
 
     for key in references:

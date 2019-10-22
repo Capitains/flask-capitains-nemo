@@ -9,7 +9,7 @@ from mock import patch, call, Mock
 from lxml import etree
 from flask import Markup, Flask
 
-from MyCapytain.resources.prototypes.text import Passage
+from MyCapytain.resources.prototypes.cts.text import PrototypeCtsPassage
 from MyCapytain.common.constants import Mimetypes
 from MyCapytain.resources.prototypes.cts.inventory import CtsTextInventoryMetadata, CtsTextMetadata
 
@@ -165,7 +165,7 @@ class NemoTestControllers(NemoResource):
                 "urn:cts:latinLit:phi1294.phi002.perseus-lat2",
                 "1.pr"
             )
-            self.assertIsInstance(passage, Passage)
+            self.assertIsInstance(passage, PrototypeCtsPassage)
             self.assertEqual(
                 len(passage.export(Mimetypes.PYTHON.ETREE)
                     .xpath("//tei:l[@n]", namespaces={"tei": "http://www.tei-c.org/ns/1.0"})),
@@ -202,5 +202,5 @@ class NemoTestControllers(NemoResource):
         # Passage with unknown range
         p = nemo.get_passage("urn:cts:latinLit:phi1294.phi002.perseus-lat2", "1.11.1-1.11.2")
         l, r = nemo.get_siblings("urn:cts:latinLit:phi1294.phi002.perseus-lat2", "1.11.1-1.11.2", p)
-        self.assertEqual(l, "1.10.3-1.10.4", "Passage should be computed specifically if texts have unknown range")
-        self.assertEqual(r, "1.11.3-1.11.4", "Passage should be computed specifically if texts have unknown range")
+        self.assertEqual(l, ('1.10.3', '1.10.4'), "Passage should be computed specifically if texts have unknown range")
+        self.assertEqual(r, ("1.11.3", "1.11.4"), "Passage should be computed specifically if texts have unknown range")
