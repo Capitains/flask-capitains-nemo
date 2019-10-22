@@ -168,7 +168,7 @@ class TestLocalRetrievers(TestCase):
             if sendfile:
                 with patch("flask_nemo.query.resolve.send_file", return_value=content) as patched:
                     data, mimetype = ret.read(uri)
-                    patched.assert_called_with(ret.__absolute__(uri))
+                    patched.assert_called_with(ret._absolute(uri))
             else:
                 data, mimetype = ret.read(uri)
 

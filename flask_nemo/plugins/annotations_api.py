@@ -34,7 +34,7 @@ class AnnotationsApiPlugin(PluginPrototype):
 
     def __init__(self, queryinterface, *args, **kwargs):
         super(AnnotationsApiPlugin, self).__init__(*args, **kwargs)
-        self.__queryinterface__ = queryinterface
+        self._queryinterface = queryinterface
 
     # TODO we should have a response at the base of annotations/api that returns link types and link relations
     # showing the next level of options 
@@ -63,13 +63,13 @@ class AnnotationsApiPlugin(PluginPrototype):
             except ValueError:
                 return "invalid urn", 400
 
-            count, annotations = self.__queryinterface__.getAnnotations(urn, wildcard=wildcard, include=include,
-                                                                        exclude=exclude, limit=limit, start=start,
-                                                                        expand=expand)
+            count, annotations = self._queryinterface.getAnnotations(urn, wildcard=wildcard, include=include,
+                                                                     exclude=exclude, limit=limit, start=start,
+                                                                     expand=expand)
         else:
             #  Note that this implementation is not done for too much annotations
             #  because we do not implement pagination here
-            count, annotations = self.__queryinterface__.getAnnotations(None, limit=limit, start=start, expand=expand)
+            count, annotations = self._queryinterface.getAnnotations(None, limit=limit, start=start, expand=expand)
         mapped = []
         response = {
             "@context": type(self).JSONLD_CONTEXT,
@@ -102,7 +102,7 @@ class AnnotationsApiPlugin(PluginPrototype):
         :return: annotation contents
         :rtype: {str: Any}
         """
-        annotation = self.__queryinterface__.getResource(sha)
+        annotation = self._queryinterface.getResource(sha)
         if not annotation:
             return "invalid resource uri", 404
         response = {
@@ -125,7 +125,7 @@ class AnnotationsApiPlugin(PluginPrototype):
         :return: annotation contents
         :rtype: {str: Any}
         """
-        annotation = self.__queryinterface__.getResource(sha)
+        annotation = self._queryinterface.getResource(sha)
         if not annotation:
             return "invalid resource uri", 404
         # TODO this should inspect the annotation content

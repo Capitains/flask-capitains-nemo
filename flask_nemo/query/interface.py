@@ -23,22 +23,22 @@ class SimpleQuery(QueryPrototype):
 
     def __init__(self, annotations, resolver=None):
         super(SimpleQuery, self).__init__(None)
-        self.__annotations__ = []
-        self.__nemo__ = None
-        self.__resolver__ = resolver
+        self._annotations = []
+        self._nemo = None
+        self._resolver = resolver
 
         for resource in annotations:
             if isinstance(resource, tuple):
                 target, body, type_uri = resource
-                self.__annotations__.append(AnnotationResource(
-                    body, target, type_uri, self.__resolver__
+                self._annotations.append(AnnotationResource(
+                    body, target, type_uri, self._resolver
                 ))
             else:
-                self.__annotations__.append(resource)
+                self._annotations.append(resource)
 
     @property
     def textResolver(self):
-        return self.__nemo__.resolver
+        return self._nemo.resolver
 
     def process(self, nemo):
         """ Register nemo and parses annotations
@@ -47,16 +47,16 @@ class SimpleQuery(QueryPrototype):
 
         :param nemo: Nemo
         """
-        self.__nemo__ = nemo
-        for annotation in self.__annotations__:
+        self._nemo = nemo
+        for annotation in self._annotations:
             annotation.target.expanded = frozenset(
-                self.__getinnerreffs__(
+                self._getinnerreffs(
                     objectId=annotation.target.objectId,
                     subreference=annotation.target.subreference
                 )
             )
 
-    def __get_resource_metadata__(self, objectId):
+    def _get_resource_metadata(self, objectId):
         """ Return a metadata text object
 
         :param objectId: objectId of the text
@@ -66,7 +66,7 @@ class SimpleQuery(QueryPrototype):
 
     @property
     def annotations(self):
-        return self.__annotations__
+        return self._annotations
 
     def getResource(self, sha):
         try:
@@ -92,7 +92,7 @@ class SimpleQuery(QueryPrototype):
             else:
                 objectId, subreference = target, None
 
-            ref_in_range = list(self.__getinnerreffs__(
+            ref_in_range = list(self._getinnerreffs(
                 objectId=objectId,
                 subreference=subreference
             ))
@@ -110,7 +110,7 @@ class SimpleQuery(QueryPrototype):
 
         return len(annotations), sorted(annotations, key=lambda x: x.uri)
 
-    def __getinnerreffs__(self, objectId, subreference):
+    def _getinnerreffs(self, objectId, subreference):
         """ Resolve the list of urns between in a range
 
         :param text_metadata: Resource Metadata
@@ -124,7 +124,7 @@ class SimpleQuery(QueryPrototype):
         yield subreference
         while level > -1:
             try:
-                reffs = self.__nemo__.resolver.getReffs(
+                reffs = self._nemo.resolver.getReffs(
                     objectId,
                     subreference=subreference,
                     level=level
