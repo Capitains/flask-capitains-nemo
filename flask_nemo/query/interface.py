@@ -132,9 +132,6 @@ class SimpleQuery(QueryPrototype):
             # This is the new behavior in MyCapytain 3.0.0
             except CitationDepthError:
                 break
-            # This is the old behavior kept for backward compatibility.
-            if len(reffs) == 0:
-                break
             else:
                 for r in reffs:
                     yield r[0]  # only the first member of the CtsReferenceSet is needed here.
