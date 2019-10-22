@@ -1,4 +1,5 @@
 from MyCapytain.common.reference import URN
+from MyCapytain.errors import CitationDepthError
 from flask_nemo.query.proto import QueryPrototype
 from flask_nemo.query.annotation import AnnotationResource
 from werkzeug.exceptions import NotFound
@@ -122,14 +123,19 @@ class SimpleQuery(QueryPrototype):
         level = 0
         yield subreference
         while level > -1:
-            reffs = self.__nemo__.resolver.getReffs(
-                objectId,
-                subreference=subreference,
-                level=level
-            )
+            try:
+                reffs = self.__nemo__.resolver.getReffs(
+                    objectId,
+                    subreference=subreference,
+                    level=level
+                )
+            # This is the new behavior in MyCapytain 3.0.0
+            except CitationDepthError:
+                break
+            # This is the old behavior kept for backward compatibility.
             if len(reffs) == 0:
                 break
             else:
                 for r in reffs:
-                    yield r
+                    yield r[0]  # only the first member of the CtsReferenceSet is needed here.
                 level += 1
