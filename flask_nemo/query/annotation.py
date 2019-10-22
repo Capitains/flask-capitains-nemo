@@ -25,16 +25,16 @@ class Target(object):
                 subreference = None
         elif isinstance(objectId, tuple):
             objectId, subreference = objectId
-        self.__objectId__ = objectId
-        self.__subreference__ = subreference
+        self._objectId = objectId
+        self._subreference = subreference
 
     @property
     def objectId(self):
-        return self.__objectId__
+        return self._objectId
 
     @property
     def subreference(self):
-        return self.__subreference__
+        return self._subreference
 
     def to_json(self):
         """ Method to call to get a serializable object for json.dump or jsonify based on the target
@@ -84,45 +84,45 @@ class AnnotationResource(object):
     SLUG = "annotation"
 
     def __init__(self, uri, target, type_uri, resolver, target_class=Target, mimetype=None, slug=None, **kwargs):
-        self.__uri__ = uri
+        self._uri = uri
         if not isinstance(target, Target):
-            self.__target__ = target_class(target)
+            self._target = target_class(target)
         else:
-            self.__target__ = target
-        self.__type_uri__ = type_uri
-        self.__slug__ = slug or deepcopy(type(self).SLUG)
-        self.__sha__ = hashlib.sha256(
+            self._target = target
+        self._type_uri = type_uri
+        self._slug = slug or deepcopy(type(self).SLUG)
+        self._sha = hashlib.sha256(
             "{uri}::{type_uri}".format(uri=uri, type_uri=type_uri).encode('utf-8')
         ).hexdigest()
 
-        self.__content__ = None
-        self.__resolver__ = resolver
-        self.__retriever__ = None
-        self.__mimetype__ = mimetype
+        self._content = None
+        self._resolver = resolver
+        self._retriever = None
+        self._mimetype = mimetype
 
     @property
     def mimetype(self):
-        return self.__mimetype__
+        return self._mimetype
 
     @property
     def sha(self):
-        return self.__sha__
+        return self._sha
 
     @property
     def uri(self):
-        return self.__uri__
+        return self._uri
 
     @property
     def type_uri(self):
-        return self.__type_uri__
+        return self._type_uri
 
     @property
     def slug(self):
-        return self.__slug__
+        return self._slug
 
     @property
     def target(self):
-        return self.__target__
+        return self._target
 
     @property
     def expandable(self):
@@ -135,10 +135,10 @@ class AnnotationResource(object):
         :return: the contents of the resource
         :rtype: str or bytes or flask.response
         """
-        if not self.__content__:
-            self.__retriever__ = self.__resolver__.resolve(self.uri)
-            self.__content__, self.__mimetype__ = self.__retriever__.read(self.uri)
-        return self.__content__
+        if not self._content:
+            self._retriever = self._resolver.resolve(self.uri)
+            self._content, self._mimetype = self._retriever.read(self.uri)
+        return self._content
  
     def expand(self): 
         """ Expand the contents of the Annotation if it is expandable  (i.e. if it references  multiple resources)

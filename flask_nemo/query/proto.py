@@ -18,7 +18,7 @@ class QueryPrototype(object):
     MATCH_ALL = "%.%"
 
     def __init__(self, getreffs, **kwargs):
-        self.__getreffs__ = getreffs
+        self._getreffs = getreffs
 
     def getAnnotations(self, targets, wildcard=".", include=None, exclude=None, limit=None, start=1, expand=False,
                        **kwargs):
