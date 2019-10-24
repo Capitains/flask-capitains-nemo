@@ -1,4 +1,4 @@
-from MyCapytain.common.reference import URN
+from MyCapytain.common.reference import URN, BaseReferenceSet, BaseReference
 from MyCapytain.errors import CitationDepthError
 from flask_nemo.query.proto import QueryPrototype
 from flask_nemo.query.annotation import AnnotationResource
@@ -20,6 +20,10 @@ class SimpleQuery(QueryPrototype):
     >>> query.process(nemo)
 
     """
+
+    # ToDo: We should probably make a real use (and not just test fixes)
+    #       of BaseReferenceSet and BaseReference here. This seems silly
+    #       that we are restringing stuff here.
 
     def __init__(self, annotations, resolver=None):
         super(SimpleQuery, self).__init__(None)
@@ -110,7 +114,7 @@ class SimpleQuery(QueryPrototype):
 
         return len(annotations), sorted(annotations, key=lambda x: x.uri)
 
-    def _getinnerreffs(self, objectId, subreference):
+    def _getinnerreffs(self, objectId, subreference) -> BaseReference:
         """ Resolve the list of urns between in a range
 
         :param text_metadata: Resource Metadata
@@ -122,9 +126,10 @@ class SimpleQuery(QueryPrototype):
         """
         level = 0
         yield subreference
+
         while level > -1:
             try:
-                reffs = self._nemo.resolver.getReffs(
+                reffs: BaseReferenceSet = self._nemo.resolver.getReffs(
                     objectId,
                     subreference=subreference,
                     level=level
@@ -134,5 +139,7 @@ class SimpleQuery(QueryPrototype):
                 break
             else:
                 for r in reffs:
-                    yield r[0]  # only the first member of the CtsReferenceSet is needed here.
+                    # We only needs the start of the reference here,
+                    # because we specifically want to drop ranges here.
+                    yield r.start
                 level += 1

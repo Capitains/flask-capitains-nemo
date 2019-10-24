@@ -14,7 +14,7 @@
     <section class="card-columns">
         <ul>
         {% for coll in collections.members %}
-            {% if coll.model == 'http://w3id.org/dts-ontology/resource' %}
+            {% if coll.is_resource %}
             <li class="card">
                 [{{coll.lang}}] {{ coll.label }}<br />
                 <a class="card-link" href="{{url_for('.r_references_semantic', objectId=coll.id, semantic=coll.semantic)}}">Browse</a>
