@@ -1,6 +1,12 @@
 Change logs
 ===
 
+## 1.0.4 - 22/10/2019
+
+By @ponteineptique
+
+- Ensure Nemo < 2.0.0 does not use MyCapytain 3.0.0
+
 ## 1.0.3 - 22/05/2018
 
 By @sonofmun
