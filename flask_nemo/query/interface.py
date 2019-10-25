@@ -129,7 +129,8 @@ class SimpleQuery(QueryPrototype):
 
         while level > -1:
             try:
-                reffs: BaseReferenceSet = self._nemo.resolver.getReffs(
+                # type == BaseReferenceSet. I removed the explicit typing below since it broke the tests on Python 3.5.
+                reffs = self._nemo.resolver.getReffs(
                     objectId,
                     subreference=subreference,
                     level=level
