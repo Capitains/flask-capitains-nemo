@@ -499,6 +499,7 @@ class Nemo(object):
         x = {
             "id": member.id,
             "label": str(member.get_label(lang)),
+            "is_resource": isinstance(member, ResourceCollection),
             "model": str(member.model),
             "type": str(member.type),
             "size": member.size,

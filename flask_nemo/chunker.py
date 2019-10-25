@@ -14,7 +14,7 @@ def default_chunker(text, getreffs):
     :rtype: [(str, str)]
     """
     level = len(text.citation)
-    return [tuple([reff.split(":")[-1]]*2) for reff in getreffs(level=level)]
+    return [tuple([str(reff)]*2) for reff in getreffs(level=level)]
 
 
 def scheme_chunker(text, getreffs):
@@ -34,7 +34,7 @@ def scheme_chunker(text, getreffs):
         level = 2
     elif types == ["book", "line"]:
         return line_chunker(text, getreffs)
-    return [tuple([reff.split(":")[-1]]*2) for reff in getreffs(level=level)]
+    return [tuple([str(reff)]*2) for reff in getreffs(level=level)]
 
 
 def line_chunker(text, getreffs, lines=30):
@@ -50,7 +50,7 @@ def line_chunker(text, getreffs, lines=30):
     :rtype: [(str, str)]
     """
     level = len(text.citation)
-    source_reffs = [reff.split(":")[-1] for reff in getreffs(level=level)]
+    source_reffs = [str(reff) for reff in getreffs(level=level)]
     reffs = []
     i = 0
     while i + lines - 1 < len(source_reffs):
@@ -72,7 +72,7 @@ def level_chunker(text, getreffs, level=1):
     :rtype: [(str, str)]
     """
     references = getreffs(level=level)
-    return [(ref.split(":")[-1], ref.split(":")[-1]) for ref in references]
+    return [(str(ref), str(ref)) for ref in references]
 
 
 def level_grouper(text, getreffs, level=None, groupby=20):
@@ -87,7 +87,7 @@ def level_grouper(text, getreffs, level=None, groupby=20):
     if level is None or level > len(text.citation):
         level = len(text.citation)
 
-    references = [ref.split(":")[-1] for ref in getreffs(level=level)]
+    references = [str(ref) for ref in getreffs(level=level)]
     _refs = OrderedDict()
 
     for key in references:

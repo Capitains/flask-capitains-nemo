@@ -19,7 +19,7 @@ class Resolver(object):
     """
 
     def __init__(self, *retrievers, **kwargs):
-        self.__retrievers__ = retrievers
+        self._retrievers = retrievers
 
     def resolve(self, uri):
         """ Resolve a Resource identified by URI
@@ -28,7 +28,7 @@ class Resolver(object):
         :return: the contents of the resource as a string
         :rtype: str
         """
-        for r in self.__retrievers__:
+        for r in self._retrievers:
             if r.match(uri):
                 return r
         raise UnresolvableURIError()
@@ -62,7 +62,7 @@ class RetrieverPrototype(object):
 class HTTPRetriever(RetrieverPrototype):
     """ Http retriever retrieves resources being remotely hosted in CTS
     """
-    __reg_exp__ = re.compile("^(https?:)?//")
+    _reg_exp = re.compile("^(https?:)?//")
 
     def match(self, uri):
         """ Check to see if this URI is retrievable by this Retriever implementation
@@ -73,7 +73,7 @@ class HTTPRetriever(RetrieverPrototype):
         :rtype: bool
         """
         # prototype implementation can't retrieve anything!
-        return HTTPRetriever.__reg_exp__.match(uri) is not None
+        return HTTPRetriever._reg_exp.match(uri) is not None
 
     def read(self, uri):
         """ Retrieve the contents of the resource
@@ -99,7 +99,7 @@ class LocalRetriever(RetrieverPrototype):
     def __init__(self, path="./"):
         self.__path__ = op.abspath(path)
 
-    def __absolute__(self, uri):
+    def _absolute(self, uri):
         """ Get the absolute uri for a file
 
         :param uri: URI of the resource to be retrieved
@@ -115,7 +115,7 @@ class LocalRetriever(RetrieverPrototype):
         :return: True if it can be, False if not
         :rtype: bool
         """
-        absolute_uri = self.__absolute__(uri)
+        absolute_uri = self._absolute(uri)
 
         return absolute_uri.startswith(self.__path__) and op.exists(absolute_uri)
 
@@ -127,7 +127,7 @@ class LocalRetriever(RetrieverPrototype):
         :return: the contents of the resource
         :rtype: str
         """
-        uri = self.__absolute__(uri)
+        uri = self._absolute(uri)
         mime, _ = guess_type(uri)
         if "image" in mime:
             return send_file(uri), mime
@@ -145,10 +145,10 @@ class CTSRetriever(RetrieverPrototype):
     :param resolver: CTS5 Resolver
     :type resolver: MyCapytain.resolver.cts.*
     """
-    __reg_exp__ = re.compile("^urn:cts:")
+    _reg_exp = re.compile("^urn:cts:")
 
     def __init__(self, resolver):
-        self.__resolver__ = resolver
+        self._resolver = resolver
 
     @staticmethod
     def match(uri):
@@ -160,7 +160,7 @@ class CTSRetriever(RetrieverPrototype):
         :rtype: bool
         """
         # prototype implementation can't retrieve anything!
-        return CTSRetriever.__reg_exp__.match(uri) is not None
+        return CTSRetriever._reg_exp.match(uri) is not None
 
     def read(self, uri):
         """ Retrieve the contents of the resource
@@ -170,4 +170,4 @@ class CTSRetriever(RetrieverPrototype):
         :return: the contents of the resource
         :rtype: str
         """
-        return self.__resolver__.getTextualNode(uri).export(Mimetypes.XML.TEI), "text/xml"
+        return self._resolver.getTextualNode(uri).export(Mimetypes.XML.TEI), "text/xml"
