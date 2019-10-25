@@ -55,7 +55,7 @@ class TestSimpleQuery(TestCase):
         logger = logging.getLogger('my-logger')
         logger.propagate = False
         self.nautilus = CtsCapitainsLocalResolver(["tests/test_data/interface/latinLit"], logger=logger)
-        self.nemo = Nemo(app=self.app, resolver=self.nautilus, base_url="/")
+        self.nemo = Nemo(app=self.app, resolver=self.nautilus, base_url="")
         self.query = SimpleQuery(
             [
                 self.one,

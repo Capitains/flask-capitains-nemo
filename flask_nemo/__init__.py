@@ -9,7 +9,8 @@
 from urllib.parse import quote
 from operator import itemgetter
 from warnings import warn
-from collections import Callable, OrderedDict
+from collections import OrderedDict
+from collections.abc import Callable
 from copy import deepcopy as copy
 from pkg_resources import resource_filename
 
@@ -498,6 +499,7 @@ class Nemo(object):
         x = {
             "id": member.id,
             "label": str(member.get_label(lang)),
+            "is_resource": isinstance(member, ResourceCollection),
             "model": str(member.model),
             "type": str(member.type),
             "size": member.size,

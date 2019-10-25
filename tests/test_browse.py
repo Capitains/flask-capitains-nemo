@@ -258,15 +258,15 @@ class NemoTestBrowse(TestCase):
         """
         query_data = self.client.get("/collections").data.decode()
         self.assertRegex(
-            query_data, "Classical Latin<br />\s*<a class=\"card-link\" href=\"/collections/urn:perseus:latinLit",
+            query_data, r'Classical Latin<br />\s*<a class="card-link" href="/collections/urn:perseus:latinLit',
             "Link to classical latin main collection should be found"
         )
         self.assertRegex(
-            query_data, "Farsi<br />\s*<a class=\"card-link\" href=\"/collections/urn:perseus:farsiLit",
+            query_data, r'Farsi<br />\s*<a class="card-link" href="/collections/urn:perseus:farsiLit',
             "Link to farsi main collection should be found"
         )
         self.assertRegex(
-            query_data, "Ancient Greek<br />\s*<a class=\"card-link\" href=\"/collections/urn:perseus:greekLit",
+            query_data, r'Ancient Greek<br />\s*<a class="card-link" href="/collections/urn:perseus:greekLit',
             "Link to farsi main collection should be found"
         )
 
@@ -406,6 +406,15 @@ class NemoTestBrowse(TestCase):
             self.assertGreater(
                 len(set(sets)), 1, "Random has been cached and is not recomputed"
             )
+
+    def test_collection_collection_vs_version(self):
+        """ Make sure that a work is correctly displayed on the collection template"""
+        with self.client as c:
+            r = c.get('/collections/urn:cts:latinLit:phi1294.phi002', follow_redirects=True)
+            self.assertRegex(r.get_data(as_text=True), '<a.*Browse</a>\s+<a.*Read</a>')
+            # Make sure the read link is not present for a collection
+            r = c.get('/collections/urn:cts:latinLit:phi1294', follow_redirects=True)
+            self.assertNotIn(r.get_data(as_text=True), '<a.*Read</a>')
 
 
 class NemoTestBrowseWithCache(NemoTestBrowse):
